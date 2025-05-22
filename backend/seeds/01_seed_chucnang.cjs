@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 exports.seed = async function (knex) {
   // Xóa dữ liệu cũ trong bảng CHUCNANG (nếu có)
   await knex('CHUCNANG').del();
