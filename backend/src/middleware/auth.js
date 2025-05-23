@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import process from 'node:process';
+import NguoiDung from '../models/NguoiDung.js';
 
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) {
     return res.status(401).json({ error: 'Không có token, truy cập bị từ chối' });
@@ -9,7 +10,11 @@ const auth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Lưu thông tin user vào req để sử dụng ở các middleware/controller sau
+    const user = await NguoiDung.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ error: 'Người dùng không tồn tại' });
+    }
+    req.user = { id: decoded.id, maNhom: decoded.maNhom };
     next();
   } catch (error) {
     console.error('Lỗi xác thực token:', error);
