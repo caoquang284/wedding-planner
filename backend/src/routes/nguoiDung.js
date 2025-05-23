@@ -9,7 +9,7 @@ const router = Router();
 router.post(
   '/tao',
   auth,
-  checkPermission(1),
+  checkPermission('Quản lý người dùng'),
   validation.validateUserCreation,
   nguoiDungController.createNguoiDung
 );
@@ -18,7 +18,7 @@ router.get('/thong-tin', auth, nguoiDungController.getNguoiDung);
 router.get(
   '/danh-sach',
   auth,
-  checkPermission(1),
+  checkPermission('Quản lý người dùng'),
   nguoiDungController.getAllNguoiDung
 );
 router.put(
@@ -30,9 +30,12 @@ router.put(
 router.delete(
   '/xoa/:id',
   auth,
-  checkPermission(1),
+  checkPermission('Quản lý người dùng'),
   validation.validateIdParam,
   nguoiDungController.deleteNguoiDung
 );
+router.get('/chuc-nang', auth, nguoiDungController.getChucNang);
+router.post('/refresh', nguoiDungController.refreshToken);
+router.post('/dang-xuat', nguoiDungController.logout);
 
 export default router;
