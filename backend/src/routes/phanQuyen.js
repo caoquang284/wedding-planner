@@ -9,21 +9,21 @@ const router = Router();
 router.post(
   '/gan-quyen',
   auth,
-  checkPermission(2),
+  checkPermission('Quản lý phân quyền'),
   validation.validatePhanQuyen,
   phanQuyenController.createPhanQuyen
 );
 router.get(
   '/danh-sach/:maNhom',
   auth,
-  checkPermission(2),
+  checkPermission('Quản lý phân quyền'),
   validation.validateMaNhomParam,
   phanQuyenController.getPhanQuyenByNhom
 );
 router.delete(
   '/xoa-quyen/:maNhom/:maChucNang',
   auth,
-  checkPermission(2),
+  checkPermission('Quản lý phân quyền'),
   validation.validateMaNhomParam,
   validation.validateMaChucNangParam,
   phanQuyenController.deletePhanQuyen
