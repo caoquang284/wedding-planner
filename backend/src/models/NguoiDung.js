@@ -27,17 +27,31 @@ const NguoiDung = {
     return await knex('NGUOIDUNG').where({ MaNguoiDung: id }).delete();
   },
   generateToken: async (nguoiDung) => {
+    if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+      throw new Error('Cấu hình JWT không đầy đủ');
+    }
+
     const payload = {
       id: nguoiDung.MaNguoiDung,
       maNhom: nguoiDung.MaNhom,
     };
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-    await knex('REFRESH_TOKEN').insert({
-      MaNguoiDung: nguoiDung.MaNguoiDung,
-      RefreshToken: refreshToken,
-      HanSuDung: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '1h',
     });
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: '7d',
+    });
+
+    try {
+      await knex('REFRESH_TOKEN').insert({
+        MaNguoiDung: nguoiDung.MaNguoiDung,
+        RefreshToken: refreshToken,
+        HanSuDung: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+    } catch (error) {
+      throw new Error('Lỗi khi lưu refresh token: ' + error.message);
+    }
+
     return { accessToken, refreshToken };
   },
   findRefreshToken: async (refreshToken) => {
@@ -47,7 +61,9 @@ const NguoiDung = {
       .first();
   },
   deleteRefreshToken: async (refreshToken) => {
-    return await knex('REFRESH_TOKEN').where({ RefreshToken: refreshToken }).delete();
+    return await knex('REFRESH_TOKEN')
+      .where({ RefreshToken: refreshToken })
+      .delete();
   },
 };
 

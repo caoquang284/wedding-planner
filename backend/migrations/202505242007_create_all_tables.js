@@ -1,18 +1,16 @@
 export const up = async (knex) => {
-  // Tạo bảng CHUCNANG
+  // --- Các bảng quyền và người dùng ---
   await knex.schema.createTable('CHUCNANG', (table) => {
     table.increments('MaChucNang').primary();
     table.string('TenChucNang', 50).notNullable();
     table.string('TenManHinh', 50).notNullable();
   });
 
-  // Tạo bảng NHOMNGUOIDUNG
   await knex.schema.createTable('NHOMNGUOIDUNG', (table) => {
     table.increments('MaNhom').primary();
     table.string('TenNhom', 50).notNullable();
   });
 
-  // Tạo bảng PHANQUYEN
   await knex.schema.createTable('PHANQUYEN', (table) => {
     table.integer('MaNhom').unsigned().notNullable();
     table.integer('MaChucNang').unsigned().notNullable();
@@ -21,7 +19,6 @@ export const up = async (knex) => {
     table.foreign('MaChucNang').references('MaChucNang').inTable('CHUCNANG');
   });
 
-  // Tạo bảng NGUOIDUNG
   await knex.schema.createTable('NGUOIDUNG', (table) => {
     table.increments('MaNguoiDung').primary();
     table.string('TenDangNhap', 50).notNullable().unique();
@@ -31,7 +28,16 @@ export const up = async (knex) => {
     table.foreign('MaNhom').references('MaNhom').inTable('NHOMNGUOIDUNG');
   });
 
-  // Tạo bảng LOAISANH
+  await knex.schema.createTable('REFRESH_TOKEN', (table) => {
+    table.increments('MaRefreshToken').primary();
+    table.integer('MaNguoiDung').unsigned().notNullable()
+      .references('MaNguoiDung').inTable('NGUOIDUNG');
+    table.string('RefreshToken', 500).notNullable();
+    table.dateTime('HanSuDung').notNullable();
+    table.timestamp('created_at').defaultTo(knex.fn.now());
+  });
+
+  // --- Các bảng sảnh, loại sảnh ---
   await knex.schema.createTable('LOAISANH', (table) => {
     table.increments('MaLoaiSanh').primary();
     table.string('TenLoaiSanh', 50).notNullable();
@@ -39,7 +45,6 @@ export const up = async (knex) => {
   });
   await knex.raw('ALTER TABLE "LOAISANH" ADD CONSTRAINT "chk_dongia_bantoithieu" CHECK ("DonGiaBanToiThieu" >= 0)');
 
-  // Tạo bảng SANH
   await knex.schema.createTable('SANH', (table) => {
     table.increments('MaSanh').primary();
     table.string('TenSanh', 50).notNullable();
@@ -51,13 +56,12 @@ export const up = async (knex) => {
   });
   await knex.raw('ALTER TABLE "SANH" ADD CONSTRAINT "chk_soluong_bantoida" CHECK ("SoLuongBanToiDa" >= 0)');
 
-  // Tạo bảng LOAIMONAN
+  // --- Món ăn ---
   await knex.schema.createTable('LOAIMONAN', (table) => {
     table.increments('MaLoaiMonAn').primary();
     table.string('TenLoaiMonAn', 50).notNullable();
   });
 
-  // Tạo bảng MONAN
   await knex.schema.createTable('MONAN', (table) => {
     table.increments('MaMonAn').primary();
     table.string('TenMonAn', 100).notNullable();
@@ -69,7 +73,6 @@ export const up = async (knex) => {
   });
   await knex.raw('ALTER TABLE "MONAN" ADD CONSTRAINT "chk_dongia_monan" CHECK ("DonGia" >= 0)');
 
-  // Tạo bảng THUCDON
   await knex.schema.createTable('THUCDON', (table) => {
     table.increments('MaThucDon').primary();
     table.string('TenThucDon', 100).notNullable();
@@ -80,7 +83,6 @@ export const up = async (knex) => {
   await knex.raw('ALTER TABLE "THUCDON" ADD CONSTRAINT "chk_dongia_thoidiemdat_thucdon" CHECK ("DonGiaThoiDiemDat" >= 0)');
   await knex.raw('ALTER TABLE "THUCDON" ADD CONSTRAINT "chk_dongia_hientai" CHECK ("DonGiaHienTai" >= 0)');
 
-  // Tạo bảng THUCDON_MONAN
   await knex.schema.createTable('THUCDON_MONAN', (table) => {
     table.integer('MaThucDon').unsigned().notNullable();
     table.integer('MaMonAn').unsigned().notNullable();
@@ -91,13 +93,12 @@ export const up = async (knex) => {
   });
   await knex.raw('ALTER TABLE "THUCDON_MONAN" ADD CONSTRAINT "chk_dongia_thoidiemdat_monan" CHECK ("DonGiaThoiDiemDat" >= 0)');
 
-  // Tạo bảng LOAIDICHVU
+  // --- Dịch vụ ---
   await knex.schema.createTable('LOAIDICHVU', (table) => {
     table.increments('MaLoaiDichVu').primary();
     table.string('TenLoaiDichVu', 50).notNullable();
   });
 
-  // Tạo bảng DICHVU
   await knex.schema.createTable('DICHVU', (table) => {
     table.increments('MaDichVu').primary();
     table.string('TenDichVu', 100).notNullable();
@@ -109,13 +110,12 @@ export const up = async (knex) => {
   });
   await knex.raw('ALTER TABLE "DICHVU" ADD CONSTRAINT "chk_dongia_dichvu" CHECK ("DonGia" >= 0)');
 
-  // Tạo bảng CA
+  // --- Tiệc cưới ---
   await knex.schema.createTable('CA', (table) => {
     table.increments('MaCa').primary();
     table.string('TenCa', 50).notNullable();
   });
 
-  // Tạo bảng DATTIEC
   await knex.schema.createTable('DATTIEC', (table) => {
     table.increments('MaDatTiec').primary();
     table.string('TenChuRe', 100).notNullable();
@@ -136,7 +136,6 @@ export const up = async (knex) => {
   await knex.raw('ALTER TABLE "DATTIEC" ADD CONSTRAINT "chk_soluongban" CHECK ("SoLuongBan" >= 0)');
   await knex.raw('ALTER TABLE "DATTIEC" ADD CONSTRAINT "chk_sobandutru" CHECK ("SoBanDuTru" >= 0)');
 
-  // Tạo bảng DATTIEC_DICHVU
   await knex.schema.createTable('DATTIEC_DICHVU', (table) => {
     table.integer('MaDatTiec').unsigned().notNullable();
     table.integer('MaDichVu').unsigned().notNullable();
@@ -151,7 +150,6 @@ export const up = async (knex) => {
   await knex.raw('ALTER TABLE "DATTIEC_DICHVU" ADD CONSTRAINT "chk_dongia_thoidiemdat" CHECK ("DonGiaThoiDiemDat" >= 0)');
   await knex.raw('ALTER TABLE "DATTIEC_DICHVU" ADD CONSTRAINT "chk_thanhtien" CHECK ("ThanhTien" >= 0)');
 
-  // Tạo bảng HOADON
   await knex.schema.createTable('HOADON', (table) => {
     table.increments('MaHoaDon').primary();
     table.integer('MaDatTiec').unsigned().notNullable();
@@ -172,7 +170,7 @@ export const up = async (knex) => {
   await knex.raw('ALTER TABLE "HOADON" ADD CONSTRAINT "chk_tongtienphat" CHECK ("TongTienPhat" >= 0)');
   await knex.raw('ALTER TABLE "HOADON" ADD CONSTRAINT "chk_tongtienconlai" CHECK ("TongTienConLai" >= 0)');
 
-  // Tạo bảng BAOCAODOANHSO
+  // aplicativos--- Báo cáo doanh số ---
   await knex.schema.createTable('BAOCAODOANHSO', (table) => {
     table.increments('MaBaoCaoDoanhSo').primary();
     table.integer('Thang').notNullable();
@@ -182,7 +180,6 @@ export const up = async (knex) => {
   await knex.raw('ALTER TABLE "BAOCAODOANHSO" ADD CONSTRAINT "chk_thang" CHECK ("Thang" BETWEEN 1 AND 12)');
   await knex.raw('ALTER TABLE "BAOCAODOANHSO" ADD CONSTRAINT "chk_tongdoanhthu" CHECK ("TongDoanhThu" >= 0)');
 
-  // Tạo bảng CHITIET_BAOCAODOANHSO
   await knex.schema.createTable('CHITIET_BAOCAODOANHSO', (table) => {
     table.integer('MaBaoCaoDoanhSo').unsigned().notNullable();
     table.date('Ngay').notNullable();
@@ -196,7 +193,6 @@ export const up = async (knex) => {
   await knex.raw('ALTER TABLE "CHITIET_BAOCAODOANHSO" ADD CONSTRAINT "chk_doanhthu" CHECK ("DoanhThu" >= 0)');
   await knex.raw('ALTER TABLE "CHITIET_BAOCAODOANHSO" ADD CONSTRAINT "chk_tile" CHECK ("TiLe" >= 0 AND "TiLe" <= 100)');
 
-  // Tạo bảng THAMSO
   await knex.schema.createTable('THAMSO', (table) => {
     table.decimal('PhanTramPhatTrenNgay', 5, 2).notNullable();
   });
@@ -204,6 +200,7 @@ export const up = async (knex) => {
 };
 
 export const down = async (knex) => {
+  await knex.schema.dropTableIfExists('THAMSO');
   await knex.schema.dropTableIfExists('CHITIET_BAOCAODOANHSO');
   await knex.schema.dropTableIfExists('BAOCAODOANHSO');
   await knex.schema.dropTableIfExists('HOADON');
@@ -218,9 +215,9 @@ export const down = async (knex) => {
   await knex.schema.dropTableIfExists('LOAIMONAN');
   await knex.schema.dropTableIfExists('SANH');
   await knex.schema.dropTableIfExists('LOAISANH');
+  await knex.schema.dropTableIfExists('REFRESH_TOKEN');
   await knex.schema.dropTableIfExists('NGUOIDUNG');
   await knex.schema.dropTableIfExists('PHANQUYEN');
   await knex.schema.dropTableIfExists('NHOMNGUOIDUNG');
   await knex.schema.dropTableIfExists('CHUCNANG');
-  await knex.schema.dropTableIfExists('THAMSO');
 };
