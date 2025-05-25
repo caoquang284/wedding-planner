@@ -6,10 +6,19 @@ const Sanh = {
     return sanh;
   },
   findById: async (id) => {
-    return await knex('SANH').where({ MaSanh: id }).first();
+    return await knex('SANH')
+      .select('SANH.*', 'LOAISANH.TenLoaiSanh', 'LOAISANH.DonGiaBanToiThieu')
+      .leftJoin('LOAISANH', 'SANH.MaLoaiSanh', 'LOAISANH.MaLoaiSanh')
+      .where({ MaSanh: id })
+      .first();
   },
   findAll: async () => {
-    return await knex('SANH');
+    return await knex('SANH')
+      .select('SANH.*', 'LOAISANH.TenLoaiSanh', 'LOAISANH.DonGiaBanToiThieu')
+      .leftJoin('LOAISANH', 'SANH.MaLoaiSanh', 'LOAISANH.MaLoaiSanh');
+  },
+  findByTenSanh: async (tenSanh) => {
+    return await knex('SANH').where({ TenSanh: tenSanh }).first();
   },
   update: async (id, data) => {
     const [sanh] = await knex('SANH')

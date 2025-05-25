@@ -9,27 +9,27 @@ const router = Router();
 router.post(
   '/tao',
   auth,
-  checkPermission(9),
+  checkPermission('Quản lý món ăn'),
   validation.validateMonAn,
   monAnController.createMonAn
 );
 router.get(
   '/danh-sach',
   auth,
-  checkPermission(10),
+  checkPermission('Quản lý món ăn'),
   monAnController.getAllMonAn
 );
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission(10),
+  checkPermission('Quản lý món ăn'),
   validation.validateIdParam,
   monAnController.getMonAn
 );
 router.put(
   '/cap-nhat/:id',
   auth,
-  checkPermission(9),
+  checkPermission('Quản lý món ăn'),
   validation.validateIdParam,
   validation.validateMonAn,
   monAnController.updateMonAn
@@ -37,7 +37,7 @@ router.put(
 router.delete(
   '/xoa/:id',
   auth,
-  checkPermission(9),
+  checkPermission('Quản lý món ăn'),
   validation.validateIdParam,
   monAnController.deleteMonAn
 );
