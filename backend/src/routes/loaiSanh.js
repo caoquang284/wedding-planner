@@ -9,27 +9,27 @@ const router = Router();
 router.post(
   '/tao',
   auth,
-  checkPermission(3),
+  checkPermission('Quản lý loại sảnh'),
   validation.validateLoaiSanh,
   loaiSanhController.createLoaiSanh
 );
 router.get(
   '/danh-sach',
   auth,
-  checkPermission(4),
+  checkPermission('Quản lý loại sảnh'),
   loaiSanhController.getAllLoaiSanh
 );
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission(4),
+  checkPermission('Quản lý loại sảnh'),
   validation.validateIdParam,
   loaiSanhController.getLoaiSanh
 );
 router.put(
   '/cap-nhat/:id',
   auth,
-  checkPermission(3),
+  checkPermission('Quản lý loại sảnh'),
   validation.validateIdParam,
   validation.validateLoaiSanh,
   loaiSanhController.updateLoaiSanh
@@ -37,7 +37,7 @@ router.put(
 router.delete(
   '/xoa/:id',
   auth,
-  checkPermission(3),
+  checkPermission('Quản lý loại sảnh'),
   validation.validateIdParam,
   loaiSanhController.deleteLoaiSanh
 );

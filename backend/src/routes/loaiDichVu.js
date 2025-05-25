@@ -9,27 +9,27 @@ const router = Router();
 router.post(
   '/tao',
   auth,
-  checkPermission(11),
+  checkPermission('Quản lý loại dịch vụ'),
   validation.validateLoaiDichVu,
   loaiDichVuController.createLoaiDichVu
 );
 router.get(
   '/danh-sach',
   auth,
-  checkPermission(12),
+  checkPermission('Quản lý loại dịch vụ'),
   loaiDichVuController.getAllLoaiDichVu
 );
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission(12),
+  checkPermission('Quản lý loại dịch vụ'),
   validation.validateIdParam,
   loaiDichVuController.getLoaiDichVu
 );
 router.put(
   '/cap-nhat/:id',
   auth,
-  checkPermission(11),
+  checkPermission('Quản lý loại dịch vụ'),
   validation.validateIdParam,
   validation.validateLoaiDichVu,
   loaiDichVuController.updateLoaiDichVu
@@ -37,7 +37,7 @@ router.put(
 router.delete(
   '/xoa/:id',
   auth,
-  checkPermission(11),
+  checkPermission('Quản lý loại dịch vụ'),
   validation.validateIdParam,
   loaiDichVuController.deleteLoaiDichVu
 );

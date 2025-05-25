@@ -6,11 +6,16 @@ import thamSoController from '../controllers/thamSoController.js';
 
 const router = Router();
 
-router.get('/lay', auth, checkPermission(23), thamSoController.getThamSo);
+router.get(
+  '/lay',
+  auth,
+  checkPermission('Quản lý tham số'),
+  thamSoController.getThamSo
+);
 router.put(
   '/cap-nhat',
   auth,
-  checkPermission(23),
+  checkPermission('Quản lý tham số'),
   validation.validateThamSo,
   thamSoController.updateThamSo
 );

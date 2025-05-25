@@ -9,22 +9,27 @@ const router = Router();
 router.post(
   '/tao',
   auth,
-  checkPermission(15),
+  checkPermission('Quản lý ca'),
   validation.validateCa,
   caController.createCa
 );
-router.get('/danh-sach', auth, checkPermission(16), caController.getAllCa);
+router.get(
+  '/danh-sach',
+  auth,
+  checkPermission('Quản lý ca'),
+  caController.getAllCa
+);
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission(16),
+  checkPermission('Quản lý ca'),
   validation.validateIdParam,
   caController.getCa
 );
 router.put(
   '/cap-nhat/:id',
   auth,
-  checkPermission(15),
+  checkPermission('Quản lý ca'),
   validation.validateIdParam,
   validation.validateCa,
   caController.updateCa
@@ -32,7 +37,7 @@ router.put(
 router.delete(
   '/xoa/:id',
   auth,
-  checkPermission(15),
+  checkPermission('Quản lý ca'),
   validation.validateIdParam,
   caController.deleteCa
 );
