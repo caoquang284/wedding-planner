@@ -9,7 +9,10 @@ const Ca = {
     return await knex('CA').where({ MaCa: id }).first();
   },
   findAll: async () => {
-    return await knex('CA');
+    return await knex('CA').select('*');
+  },
+  findByTenCa: async (tenCa) => {
+    return await knex('CA').where({ TenCa: tenCa }).first();
   },
   update: async (id, data) => {
     const [ca] = await knex('CA')
