@@ -11,7 +11,7 @@ const NguoiDung = {
     return await knex('NGUOIDUNG').where({ MaNguoiDung: id }).first();
   },
   findAll: async () => {
-    return await knex('NGUOIDUNG');
+    return await knex('NGUOIDUNG').orderBy('TenNguoiDung', 'asc');
   },
   findByTenDangNhap: async (tenDangNhap) => {
     return await knex('NGUOIDUNG').where({ TenDangNhap: tenDangNhap }).first();
