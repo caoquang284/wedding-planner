@@ -9,7 +9,7 @@ const LoaiSanh = {
     return await knex('LOAISANH').where({ MaLoaiSanh: id }).first();
   },
   findAll: async () => {
-    return await knex('LOAISANH').select('*');
+    return await knex('LOAISANH').select('*').orderBy('TenLoaiSanh', 'asc');
   },
   findByTenLoaiSanh: async (tenLoaiSanh) => {
     return await knex('LOAISANH').where({ TenLoaiSanh: tenLoaiSanh }).first();

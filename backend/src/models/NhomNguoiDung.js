@@ -9,7 +9,7 @@ const NhomNguoiDung = {
     return await knex('NHOMNGUOIDUNG').where({ MaNhom: id }).first();
   },
   findAll: async () => {
-    return await knex('NHOMNGUOIDUNG');
+    return await knex('NHOMNGUOIDUNG').orderBy('TenNhom', 'asc');
   },
   update: async (id, data) => {
     const [nhom] = await knex('NHOMNGUOIDUNG')

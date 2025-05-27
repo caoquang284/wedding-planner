@@ -15,7 +15,11 @@ const DichVu = {
   findAll: async () => {
     return await knex('DICHVU')
       .select('DICHVU.*', 'LOAIDICHVU.TenLoaiDichVu')
-      .leftJoin('LOAIDICHVU', 'DICHVU.MaLoaiDichVu', 'LOAIDICHVU.MaLoaiDichVu');
+      .leftJoin('LOAIDICHVU', 'DICHVU.MaLoaiDichVu', 'LOAIDICHVU.MaLoaiDichVu')
+      .orderBy([
+        { column: 'LOAIDICHVU.TenLoaiDichVu', order: 'asc' },
+        { column: 'DICHVU.TenDichVu', order: 'asc' },
+      ]);
   },
   update: async (id, data) => {
     const [dichVu] = await knex('DICHVU')
