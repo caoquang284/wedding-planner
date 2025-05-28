@@ -15,7 +15,11 @@ const Sanh = {
   findAll: async () => {
     return await knex('SANH')
       .select('SANH.*', 'LOAISANH.TenLoaiSanh', 'LOAISANH.DonGiaBanToiThieu')
-      .leftJoin('LOAISANH', 'SANH.MaLoaiSanh', 'LOAISANH.MaLoaiSanh');
+      .leftJoin('LOAISANH', 'SANH.MaLoaiSanh', 'LOAISANH.MaLoaiSanh')
+      .orderBy([
+        { column: 'LOAISANH.TenLoaiSanh', order: 'asc' },
+        { column: 'SANH.TenSanh', order: 'asc' },
+      ]);
   },
   findByTenSanh: async (tenSanh) => {
     return await knex('SANH').where({ TenSanh: tenSanh }).first();
