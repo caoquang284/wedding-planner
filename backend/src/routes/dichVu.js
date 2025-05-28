@@ -15,8 +15,8 @@ router.post(
 );
 router.get(
   '/danh-sach',
-  auth,
-  checkPermission('Quản lý dịch vụ'),
+  // auth,
+  // checkPermission('Quản lý dịch vụ'),
   dichVuController.getAllDichVu
 );
 router.get(

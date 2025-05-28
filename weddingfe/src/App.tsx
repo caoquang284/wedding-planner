@@ -17,6 +17,7 @@ import AdminWedding from "./pages/Admin/Admin_Wedding";
 import AdminInvoices from "./pages/Admin/Admin_Invoice";
 import AdminReports from "./pages/Admin/Admin_Report";
 import AdminPermissions from "./pages/Admin/Admin_Permission";
+import AdminLogin from "./pages/Admin/Login";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
 
       // Admin routes
       { path: "admin", element: <AdminHome /> },
+      { path: "admin/login", element: <AdminLogin /> },
       { path: "admin/halls", element: <AdminHalls /> },
       { path: "admin/menus", element: <AdminMenus /> },
       { path: "admin/services", element: <AdminServices /> },

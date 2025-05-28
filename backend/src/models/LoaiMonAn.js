@@ -21,6 +21,10 @@ const LoaiMonAn = {
   delete: async (id) => {
     return await knex('LOAIMONAN').where({ MaLoaiMonAn: id }).delete();
   },
+  isUsedByMonAn: async (id) => {
+    const monAn = await knex('MONAN').where({ MaLoaiMonAn: id }).first();
+    return !!monAn; // Trả về true nếu có món ăn sử dụng loại này
+  },
 };
 
 export default LoaiMonAn;

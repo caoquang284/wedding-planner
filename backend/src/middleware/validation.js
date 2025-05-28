@@ -144,6 +144,44 @@ const validateMonAn = [
   },
 ];
 
+// Validation cho tạo/cập nhật thực đơn
+const validateThucDon = [
+  body('tenThucDon')
+    .notEmpty()
+    .withMessage('Tên thực đơn không được để trống')
+    .isString()
+    .withMessage('Tên thực đơn phải là chuỗi'),
+  body('donGiaThoiDiemDat')
+    .isFloat({ min: 0 })
+    .withMessage('Đơn giá thời điểm đặt phải là số không âm'),
+  body('donGiaHienTai')
+    .isFloat({ min: 0 })
+    .withMessage('Đơn giá hiện tại phải là số không âm'),
+  body('ghiChu').optional().isString().withMessage('Ghi chú phải là chuỗi'),
+  body('coverImg').optional().isString().withMessage('Ảnh bìa phải là chuỗi'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
+// Validation cho cập nhật món ăn trong thực đơn
+const validateThucDonMonAnUpdate = [
+  body('donGiaThoiDiemDat')
+    .isFloat({ min: 0 })
+    .withMessage('Đơn giá thời điểm đặt phải là số không âm'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
 const validateLoaiDichVu = [
   body('tenLoaiDichVu')
     .notEmpty()

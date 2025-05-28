@@ -15,8 +15,8 @@ router.post(
 );
 router.get(
   '/danh-sach',
-  auth,
-  checkPermission('Quản lý loại dịch vụ'),
+  // auth,
+  // checkPermission('Quản lý loại dịch vụ'),
   loaiDichVuController.getAllLoaiDichVu
 );
 router.get(

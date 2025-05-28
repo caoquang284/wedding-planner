@@ -15,8 +15,8 @@ router.post(
 );
 router.get(
   '/danh-sach',
-  auth,
-  checkPermission('Quản lý loại món ăn'),
+  // auth,
+  // checkPermission('Quản lý loại món ăn'),
   loaiMonAnController.getAllLoaiMonAn
 );
 router.get(

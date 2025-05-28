@@ -1,18 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  getAllDichVu,
+  getDichVuById,
+  createDichVu,
+  updateDichVu,
+  deleteDichVu,
+  getAllLoaiDichVu,
+  createLoaiDichVu,
+  updateLoaiDichVu,
+  deleteLoaiDichVu,
+} from "../../../Api/dichVuApi";
 
 interface Service {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  categoryId: number | null;
-  imageUrl?: string; // Thêm trường ảnh URL
-  note?: string; // Thêm trường ghi chú
+  MaDichVu: number;
+  TenDichVu: string;
+  GhiChu?: string;
+  DonGia: number;
+  MaLoaiDichVu: number | null;
+  AnhURL?: string;
+  TenLoaiDichVu?: string;
 }
 
 interface Category {
-  id: number | null;
-  name: string;
+  MaLoaiDichVu: number | null;
+  TenLoaiDichVu: string;
 }
 
 interface FormData {
@@ -21,8 +32,8 @@ interface FormData {
   description: string;
   price: string;
   categoryId: number | null;
-  imageUrl: string; // Thêm trường ảnh URL
-  note: string; // Thêm trường ghi chú
+  imageUrl: string;
+  note: string;
 }
 
 interface ConfirmationModal {
@@ -32,42 +43,8 @@ interface ConfirmationModal {
 }
 
 function Services() {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: 1,
-      name: "Trang trí hoa",
-      description: "Trang trí bàn tiệc với hoa tươi",
-      price: 5000000,
-      categoryId: 1,
-      imageUrl: "https://via.placeholder.com/100?text=Hoa",
-      note: "Hoa tươi nhập khẩu, thiết kế sang trọng",
-    },
-    {
-      id: 2,
-      name: "Âm thanh ánh sáng",
-      description: "Hệ thống âm thanh và ánh sáng chuyên nghiệp",
-      price: 10000000,
-      categoryId: 2,
-      imageUrl: "https://via.placeholder.com/100?text=Am+Thanh",
-      note: "Thiết bị hiện đại, phù hợp sự kiện lớn",
-    },
-    {
-      id: 3,
-      name: "Chụp ảnh cưới",
-      description: "Gói chụp ảnh cưới chuyên nghiệp",
-      price: 8000000,
-      categoryId: 3,
-      imageUrl: "https://via.placeholder.com/100?text=Chup+Anh",
-      note: "Ekip chuyên nghiệp, chỉnh sửa ảnh cao cấp",
-    },
-  ]);
-
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 1, name: "Trang trí" },
-    { id: 2, name: "Âm thanh" },
-    { id: 3, name: "Chụp ảnh" },
-  ]);
-
+  const [services, setServices] = useState<Service[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] =
     useState<boolean>(false);
@@ -81,16 +58,13 @@ function Services() {
     note: "",
   });
   const [categoryFormData, setCategoryFormData] = useState<Category>({
-    id: null,
-    name: "",
+    MaLoaiDichVu: null,
+    TenLoaiDichVu: "",
   });
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [isCategoryEditMode, setIsCategoryEditMode] = useState<boolean>(false);
-
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
-
-  // State cho modal xác nhận
   const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>(
     {
       isOpen: false,
@@ -98,6 +72,27 @@ function Services() {
       onConfirm: () => {},
     }
   );
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load dữ liệu từ backend khi component được render
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const dichVuList = await getAllDichVu();
+        const loaiDichVuList = await getAllLoaiDichVu();
+        setServices(dichVuList);
+        setCategories(loaiDichVuList);
+      } catch (err) {
+        setError("Lỗi khi lấy dữ liệu: " + (err as any).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const openAddModal = () => {
     setFormData({
@@ -115,26 +110,29 @@ function Services() {
 
   const openEditModal = (service: Service) => {
     setFormData({
-      id: service.id,
-      name: service.name,
-      description: service.description,
-      price: service.price.toString(),
-      categoryId: service.categoryId,
-      imageUrl: service.imageUrl || "",
-      note: service.note || "",
+      id: service.MaDichVu,
+      name: service.TenDichVu,
+      description: service.GhiChu || "",
+      price: service.DonGia.toString(),
+      categoryId: service.MaLoaiDichVu,
+      imageUrl: service.AnhURL || "",
+      note: service.GhiChu || "",
     });
     setIsEditMode(true);
     setIsModalOpen(true);
   };
 
   const openAddCategoryModal = () => {
-    setCategoryFormData({ id: null, name: "" });
+    setCategoryFormData({ MaLoaiDichVu: null, TenLoaiDichVu: "" });
     setIsCategoryEditMode(false);
     setIsCategoryModalOpen(true);
   };
 
   const openEditCategoryModal = (category: Category) => {
-    setCategoryFormData({ id: category.id, name: category.name });
+    setCategoryFormData({
+      MaLoaiDichVu: category.MaLoaiDichVu,
+      TenLoaiDichVu: category.TenLoaiDichVu,
+    });
     setIsCategoryEditMode(true);
     setIsCategoryModalOpen(true);
   };
@@ -165,46 +163,45 @@ function Services() {
     closeConfirmationModal();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNumber = Number(formData.price);
     if (isNaN(priceNumber) || priceNumber <= 0) {
       alert("Giá phải là số dương");
       return;
     }
-    const action = () => {
-      if (isEditMode) {
-        setServices((prev) =>
-          prev.map((service) =>
-            service.id === formData.id
-              ? {
-                  ...service,
-                  name: formData.name,
-                  description: formData.description,
-                  price: priceNumber,
-                  categoryId: formData.categoryId,
-                  imageUrl: formData.imageUrl || undefined,
-                  note: formData.note || undefined,
-                }
-              : service
-          )
+    const action = async () => {
+      try {
+        if (isEditMode) {
+          const updatedService = await updateDichVu(formData.id!, {
+            tenDichVu: formData.name,
+            maLoaiDichVu: formData.categoryId,
+            donGia: priceNumber,
+            ghiChu: formData.note || null,
+            anhURL: formData.imageUrl || null,
+          });
+          setServices((prev) =>
+            prev.map((service) =>
+              service.MaDichVu === formData.id ? updatedService : service
+            )
+          );
+        } else {
+          const newService = await createDichVu({
+            tenDichVu: formData.name,
+            maLoaiDichVu: formData.categoryId,
+            donGia: priceNumber,
+            ghiChu: formData.note || null,
+            anhURL: formData.imageUrl || null,
+          });
+          setServices((prev) => [...prev, newService]);
+        }
+        closeModal();
+      } catch (error) {
+        alert(
+          "Lỗi khi lưu dịch vụ: " + (error as any).response?.data?.error ||
+            (error as any).message
         );
-      } else {
-        const newService: Service = {
-          id:
-            services.length > 0
-              ? Math.max(...services.map((s) => s.id || 0)) + 1
-              : 1,
-          name: formData.name,
-          description: formData.description,
-          price: priceNumber,
-          categoryId: formData.categoryId,
-          imageUrl: formData.imageUrl || undefined,
-          note: formData.note || undefined,
-        };
-        setServices((prev) => [...prev, newService]);
       }
-      closeModal();
     };
     setConfirmationModal({
       isOpen: true,
@@ -215,32 +212,41 @@ function Services() {
     });
   };
 
-  const handleCategorySubmit = (e: React.FormEvent) => {
+  const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (categoryFormData.name.length < 2) {
+    if (categoryFormData.TenLoaiDichVu.length < 2) {
       alert("Tên loại dịch vụ phải dài ít nhất 2 ký tự");
       return;
     }
-    const action = () => {
-      if (isCategoryEditMode) {
-        setCategories((prev) =>
-          prev.map((category) =>
-            category.id === categoryFormData.id
-              ? { ...category, name: categoryFormData.name }
-              : category
-          )
+    const action = async () => {
+      try {
+        if (isCategoryEditMode) {
+          const updatedCategory = await updateLoaiDichVu(
+            categoryFormData.MaLoaiDichVu!,
+            {
+              tenLoaiDichVu: categoryFormData.TenLoaiDichVu,
+            }
+          );
+          setCategories((prev) =>
+            prev.map((category) =>
+              category.MaLoaiDichVu === categoryFormData.MaLoaiDichVu
+                ? updatedCategory
+                : category
+            )
+          );
+        } else {
+          const newCategory = await createLoaiDichVu({
+            tenLoaiDichVu: categoryFormData.TenLoaiDichVu,
+          });
+          setCategories((prev) => [...prev, newCategory]);
+        }
+        closeCategoryModal();
+      } catch (error) {
+        alert(
+          "Lỗi khi lưu loại dịch vụ: " + (error as any).response?.data?.error ||
+            (error as any).message
         );
-      } else {
-        const newCategory: Category = {
-          id:
-            categories.length > 0
-              ? Math.max(...categories.map((c) => c.id || 0)) + 1
-              : 1,
-          name: categoryFormData.name,
-        };
-        setCategories((prev) => [...prev, newCategory]);
       }
-      closeCategoryModal();
     };
     setConfirmationModal({
       isOpen: true,
@@ -251,9 +257,19 @@ function Services() {
     });
   };
 
-  const handleDelete = (id: number | null) => {
-    const action = () => {
-      setServices((prev) => prev.filter((service) => service.id !== id));
+  const handleDelete = async (id: number | null) => {
+    const action = async () => {
+      try {
+        await deleteDichVu(id!);
+        setServices((prev) =>
+          prev.filter((service) => service.MaDichVu !== id)
+        );
+      } catch (error) {
+        alert(
+          "Lỗi khi xóa dịch vụ: " + (error as any).response?.data?.error ||
+            (error as any).message
+        );
+      }
     };
     setConfirmationModal({
       isOpen: true,
@@ -262,16 +278,26 @@ function Services() {
     });
   };
 
-  const handleDeleteCategory = (id: number | null) => {
+  const handleDeleteCategory = async (id: number | null) => {
     const isCategoryInUse = services.some(
-      (service) => service.categoryId === id
+      (service) => service.MaLoaiDichVu === id
     );
     if (isCategoryInUse) {
       alert("Không thể xóa loại dịch vụ đang được sử dụng!");
       return;
     }
-    const action = () => {
-      setCategories((prev) => prev.filter((category) => category.id !== id));
+    const action = async () => {
+      try {
+        await deleteLoaiDichVu(id!);
+        setCategories((prev) =>
+          prev.filter((category) => category.MaLoaiDichVu !== id)
+        );
+      } catch (error) {
+        alert(
+          "Lỗi khi xóa loại dịch vụ: " + (error as any).response?.data?.error ||
+            (error as any).message
+        );
+      }
     };
     setConfirmationModal({
       isOpen: true,
@@ -289,12 +315,27 @@ function Services() {
 
   const filteredServices = services.filter(
     (service) =>
-      (service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (service.note &&
-          service.note.toLowerCase().includes(searchTerm.toLowerCase()))) &&
-      (categoryFilter === "" || service.categoryId === Number(categoryFilter))
+      (service.TenDichVu.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.GhiChu &&
+          service.GhiChu.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+      (categoryFilter === "" || service.MaLoaiDichVu === Number(categoryFilter))
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p>Đang tải dữ liệu...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -319,8 +360,11 @@ function Services() {
               >
                 <option value="">Tất cả loại dịch vụ</option>
                 {categories.map((category) => (
-                  <option key={category.id} value={category.id || ""}>
-                    {category.name}
+                  <option
+                    key={category.MaLoaiDichVu}
+                    value={category.MaLoaiDichVu || ""}
+                  >
+                    {category.TenLoaiDichVu}
                   </option>
                 ))}
               </select>
@@ -371,110 +415,100 @@ function Services() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredServices.map((service) => {
-                  const category = categories.find(
-                    (cat) => cat.id === service.categoryId
-                  );
-                  return (
-                    <tr key={service.id}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 align-middle">
-                        {service.name}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                        {service.description}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                        {service.price.toLocaleString("vi-VN")}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                        {category ? category.name : "Chưa phân loại"}
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        {service.imageUrl ? (
-                          <img
-                            src={service.imageUrl}
-                            alt={service.name}
-                            className="w-16 h-16 object-cover rounded-lg mx-auto"
-                          />
-                        ) : (
-                          <span className="text-gray-500">Không có ảnh</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                        {service.note || "Không có ghi chú"}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-right align-middle">
-                        <button
-                          onClick={() => openEditModal(service)}
-                          className="text-blue-600 hover:text-blue-800 mr-4"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDelete(service.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Xóa
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredServices.map((service) => (
+                  <tr key={service.MaDichVu}>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 align-middle">
+                      {service.TenDichVu}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 align-middle">
+                      {service.GhiChu || "Không có mô tả"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 align-middle">
+                      {service.DonGia.toLocaleString("vi-VN")}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 align-middle">
+                      {service.TenLoaiDichVu || "Chưa phân loại"}
+                    </td>
+                    <td className="px-6 py-4 align-middle">
+                      {service.AnhURL ? (
+                        <img
+                          src={service.AnhURL}
+                          alt={service.TenDichVu}
+                          className="w-16 h-16 object-cover rounded-lg mx-auto"
+                        />
+                      ) : (
+                        <span className="text-gray-500">Không có ảnh</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 align-middle">
+                      {service.GhiChu || "Không có ghi chú"}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-right align-middle">
+                      <button
+                        onClick={() => openEditModal(service)}
+                        className="text-blue-600 hover:text-blue-800 mr-4"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(service.MaDichVu)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
           <div className="block sm:hidden space-y-4">
-            {filteredServices.map((service) => {
-              const category = categories.find(
-                (cat) => cat.id === service.categoryId
-              );
-              return (
-                <div
-                  key={service.id}
-                  className="bg-white shadow-md rounded-lg p-4"
-                >
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {service.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 line-clamp-2">
-                      {service.description}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Giá: {service.price.toLocaleString("vi-VN")} VNĐ
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Loại: {category ? category.name : "Chưa phân loại"}
-                    </p>
-                    {service.imageUrl && (
-                      <img
-                        src={service.imageUrl}
-                        alt={service.name}
-                        className="w-16 h-16 object-cover rounded-lg mt-2"
-                      />
-                    )}
-                    <p className="text-sm text-gray-500">
-                      Ghi chú: {service.note || "Không có ghi chú"}
-                    </p>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => openEditModal(service)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(service.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Xóa
-                      </button>
-                    </div>
+            {filteredServices.map((service) => (
+              <div
+                key={service.MaDichVu}
+                className="bg-white shadow-md rounded-lg p-4"
+              >
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {service.TenDichVu}
+                  </h3>
+                  <p className="text-sm text-gray-500 line-clamp-2">
+                    {service.GhiChu || "Không có mô tả"}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Giá: {service.DonGia.toLocaleString("vi-VN")} VNĐ
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Loại: {service.TenLoaiDichVu || "Chưa phân loại"}
+                  </p>
+                  {service.AnhURL && (
+                    <img
+                      src={service.AnhURL}
+                      alt={service.TenDichVu}
+                      className="w-16 h-16 object-cover rounded-lg mt-2"
+                    />
+                  )}
+                  <p className="text-sm text-gray-500">
+                    Ghi chú: {service.GhiChu || "Không có ghi chú"}
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => openEditModal(service)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDelete(service.MaDichVu)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Xóa
+                    </button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -548,8 +582,11 @@ function Services() {
                 >
                   <option value="">Chưa phân loại</option>
                   {categories.map((category) => (
-                    <option key={category.id} value={category.id || ""}>
-                      {category.name}
+                    <option
+                      key={category.MaLoaiDichVu}
+                      value={category.MaLoaiDichVu || ""}
+                    >
+                      {category.TenLoaiDichVu}
                     </option>
                   ))}
                 </select>
@@ -585,8 +622,8 @@ function Services() {
                 </label>
                 <input
                   type="text"
-                  name="name"
-                  value={categoryFormData.name}
+                  name="TenLoaiDichVu"
+                  value={categoryFormData.TenLoaiDichVu}
                   onChange={handleCategoryInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                   required

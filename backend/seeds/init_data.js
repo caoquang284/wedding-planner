@@ -1,6 +1,21 @@
 import { hash } from 'bcrypt';
 
 export async function seed(knex) {
+  await knex('THUCDON_MONAN').del();
+  await knex('THUCDON').del();
+  await knex('MONAN').del();
+  await knex('LOAIMONAN').del();
+  await knex('PHANQUYEN').del();
+  await knex('REFRESH_TOKEN').del();
+  await knex('NGUOIDUNG').del();
+  await knex('NHOMNGUOIDUNG').del();
+  await knex('CHUCNANG').del();
+  await knex('LOAISANH').del();
+  await knex('CA').del();
+  await knex('THAMSO').del();
+  await knex('DICHVU').del();
+  await knex('LOAIDICHVU').del();
+
   // Seed bảng CHUCNANG
   await knex('CHUCNANG').insert([
     {
@@ -294,4 +309,282 @@ export async function seed(knex) {
   await knex.raw('SELECT setval(\'"CA_MaCa_seq"\', 2)'); // Sau MaCa: 2
   await knex.raw('SELECT setval(\'"LOAIDICHVU_MaLoaiDichVu_seq"\', 5)'); // Sau MaLoaiDichVu: 5
   await knex.raw('SELECT setval(\'"DICHVU_MaDichVu_seq"\', 20)'); // Sau MaDichVu: 20
+
+  // 1. Seed bảng LOAIMONAN
+  const loaiMonAnData = [
+    { MaLoaiMonAn: 1, TenLoaiMonAn: 'Khai vị' },
+    { MaLoaiMonAn: 2, TenLoaiMonAn: 'Gỏi - Salad' },
+    { MaLoaiMonAn: 3, TenLoaiMonAn: 'Súp' },
+    { MaLoaiMonAn: 4, TenLoaiMonAn: 'Món Gà' },
+    { MaLoaiMonAn: 5, TenLoaiMonAn: 'Món Bò' },
+    { MaLoaiMonAn: 6, TenLoaiMonAn: 'Món Heo' },
+    { MaLoaiMonAn: 7, TenLoaiMonAn: 'Món Hải Sản' },
+    { MaLoaiMonAn: 8, TenLoaiMonAn: 'Món Rau - Củ' },
+    { MaLoaiMonAn: 9, TenLoaiMonAn: 'Cơm - Mì - Miến' },
+    { MaLoaiMonAn: 10, TenLoaiMonAn: 'Lẩu' },
+    { MaLoaiMonAn: 11, TenLoaiMonAn: 'Tráng miệng' },
+    { MaLoaiMonAn: 12, TenLoaiMonAn: 'Đồ uống đặc biệt' },
+  ];
+  await knex('LOAIMONAN').insert(loaiMonAnData);
+
+  // 2. Seed bảng MONAN (Khoảng 100 món ăn)
+  const monAnData = [];
+  const baseMonAn = [
+    // Khai vị (MaLoaiMonAn: 1)
+    {
+      TenMonAn: 'Chả giò hải sản',
+      MaLoaiMonAn: 1,
+      DonGia: 95000,
+      GhiChu: 'Giòn rụm, nhân đầy đặn',
+    },
+    {
+      TenMonAn: 'Nem nướng Nha Trang',
+      MaLoaiMonAn: 1,
+      DonGia: 120000,
+      GhiChu: 'Ăn kèm rau sống, bánh tráng',
+    },
+    { TenMonAn: 'Bánh tôm Hồ Tây', MaLoaiMonAn: 1, DonGia: 85000 },
+    { TenMonAn: 'Phồng tôm chiên', MaLoaiMonAn: 1, DonGia: 45000 },
+    { TenMonAn: 'Đậu hũ chiên sả', MaLoaiMonAn: 1, DonGia: 65000 },
+    // Gỏi - Salad (MaLoaiMonAn: 2)
+    {
+      TenMonAn: 'Gỏi ngó sen tôm thịt',
+      MaLoaiMonAn: 2,
+      DonGia: 130000,
+      GhiChu: 'Vị chua ngọt thanh mát',
+    },
+    { TenMonAn: 'Salad Caesar gà nướng', MaLoaiMonAn: 2, DonGia: 150000 },
+    { TenMonAn: 'Gỏi cuốn tôm thịt', MaLoaiMonAn: 2, DonGia: 80000 },
+    { TenMonAn: 'Nộm sứa dừa tươi', MaLoaiMonAn: 2, DonGia: 110000 },
+    { TenMonAn: 'Salad dầu giấm trứng', MaLoaiMonAn: 2, DonGia: 90000 },
+    // Súp (MaLoaiMonAn: 3)
+    {
+      TenMonAn: 'Súp cua tuyết nhĩ',
+      MaLoaiMonAn: 3,
+      DonGia: 75000,
+      GhiChu: 'Bổ dưỡng, thơm ngon',
+    },
+    { TenMonAn: 'Súp hải sản tóc tiên', MaLoaiMonAn: 3, DonGia: 85000 },
+    { TenMonAn: 'Súp gà ngô non', MaLoaiMonAn: 3, DonGia: 65000 },
+    { TenMonAn: 'Súp bí đỏ kem tươi', MaLoaiMonAn: 3, DonGia: 70000 },
+    { TenMonAn: 'Súp măng tây cua', MaLoaiMonAn: 3, DonGia: 90000 },
+    // Món Gà (MaLoaiMonAn: 4)
+    {
+      TenMonAn: 'Gà hấp lá chanh',
+      MaLoaiMonAn: 4,
+      DonGia: 350000,
+      GhiChu: 'Gà ta thả vườn',
+    },
+    { TenMonAn: 'Gà nướng mật ong', MaLoaiMonAn: 4, DonGia: 380000 },
+    {
+      TenMonAn: 'Cà ri gà kiểu Thái',
+      MaLoaiMonAn: 4,
+      DonGia: 280000,
+      GhiChu: 'Cay nồng đặc trưng',
+    },
+    { TenMonAn: 'Gà rang muối Hồng Kông', MaLoaiMonAn: 4, DonGia: 360000 },
+    { TenMonAn: 'Lẩu gà nấm thiên nhiên', MaLoaiMonAn: 4, DonGia: 450000 }, // Cũng có thể là loại Lẩu
+    { TenMonAn: 'Cánh gà chiên nước mắm', MaLoaiMonAn: 4, DonGia: 180000 },
+    {
+      TenMonAn: 'Chân gà rút xương ngâm sả tắc',
+      MaLoaiMonAn: 4,
+      DonGia: 150000,
+    },
+    // Món Bò (MaLoaiMonAn: 5)
+    {
+      TenMonAn: 'Bò lúc lắc khoai tây',
+      MaLoaiMonAn: 5,
+      DonGia: 250000,
+      GhiChu: 'Bò mềm, khoai giòn',
+    },
+    { TenMonAn: 'Bò bít tết sốt tiêu xanh', MaLoaiMonAn: 5, DonGia: 280000 },
+    { TenMonAn: 'Bò nhúng dấm', MaLoaiMonAn: 5, DonGia: 320000 },
+    { TenMonAn: 'Nạm bò xào sả ớt', MaLoaiMonAn: 5, DonGia: 220000 },
+    { TenMonAn: 'Bò cuộn nấm kim châm nướng', MaLoaiMonAn: 5, DonGia: 260000 },
+    { TenMonAn: 'Phở bò tái lăn', MaLoaiMonAn: 5, DonGia: 120000 }, // Cũng có thể là Cơm - Mì
+    // Món Heo (MaLoaiMonAn: 6)
+    {
+      TenMonAn: 'Sườn non nướng BBQ',
+      MaLoaiMonAn: 6,
+      DonGia: 300000,
+      GhiChu: 'Sốt đậm đà',
+    },
+    { TenMonAn: 'Ba chỉ rang cháy cạnh', MaLoaiMonAn: 6, DonGia: 180000 },
+    {
+      TenMonAn: 'Thịt kho tàu trứng cút',
+      MaLoaiMonAn: 6,
+      DonGia: 220000,
+      GhiChu: 'Truyền thống',
+    },
+    { TenMonAn: 'Tai heo ngâm giấm', MaLoaiMonAn: 6, DonGia: 150000 },
+    { TenMonAn: 'Giò heo muối chiên giòn', MaLoaiMonAn: 6, DonGia: 280000 },
+    // Món Hải Sản (MaLoaiMonAn: 7)
+    {
+      TenMonAn: 'Tôm hùm nướng bơ tỏi',
+      MaLoaiMonAn: 7,
+      DonGia: 1200000,
+      GhiChu: 'Tôm hùm bông size lớn',
+    },
+    { TenMonAn: 'Cua rang me', MaLoaiMonAn: 7, DonGia: 750000 },
+    { TenMonAn: 'Mực nướng sa tế', MaLoaiMonAn: 7, DonGia: 320000 },
+    { TenMonAn: 'Cá diêu hồng hấp Hồng Kông', MaLoaiMonAn: 7, DonGia: 450000 },
+    {
+      TenMonAn: 'Hàu nướng mỡ hành',
+      MaLoaiMonAn: 7,
+      DonGia: 180000,
+      GhiChu: '10 con',
+    },
+    { TenMonAn: 'Ốc hương rang muối ớt', MaLoaiMonAn: 7, DonGia: 280000 },
+    { TenMonAn: 'Sò điệp nướng phô mai', MaLoaiMonAn: 7, DonGia: 250000 },
+    // Món Rau - Củ (MaLoaiMonAn: 8)
+    { TenMonAn: 'Rau muống xào tỏi', MaLoaiMonAn: 8, DonGia: 70000 },
+    {
+      TenMonAn: 'Cải thìa sốt dầu hào nấm đông cô',
+      MaLoaiMonAn: 8,
+      DonGia: 95000,
+    },
+    { TenMonAn: 'Bông thiên lý xào thịt bò', MaLoaiMonAn: 8, DonGia: 130000 }, // Có thể là món bò
+    { TenMonAn: 'Mướp đắng xào trứng', MaLoaiMonAn: 8, DonGia: 80000 },
+    { TenMonAn: 'Đậu que xào tôm', MaLoaiMonAn: 8, DonGia: 110000 },
+    // Cơm - Mì - Miến (MaLoaiMonAn: 9)
+    { TenMonAn: 'Cơm chiên Dương Châu', MaLoaiMonAn: 9, DonGia: 120000 },
+    { TenMonAn: 'Mì xào hải sản', MaLoaiMonAn: 9, DonGia: 150000 },
+    { TenMonAn: 'Miến xào cua bể', MaLoaiMonAn: 9, DonGia: 180000 },
+    { TenMonAn: 'Cơm niêu cá kho tộ', MaLoaiMonAn: 9, DonGia: 160000 },
+    { TenMonAn: 'Phở xào bò mềm', MaLoaiMonAn: 9, DonGia: 130000 },
+    // Lẩu (MaLoaiMonAn: 10)
+    {
+      TenMonAn: 'Lẩu Thái Tomyum hải sản',
+      MaLoaiMonAn: 10,
+      DonGia: 550000,
+      GhiChu: 'Đủ vị chua cay',
+    },
+    { TenMonAn: 'Lẩu riêu cua bắp bò', MaLoaiMonAn: 10, DonGia: 480000 },
+    { TenMonAn: 'Lẩu nấm thập cẩm chay', MaLoaiMonAn: 10, DonGia: 350000 },
+    { TenMonAn: 'Lẩu cá kèo lá giang', MaLoaiMonAn: 10, DonGia: 420000 },
+    { TenMonAn: 'Lẩu dê tiềm thuốc bắc', MaLoaiMonAn: 10, DonGia: 600000 },
+    // Tráng miệng (MaLoaiMonAn: 11)
+    { TenMonAn: 'Chè khúc bạch', MaLoaiMonAn: 11, DonGia: 45000 },
+    { TenMonAn: 'Trái cây thập cẩm theo mùa', MaLoaiMonAn: 11, DonGia: 90000 },
+    { TenMonAn: 'Bánh flan caramen', MaLoaiMonAn: 11, DonGia: 35000 },
+    { TenMonAn: 'Rau câu dừa xiêm', MaLoaiMonAn: 11, DonGia: 40000 },
+    { TenMonAn: 'Panna cotta chanh dây', MaLoaiMonAn: 11, DonGia: 55000 },
+    // Đồ uống đặc biệt (MaLoaiMonAn: 12)
+    { TenMonAn: 'Nước ép dưa hấu', MaLoaiMonAn: 12, DonGia: 50000 },
+    { TenMonAn: 'Sinh tố bơ sáp', MaLoaiMonAn: 12, DonGia: 65000 },
+    { TenMonAn: 'Trà đào cam sả', MaLoaiMonAn: 12, DonGia: 55000 },
+    { TenMonAn: 'Mojito chanh bạc hà', MaLoaiMonAn: 12, DonGia: 70000 },
+    { TenMonAn: 'Cà phê trứng Hà Nội', MaLoaiMonAn: 12, DonGia: 60000 },
+  ];
+
+  let maMonAnCounter = 1;
+  for (const mon of baseMonAn) {
+    monAnData.push({
+      MaMonAn: maMonAnCounter++,
+      ...mon,
+      AnhURL: `https://via.placeholder.com/150?text=${encodeURIComponent(mon.TenMonAn)}`,
+    });
+  }
+
+  // Tạo thêm món ăn để đạt gần 100 món
+  const prefixes = [
+    'Đặc biệt',
+    'Siêu ngon',
+    'Hảo hạng',
+    'Truyền thống',
+    'Hiện đại',
+  ];
+  const suffixes = [
+    'kiểu mới',
+    'sốt cay',
+    'sốt me',
+    'hấp',
+    'nướng',
+    'xào',
+    'chiên',
+  ];
+  let additionalDishesCount = monAnData.length;
+
+  while (additionalDishesCount < 100) {
+    const randomBaseDish =
+      baseMonAn[Math.floor(Math.random() * baseMonAn.length)];
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    let newTenMonAn = `${randomPrefix} ${randomBaseDish.TenMonAn.split(' ')[0]} ${randomSuffix}`;
+    // Đảm bảo tên không quá dài và duy nhất (trong phạm vi seed này)
+    if (monAnData.some((m) => m.TenMonAn === newTenMonAn)) {
+      newTenMonAn = `${newTenMonAn} #${maMonAnCounter}`;
+    }
+
+    monAnData.push({
+      MaMonAn: maMonAnCounter++,
+      TenMonAn: newTenMonAn.substring(0, 100),
+      MaLoaiMonAn: randomBaseDish.MaLoaiMonAn,
+      DonGia:
+        Math.floor(
+          (randomBaseDish.DonGia * (0.8 + Math.random() * 0.4)) / 1000
+        ) * 1000, // Giá biến đổi chút
+      GhiChu: `Biến tấu từ ${randomBaseDish.TenMonAn}`,
+      AnhURL: `https://via.placeholder.com/150?text=${encodeURIComponent(newTenMonAn.substring(0, 15))}`,
+    });
+    additionalDishesCount++;
+  }
+  await knex('MONAN').insert(monAnData);
+
+  // 3. Seed bảng THUCDON (10 thực đơn)
+  const thucDonEntries = [];
+  const thucDonMonAnEntries = [];
+
+  for (let i = 1; i <= 10; i++) {
+    const tenThucDon = `Thực đơn Đặc Biệt ${i}`;
+    const ghiChuThucDon = `Set menu bao gồm các món ăn chọn lọc, phù hợp cho ${Math.floor(Math.random() * 4 + 4)} người.`;
+
+    const monAnTrongThucDon = [];
+    let tongGiaThucDon = 0;
+    const soLuongMon = Math.floor(Math.random() * 6) + 5; // 5-10 món mỗi thực đơn
+
+    // Chọn món ngẫu nhiên, đảm bảo không trùng lặp trong một thực đơn
+    const availableMonAnIds = [...monAnData.map((m) => m.MaMonAn)];
+    for (let j = 0; j < soLuongMon; j++) {
+      if (availableMonAnIds.length === 0) break;
+      const randomIndex = Math.floor(Math.random() * availableMonAnIds.length);
+      const selectedMonAnId = availableMonAnIds.splice(randomIndex, 1)[0];
+      const monAnDetail = monAnData.find((m) => m.MaMonAn === selectedMonAnId);
+
+      if (monAnDetail) {
+        monAnTrongThucDon.push({
+          MaThucDon: i,
+          MaMonAn: monAnDetail.MaMonAn,
+          DonGiaThoiDiemDat: monAnDetail.DonGia, // Lấy giá hiện tại của món ăn làm giá tại thời điểm đặt
+        });
+        tongGiaThucDon += monAnDetail.DonGia;
+      }
+    }
+
+    thucDonEntries.push({
+      MaThucDon: i,
+      TenThucDon: tenThucDon,
+      DonGiaThoiDiemDat: tongGiaThucDon,
+      DonGiaHienTai: tongGiaThucDon, // Ban đầu có thể giống nhau
+      GhiChu: ghiChuThucDon,
+    });
+    thucDonMonAnEntries.push(...monAnTrongThucDon);
+  }
+  await knex('THUCDON').insert(thucDonEntries);
+
+  // 4. Seed bảng THUCDON_MONAN
+  await knex('THUCDON_MONAN').insert(thucDonMonAnEntries);
+
+  // 5. Đặt lại sequence cho các bảng (Quan trọng cho PostgreSQL)
+  // Tên sequence có thể khác nhau tùy theo cách Knex tạo bảng, thường là TênBảng_TênCộtPK_seq
+  await knex.raw(
+    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT MAX("MaLoaiMonAn") FROM "LOAIMONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT MAX("MaMonAn") FROM "MONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT MAX("MaThucDon") FROM "THUCDON"))`
+  );
+  // Bảng THUCDON_MONAN không có cột SERIAL nên không cần reset sequence cho nó.
 }

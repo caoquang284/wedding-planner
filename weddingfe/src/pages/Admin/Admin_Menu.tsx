@@ -1,13 +1,23 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import {
+  getAllMonAn,
+  getMonAnById,
+  createMonAn,
+  updateMonAn,
+  deleteMonAn,
+  getAllLoaiMonAn,
+  createLoaiMonAn,
+  updateLoaiMonAn,
+  deleteLoaiMonAn,
+} from "../../../Api/monAnApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
 // Định nghĩa interface
 interface Dish {
-  id: number | null;
-  name: string;
-  categoryId: number | null;
-  price: number;
-  note: string;
-  imageUrl?: string;
+  MaMonAn: number | null;
+  TenMonAn: string;
+  MaLoaiMonAn: number | null;
+  DonGia: number;
+  GhiChu: string;
+  AnhURL?: string;
 }
 
 interface Category {
@@ -61,54 +71,33 @@ function Menus() {
     },
   ]);
 
-  const [dishes, setDishes] = useState<Dish[]>([
-    {
-      id: 1,
-      name: "Soup bò củ quả xào",
-      categoryId: 1,
-      price: 150000,
-      note: "Hương vị đậm đà, bổ dưỡng",
-      imageUrl: "https://via.placeholder.com/100?text=Soup+Bo",
-    },
-    {
-      id: 2,
-      name: "Gỏi cuốn tôm thịt",
-      categoryId: 1,
-      price: 80000,
-      note: "Tôm tươi, rau sạch",
-      imageUrl: "https://via.placeholder.com/100?text=Goi+Cuon",
-    },
-    {
-      id: 3,
-      name: "Cà ri gà + Bánh mì",
-      categoryId: 2,
-      price: 200000,
-      note: "Cà ri thơm lừng, bánh mì giòn",
-      imageUrl: "https://via.placeholder.com/100?text=Ca+Ri+Ga",
-    },
-    {
-      id: 4,
-      name: "Soup củ nâu bắp",
-      categoryId: 1,
-      price: 120000,
-      note: "Thanh nhẹ, tốt cho sức khỏe",
-      imageUrl: "https://via.placeholder.com/100?text=Soup+Cu",
-    },
-    {
-      id: 5,
-      name: "Chả giò hongkong",
-      categoryId: 3,
-      price: 100000,
-      note: "Giòn rụm, nhân tôm thịt",
-      imageUrl: "https://via.placeholder.com/100?text=Cha+Gio",
-    },
-  ]);
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const [categories, setCategories] = useState<Category[]>([
-    { id: 1, name: "Khai vị" },
-    { id: 2, name: "Chính" },
-    { id: 3, name: "Tráng miệng" },
-  ]);
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch dishes
+        const dishesData = await getAllMonAn();
+        setDishes(dishesData);
+
+        // Fetch categories
+        const categoriesData = await getAllLoaiMonAn();
+        setCategories(
+          categoriesData.map((cat: any) => ({
+            id: cat.MaLoaiMonAn,
+            name: cat.TenLoaiMonAn,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Có lỗi xảy ra khi tải dữ liệu!");
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // State cho modal và form
   const [isMenuModalOpen, setIsMenuModalOpen] = useState<boolean>(false);
@@ -185,12 +174,12 @@ function Menus() {
 
   const openEditDishModal = (dish: Dish) => {
     setDishFormData({
-      id: dish.id,
-      name: dish.name,
-      categoryId: dish.categoryId,
-      price: dish.price.toString(),
-      note: dish.note,
-      imageUrl: dish.imageUrl || "",
+      id: dish.MaMonAn,
+      name: dish.TenMonAn,
+      categoryId: dish.MaLoaiMonAn,
+      price: dish.DonGia.toString(),
+      note: dish.GhiChu,
+      imageUrl: dish.AnhURL || "",
     });
     setIsDishEditMode(true);
     setIsDishModalOpen(true);
@@ -252,8 +241,8 @@ function Menus() {
   const handleMenuSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const priceNumber = menuFormData.dishIds.reduce((total, dishId) => {
-      const dish = dishes.find((d) => d.id === dishId);
-      return total + (dish ? dish.price : 0);
+      const dish = dishes.find((d) => d.MaMonAn === dishId);
+      return total + (dish ? dish.DonGia : 0);
     }, 0);
     if (menuFormData.dishIds.length === 0) {
       alert("Vui lòng chọn ít nhất một món ăn!");
@@ -295,45 +284,45 @@ function Menus() {
   };
 
   // Thêm hoặc sửa món ăn
-  const handleDishSubmit = (e: React.FormEvent) => {
+  const handleDishSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNumber = Number(dishFormData.price);
     if (isNaN(priceNumber) || priceNumber <= 0) {
       alert("Giá phải là số dương");
       return;
     }
-    const action = () => {
-      if (isDishEditMode) {
-        setDishes((prev) =>
-          prev.map((dish) =>
-            dish.id === dishFormData.id
-              ? {
-                  ...dish,
-                  name: dishFormData.name,
-                  categoryId: dishFormData.categoryId,
-                  price: priceNumber,
-                  note: dishFormData.note,
-                  imageUrl: dishFormData.imageUrl || undefined,
-                }
-              : dish
-          )
-        );
-      } else {
-        const newDish: Dish = {
-          id:
-            dishes.length > 0
-              ? Math.max(...dishes.map((d) => d.id || 0)) + 1
-              : 1,
-          name: dishFormData.name,
-          categoryId: dishFormData.categoryId,
-          price: priceNumber,
-          note: dishFormData.note,
-          imageUrl: dishFormData.imageUrl || undefined,
+
+    const action = async () => {
+      try {
+        const dishData = {
+          MaMonAn: isDishEditMode ? dishFormData.id : null,
+          TenMonAn: dishFormData.name,
+          MaLoaiMonAn: dishFormData.categoryId,
+          DonGia: priceNumber,
+          GhiChu: dishFormData.note,
+          AnhURL: dishFormData.imageUrl || undefined,
         };
-        setDishes((prev) => [...prev, newDish]);
+
+        if (isDishEditMode && dishFormData.id) {
+          await updateMonAn(dishFormData.id, dishData);
+          setDishes((prev) =>
+            prev.map((dish) =>
+              dish.MaMonAn === dishFormData.id
+                ? { ...dishData, MaMonAn: dish.MaMonAn }
+                : dish
+            )
+          );
+        } else {
+          const newDish = await createMonAn(dishData);
+          setDishes((prev) => [...prev, newDish]);
+        }
+        closeDishModal();
+      } catch (error) {
+        console.error("Error saving dish:", error);
+        alert("Có lỗi xảy ra khi lưu món ăn!");
       }
-      closeDishModal();
     };
+
     setConfirmationModal({
       isOpen: true,
       message: `Bạn có chắc chắn muốn ${
@@ -344,29 +333,38 @@ function Menus() {
   };
 
   // Thêm hoặc sửa loại món ăn
-  const handleCategorySubmit = (e: React.FormEvent) => {
+  const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const action = () => {
-      if (isCategoryEditMode) {
-        setCategories((prev) =>
-          prev.map((category) =>
-            category.id === categoryFormData.id
-              ? { ...category, name: categoryFormData.name }
-              : category
-          )
-        );
-      } else {
-        const newCategory: Category = {
-          id:
-            categories.length > 0
-              ? Math.max(...categories.map((c) => c.id || 0)) + 1
-              : 1,
-          name: categoryFormData.name,
+    const action = async () => {
+      try {
+        const categoryData = {
+          MaLoaiMonAn: isCategoryEditMode ? categoryFormData.id : null,
+          TenLoaiMonAn: categoryFormData.name,
         };
-        setCategories((prev) => [...prev, newCategory]);
+
+        if (isCategoryEditMode && categoryFormData.id) {
+          await updateLoaiMonAn(categoryFormData.id, categoryData);
+          setCategories((prev) =>
+            prev.map((category) =>
+              category.id === categoryFormData.id
+                ? { ...category, name: categoryFormData.name }
+                : category
+            )
+          );
+        } else {
+          const newCategory = await createLoaiMonAn(categoryData);
+          setCategories((prev) => [
+            ...prev,
+            { id: newCategory.MaLoaiMonAn, name: newCategory.TenLoaiMonAn },
+          ]);
+        }
+        closeCategoryModal();
+      } catch (error) {
+        console.error("Error saving category:", error);
+        alert("Có lỗi xảy ra khi lưu loại món ăn!");
       }
-      closeCategoryModal();
     };
+
     setConfirmationModal({
       isOpen: true,
       message: `Bạn có chắc chắn muốn ${
@@ -390,15 +388,24 @@ function Menus() {
 
   // Xóa món ăn
   const handleDeleteDish = (id: number | null) => {
-    const action = () => {
-      setDishes((prev) => prev.filter((dish) => dish.id !== id));
-      setMenus((prev) =>
-        prev.map((menu) => ({
-          ...menu,
-          dishIds: menu.dishIds.filter((dishId) => dishId !== id),
-        }))
-      );
+    const action = async () => {
+      try {
+        if (id) {
+          await deleteMonAn(id);
+          setDishes((prev) => prev.filter((dish) => dish.MaMonAn !== id));
+          setMenus((prev) =>
+            prev.map((menu) => ({
+              ...menu,
+              dishIds: menu.dishIds.filter((dishId) => dishId !== id),
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error deleting dish:", error);
+        alert("Có lỗi xảy ra khi xóa món ăn!");
+      }
     };
+
     setConfirmationModal({
       isOpen: true,
       message: "Bạn có chắc chắn muốn xóa món ăn này không?",
@@ -408,14 +415,26 @@ function Menus() {
 
   // Xóa loại món ăn
   const handleDeleteCategory = (id: number | null) => {
-    const isCategoryInUse = dishes.some((dish) => dish.categoryId === id);
+    const isCategoryInUse = dishes.some((dish) => dish.MaLoaiMonAn === id);
     if (isCategoryInUse) {
       alert("Không thể xóa loại món ăn đang được sử dụng!");
       return;
     }
-    const action = () => {
-      setCategories((prev) => prev.filter((category) => category.id !== id));
+
+    const action = async () => {
+      try {
+        if (id) {
+          await deleteLoaiMonAn(id);
+          setCategories((prev) =>
+            prev.filter((category) => category.id !== id)
+          );
+        }
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        alert("Có lỗi xảy ra khi xóa loại món ăn!");
+      }
     };
+
     setConfirmationModal({
       isOpen: true,
       message: "Bạn có chắc chắn muốn xóa loại món ăn này không?",
@@ -448,8 +467,8 @@ function Menus() {
 
   const filteredDishes = dishes.filter(
     (dish) =>
-      dish.name.toLowerCase().includes(dishSearchTerm.toLowerCase()) &&
-      (categoryFilter === "" || dish.categoryId === Number(categoryFilter))
+      dish.TenMonAn.toLowerCase().includes(dishSearchTerm.toLowerCase()) &&
+      (categoryFilter === "" || dish.MaLoaiMonAn === Number(categoryFilter))
   );
 
   return (
@@ -501,7 +520,9 @@ function Menus() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredMenus.map((menu) => {
                   const menuDishes = menu.dishIds
-                    .map((dishId) => dishes.find((dish) => dish.id === dishId))
+                    .map((dishId) =>
+                      dishes.find((dish) => dish.MaMonAn === dishId)
+                    )
                     .filter(Boolean);
                   return (
                     <tr key={menu.id}>
@@ -513,8 +534,9 @@ function Menus() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         <span className="line-clamp-2">
-                          {menuDishes.map((dish) => dish?.name).join(", ") ||
-                            "Chưa có món ăn"}
+                          {menuDishes
+                            .map((dish) => dish?.TenMonAn)
+                            .join(", ") || "Chưa có món ăn"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -542,7 +564,7 @@ function Menus() {
           <div className="block sm:hidden space-y-4">
             {filteredMenus.map((menu) => {
               const menuDishes = menu.dishIds
-                .map((dishId) => dishes.find((dish) => dish.id === dishId))
+                .map((dishId) => dishes.find((dish) => dish.MaMonAn === dishId))
                 .filter(Boolean);
               return (
                 <div
@@ -559,7 +581,7 @@ function Menus() {
                       </p>
                       <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                         Món ăn:{" "}
-                        {menuDishes.map((dish) => dish?.name).join(", ") ||
+                        {menuDishes.map((dish) => dish?.TenMonAn).join(", ") ||
                           "Chưa có món ăn"}
                       </p>
                     </div>
@@ -658,27 +680,27 @@ function Menus() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredDishes.map((dish) => {
                   const category = categories.find(
-                    (cat) => cat.id === dish.categoryId
+                    (cat) => cat.id === dish.MaLoaiMonAn
                   );
                   return (
-                    <tr key={dish.id}>
+                    <tr key={dish.MaMonAn}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {dish.name}
+                        {dish.TenMonAn}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {category ? category.name : "Chưa phân loại"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {dish.price.toLocaleString("vi-VN")}
+                        {dish.DonGia.toLocaleString("vi-VN")}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {dish.note || "Không có ghi chú"}
+                        {dish.GhiChu || "Không có ghi chú"}
                       </td>
                       <td className="px-6 py-4">
-                        {dish.imageUrl ? (
+                        {dish.AnhURL ? (
                           <img
-                            src={dish.imageUrl}
-                            alt={dish.name}
+                            src={dish.AnhURL}
+                            alt={dish.TenMonAn}
                             className="w-16 h-16 object-cover rounded-lg"
                           />
                         ) : (
@@ -693,7 +715,7 @@ function Menus() {
                           Sửa
                         </button>
                         <button
-                          onClick={() => handleDeleteDish(dish.id)}
+                          onClick={() => handleDeleteDish(dish.MaMonAn)}
                           className="text-red-600 hover:text-red-800"
                         >
                           Xóa
@@ -710,31 +732,31 @@ function Menus() {
           <div className="block sm:hidden space-y-4">
             {filteredDishes.map((dish) => {
               const category = categories.find(
-                (cat) => cat.id === dish.categoryId
+                (cat) => cat.id === dish.MaLoaiMonAn
               );
               return (
                 <div
-                  key={dish.id}
+                  key={dish.MaMonAn}
                   className="bg-white shadow-md rounded-lg p-4"
                 >
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">
-                        {dish.name}
+                        {dish.TenMonAn}
                       </h3>
                       <p className="text-sm text-gray-500">
                         Loại: {category ? category.name : "Chưa phân loại"}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Giá: {dish.price.toLocaleString("vi-VN")} VNĐ
+                        Giá: {dish.DonGia.toLocaleString("vi-VN")} VNĐ
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
-                        Ghi chú: {dish.note || "Không có ghi chú"}
+                        Ghi chú: {dish.GhiChu || "Không có ghi chú"}
                       </p>
-                      {dish.imageUrl && (
+                      {dish.AnhURL && (
                         <img
-                          src={dish.imageUrl}
-                          alt={dish.name}
+                          src={dish.AnhURL}
+                          alt={dish.TenMonAn}
                           className="w-16 h-16 object-cover rounded-lg mt-2"
                         />
                       )}
@@ -747,7 +769,7 @@ function Menus() {
                         Sửa
                       </button>
                       <button
-                        onClick={() => handleDeleteDish(dish.id)}
+                        onClick={() => handleDeleteDish(dish.MaMonAn)}
                         className="text-red-600 hover:text-red-800 text-sm"
                       >
                         Xóa
@@ -790,8 +812,8 @@ function Menus() {
                 <p className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 text-gray-700">
                   {menuFormData.dishIds
                     .reduce((total, dishId) => {
-                      const dish = dishes.find((d) => d.id === dishId);
-                      return total + (dish ? dish.price : 0);
+                      const dish = dishes.find((d) => d.MaMonAn === dishId);
+                      return total + (dish ? dish.DonGia : 0);
                     }, 0)
                     .toLocaleString("vi-VN")}{" "}
                   VNĐ
@@ -803,14 +825,15 @@ function Menus() {
                 </label>
                 <div className="mt-1">
                   {menuFormData.dishIds.map((dishId) => {
-                    const dish = dishes.find((d) => d.id === dishId);
+                    const dish = dishes.find((d) => d.MaMonAn === dishId);
                     return dish ? (
                       <div
                         key={dishId}
                         className="flex items-center gap-2 mb-2"
                       >
                         <span>
-                          {dish.name} ({dish.price.toLocaleString("vi-VN")} VNĐ)
+                          {dish.TenMonAn} ({dish.DonGia.toLocaleString("vi-VN")}{" "}
+                          VNĐ)
                         </span>
                         <button
                           type="button"
@@ -835,11 +858,13 @@ function Menus() {
                     <option value="">Chọn món ăn để thêm</option>
                     {dishes
                       .filter(
-                        (dish) => !menuFormData.dishIds.includes(dish.id || 0)
+                        (dish) =>
+                          !menuFormData.dishIds.includes(dish.MaMonAn || 0)
                       )
                       .map((dish) => (
-                        <option key={dish.id} value={dish.id || ""}>
-                          {dish.name} ({dish.price.toLocaleString("vi-VN")} VNĐ)
+                        <option key={dish.MaMonAn} value={dish.MaMonAn || ""}>
+                          {dish.TenMonAn} ({dish.DonGia.toLocaleString("vi-VN")}{" "}
+                          VNĐ)
                         </option>
                       ))}
                   </select>
