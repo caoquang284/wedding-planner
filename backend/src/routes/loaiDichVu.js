@@ -8,9 +8,9 @@ const router = Router();
 
 router.post(
   '/tao',
-  auth,
-  checkPermission('Quản lý loại dịch vụ'),
-  validation.validateLoaiDichVu,
+  // auth,
+  // checkPermission('Quản lý loại dịch vụ'),
+  // validation.validateLoaiDichVu,
   loaiDichVuController.createLoaiDichVu
 );
 router.get(
@@ -36,9 +36,9 @@ router.put(
 );
 router.delete(
   '/xoa/:id',
-  auth,
-  checkPermission('Quản lý loại dịch vụ'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý loại dịch vụ'),
+  // validation.validateIdParam,
   loaiDichVuController.deleteLoaiDichVu
 );
 

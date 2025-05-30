@@ -3,15 +3,13 @@ import ThucDon from '../models/ThucDon.js';
 
 const createThucDon = async (req, res) => {
   try {
-    const { tenThucDon, donGiaThoiDiemDat, donGiaHienTai, ghiChu, coverImg } =
-      req.body;
+    const { tenThucDon, donGiaThoiDiemDat, donGiaHienTai, ghiChu } = req.body;
 
     const thucDon = await ThucDon.create({
       TenThucDon: tenThucDon,
       DonGiaThoiDiemDat: donGiaThoiDiemDat,
       DonGiaHienTai: donGiaHienTai,
       GhiChu: ghiChu || null,
-      Cover_Img: coverImg || null,
     });
 
     return res.status(201).json(thucDon);
@@ -24,7 +22,7 @@ const createThucDon = async (req, res) => {
 
 const getAllThucDon = async (req, res) => {
   try {
-    const thucDonList = await ThucDon.findAllWithMonAnCount();
+    const thucDonList = await ThucDon.findAllWithMonAnNames();
     return res.status(200).json(thucDonList);
   } catch (error) {
     return res
@@ -198,11 +196,9 @@ const updateMonAnInThucDon = async (req, res) => {
       data: updatedThucDonMonAn,
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        error: 'Lỗi khi cập nhật món ăn trong thực đơn: ' + error.message,
-      });
+    return res.status(500).json({
+      error: 'Lỗi khi cập nhật món ăn trong thực đơn: ' + error.message,
+    });
   }
 };
 

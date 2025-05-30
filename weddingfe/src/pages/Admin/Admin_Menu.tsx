@@ -10,6 +10,14 @@ import {
   updateLoaiMonAn,
   deleteLoaiMonAn,
 } from "../../../Api/monAnApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
+
+import {
+  getAllThucDon,
+  getThucDonById,
+  createThucDon,
+  updateThucDon,
+  deleteThucDon,
+} from "../../../Api/thucDonApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
 // Định nghĩa interface
 interface Dish {
   MaMonAn: number | null;
@@ -30,6 +38,8 @@ interface Menu {
   name: string;
   price: number;
   dishIds: number[];
+  dishNames?: string[];
+  note?: string;
 }
 
 interface MenuFormData {
@@ -43,7 +53,7 @@ interface DishFormData {
   id: number | null;
   name: string;
   categoryId: number | null;
-  price: string;
+  price: number | null;
   note: string;
   imageUrl: string;
 }
@@ -56,21 +66,7 @@ interface ConfirmationModal {
 
 function Menus() {
   // State cho danh sách thực đơn, món ăn và loại món ăn
-  const [menus, setMenus] = useState<Menu[]>([
-    {
-      id: 1,
-      name: "Menu 1",
-      price: 1290000,
-      dishIds: [1, 2, 3],
-    },
-    {
-      id: 2,
-      name: "Menu 2",
-      price: 1330000,
-      dishIds: [4, 5],
-    },
-  ]);
-
+  const [menus, setMenus] = useState<Menu[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -78,6 +74,24 @@ function Menus() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch menus
+        const menusData = await getAllThucDon();
+        const menusWithDetails = await Promise.all(
+          menusData.map(async (menu: any) => {
+            const menuDetail = await getThucDonById(menu.MaThucDon);
+            return {
+              id: menu.MaThucDon,
+              name: menu.TenThucDon,
+              price: menu.DonGiaHienTai,
+              dishIds: menu.MonAnList?.map((monAn: any) => monAn.MaMonAn) || [],
+              dishNames:
+                menuDetail.MonAnList?.map((monAn: any) => monAn.TenMonAn) || [],
+              note: menuDetail.GhiChu,
+            };
+          })
+        );
+        setMenus(menusWithDetails);
+
         // Fetch dishes
         const dishesData = await getAllMonAn();
         setDishes(dishesData);
@@ -114,7 +128,7 @@ function Menus() {
     id: null,
     name: "",
     categoryId: null,
-    price: "",
+    price: null,
     note: "",
     imageUrl: "",
   });
@@ -160,11 +174,16 @@ function Menus() {
 
   // Mở modal để thêm/sửa món ăn
   const openAddDishModal = () => {
+    if (categories.length === 0) {
+      alert("Vui lòng thêm ít nhất một loại món ăn trước khi thêm món ăn");
+      return;
+    }
+
     setDishFormData({
       id: null,
       name: "",
-      categoryId: null,
-      price: "",
+      categoryId: categories[0]?.id || null, // Đặt loại món ăn mặc định là loại đầu tiên
+      price: null,
       note: "",
       imageUrl: "",
     });
@@ -177,7 +196,7 @@ function Menus() {
       id: dish.MaMonAn,
       name: dish.TenMonAn,
       categoryId: dish.MaLoaiMonAn,
-      price: dish.DonGia.toString(),
+      price: dish.DonGia,
       note: dish.GhiChu,
       imageUrl: dish.AnhURL || "",
     });
@@ -238,7 +257,7 @@ function Menus() {
   };
 
   // Thêm hoặc sửa thực đơn
-  const handleMenuSubmit = (e: React.FormEvent) => {
+  const handleMenuSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceNumber = menuFormData.dishIds.reduce((total, dishId) => {
       const dish = dishes.find((d) => d.MaMonAn === dishId);
@@ -248,32 +267,67 @@ function Menus() {
       alert("Vui lòng chọn ít nhất một món ăn!");
       return;
     }
-    const action = () => {
-      if (isMenuEditMode) {
-        setMenus((prev) =>
-          prev.map((menu) =>
-            menu.id === menuFormData.id
-              ? {
-                  ...menu,
-                  name: menuFormData.name,
-                  price: priceNumber,
-                  dishIds: menuFormData.dishIds,
-                }
-              : menu
-          )
+
+    const action = async () => {
+      try {
+        if (isMenuEditMode && menuFormData.id) {
+          const updatedMenu = await updateThucDon(menuFormData.id, {
+            tenThucDon: menuFormData.name,
+            donGiaThoiDiemDat: priceNumber,
+            donGiaHienTai: priceNumber,
+            monAnIds: menuFormData.dishIds,
+          });
+          const updatedMenuDetail = await getThucDonById(menuFormData.id);
+          setMenus((prev) =>
+            prev.map((menu) =>
+              menu.id === menuFormData.id
+                ? {
+                    ...menu,
+                    name: updatedMenu.TenThucDon,
+                    price: updatedMenu.DonGiaHienTai,
+                    dishIds: menuFormData.dishIds,
+                    dishNames:
+                      updatedMenuDetail.MonAnList?.map(
+                        (monAn: any) => monAn.TenMonAn
+                      ) || [],
+                    note: updatedMenuDetail.GhiChu,
+                  }
+                : menu
+            )
+          );
+        } else {
+          const newMenu = await createThucDon({
+            tenThucDon: menuFormData.name,
+            donGiaThoiDiemDat: priceNumber,
+            donGiaHienTai: priceNumber,
+            monAnIds: menuFormData.dishIds,
+          });
+          const newMenuDetail = await getThucDonById(newMenu.MaThucDon);
+          setMenus((prev) => [
+            ...prev,
+            {
+              id: newMenu.MaThucDon,
+              name: newMenu.TenThucDon,
+              price: newMenu.DonGiaHienTai,
+              dishIds: menuFormData.dishIds,
+              dishNames:
+                newMenuDetail.MonAnList?.map((monAn: any) => monAn.TenMonAn) ||
+                [],
+              note: newMenuDetail.GhiChu,
+            },
+          ]);
+        }
+        closeMenuModal();
+      } catch (error: any) {
+        console.error("Error saving menu:", error);
+        console.error("Error response:", error.response?.data);
+        alert(
+          "Lỗi khi lưu thực đơn: " +
+            (error.response?.data?.error || error.message)
         );
-      } else {
-        const newMenu: Menu = {
-          id:
-            menus.length > 0 ? Math.max(...menus.map((m) => m.id || 0)) + 1 : 1,
-          name: menuFormData.name,
-          price: priceNumber,
-          dishIds: menuFormData.dishIds,
-        };
-        setMenus((prev) => [...prev, newMenu]);
       }
-      closeMenuModal();
     };
+
     setConfirmationModal({
       isOpen: true,
       message: `Bạn có chắc chắn muốn ${
@@ -292,34 +346,44 @@ function Menus() {
       return;
     }
 
+    if (!dishFormData.categoryId) {
+      alert("Vui lòng chọn loại món ăn");
+      return;
+    }
+
     const action = async () => {
       try {
-        const dishData = {
-          MaMonAn: isDishEditMode ? dishFormData.id : null,
-          TenMonAn: dishFormData.name,
-          MaLoaiMonAn: dishFormData.categoryId,
-          DonGia: priceNumber,
-          GhiChu: dishFormData.note,
-          AnhURL: dishFormData.imageUrl || undefined,
-        };
-
         if (isDishEditMode && dishFormData.id) {
-          await updateMonAn(dishFormData.id, dishData);
+          const updatedDish = await updateMonAn(dishFormData.id, {
+            tenMonAn: dishFormData.name,
+            maLoaiMonAn: dishFormData.categoryId,
+            donGia: priceNumber,
+            ghiChu: dishFormData.note || "",
+            anhURL: dishFormData.imageUrl || "",
+          });
           setDishes((prev) =>
             prev.map((dish) =>
-              dish.MaMonAn === dishFormData.id
-                ? { ...dishData, MaMonAn: dish.MaMonAn }
-                : dish
+              dish.MaMonAn === dishFormData.id ? updatedDish : dish
             )
           );
         } else {
-          const newDish = await createMonAn(dishData);
+          const newDish = await createMonAn({
+            tenMonAn: dishFormData.name,
+            maLoaiMonAn: dishFormData.categoryId,
+            donGia: priceNumber,
+            ghiChu: dishFormData.note || "",
+            anhURL: dishFormData.imageUrl || "",
+          });
           setDishes((prev) => [...prev, newDish]);
         }
         closeDishModal();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving dish:", error);
-        alert("Có lỗi xảy ra khi lưu món ăn!");
+        console.error("Error response:", error.response?.data);
+        alert(
+          "Lỗi khi lưu món ăn: " +
+            (error.response?.data?.error || error.message)
+        );
       }
     };
 
@@ -335,33 +399,44 @@ function Menus() {
   // Thêm hoặc sửa loại món ăn
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (categoryFormData.name.length < 2) {
+      alert("Tên loại món ăn phải dài ít nhất 2 ký tự");
+      return;
+    }
+
     const action = async () => {
       try {
-        const categoryData = {
-          MaLoaiMonAn: isCategoryEditMode ? categoryFormData.id : null,
-          TenLoaiMonAn: categoryFormData.name,
-        };
-
         if (isCategoryEditMode && categoryFormData.id) {
-          await updateLoaiMonAn(categoryFormData.id, categoryData);
+          const updatedCategory = await updateLoaiMonAn(categoryFormData.id, {
+            tenLoaiMonAn: categoryFormData.name,
+          });
           setCategories((prev) =>
             prev.map((category) =>
               category.id === categoryFormData.id
-                ? { ...category, name: categoryFormData.name }
+                ? {
+                    id: updatedCategory.MaLoaiMonAn,
+                    name: updatedCategory.TenLoaiMonAn,
+                  }
                 : category
             )
           );
         } else {
-          const newCategory = await createLoaiMonAn(categoryData);
+          const newCategory = await createLoaiMonAn({
+            tenLoaiMonAn: categoryFormData.name,
+          });
           setCategories((prev) => [
             ...prev,
             { id: newCategory.MaLoaiMonAn, name: newCategory.TenLoaiMonAn },
           ]);
         }
         closeCategoryModal();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving category:", error);
-        alert("Có lỗi xảy ra khi lưu loại món ăn!");
+        console.error("Error response:", error.response?.data);
+        alert(
+          "Lỗi khi lưu loại món ăn: " +
+            (error.response?.data?.error || error.message)
+        );
       }
     };
 
@@ -376,9 +451,18 @@ function Menus() {
 
   // Xóa thực đơn
   const handleDeleteMenu = (id: number | null) => {
-    const action = () => {
-      setMenus((prev) => prev.filter((menu) => menu.id !== id));
+    const action = async () => {
+      try {
+        if (id) {
+          await deleteThucDon(id);
+          setMenus((prev) => prev.filter((menu) => menu.id !== id));
+        }
+      } catch (error) {
+        console.error("Error deleting menu:", error);
+        alert("Có lỗi xảy ra khi xóa thực đơn!");
+      }
     };
+
     setConfirmationModal({
       isOpen: true,
       message: "Bạn có chắc chắn muốn xóa thực đơn này không?",
@@ -512,97 +596,89 @@ function Menus() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Danh sách món ăn
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ghi chú
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Hành động
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMenus.map((menu) => {
-                  const menuDishes = menu.dishIds
-                    .map((dishId) =>
-                      dishes.find((dish) => dish.MaMonAn === dishId)
-                    )
-                    .filter(Boolean);
-                  return (
-                    <tr key={menu.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {menu.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {menu.price.toLocaleString("vi-VN")}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        <span className="line-clamp-2">
-                          {menuDishes
-                            .map((dish) => dish?.TenMonAn)
-                            .join(", ") || "Chưa có món ăn"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => openEditMenuModal(menu)}
-                          className="text-blue-600 hover:text-blue-800 mr-4"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMenu(menu.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Xóa
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filteredMenus.map((menu) => (
+                  <tr key={menu.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {menu.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {Number(menu.price).toLocaleString("vi-VN")}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <span className="line-clamp-2">
+                        {menu.dishNames?.join(", ") || "Chưa có món ăn"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {menu.note || "Không có ghi chú"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => openEditMenuModal(menu)}
+                        className="text-blue-600 hover:text-blue-800 mr-4"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMenu(menu.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
           {/* Hiển thị dạng card trên mobile */}
           <div className="block sm:hidden space-y-4">
-            {filteredMenus.map((menu) => {
-              const menuDishes = menu.dishIds
-                .map((dishId) => dishes.find((dish) => dish.MaMonAn === dishId))
-                .filter(Boolean);
-              return (
-                <div
-                  key={menu.id}
-                  className="bg-white shadow-md rounded-lg p-4"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {menu.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Giá: {menu.price.toLocaleString("vi-VN")} VNĐ
+            {filteredMenus.map((menu) => (
+              <div key={menu.id} className="bg-white shadow-md rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {menu.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Giá: {Number(menu.price).toLocaleString("vi-VN")} VNĐ
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      Món ăn: {menu.dishNames?.join(", ") || "Chưa có món ăn"}
+                    </p>
+                    {menu.note && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Ghi chú: {menu.note}
                       </p>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                        Món ăn:{" "}
-                        {menuDishes.map((dish) => dish?.TenMonAn).join(", ") ||
-                          "Chưa có món ăn"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openEditMenuModal(menu)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMenu(menu.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Xóa
-                      </button>
-                    </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditMenuModal(menu)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMenu(menu.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Xóa
+                    </button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -914,15 +990,16 @@ function Menus() {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Loại món ăn
+                  Loại món ăn <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="categoryId"
                   value={dishFormData.categoryId || ""}
                   onChange={handleDishInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50"
+                  required
                 >
-                  <option value="">Chưa phân loại</option>
+                  <option value="">Chọn loại món ăn</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id || ""}>
                       {category.name}
@@ -937,7 +1014,7 @@ function Menus() {
                 <input
                   type="number"
                   name="price"
-                  value={dishFormData.price}
+                  value={dishFormData.price?.toString() || ""}
                   onChange={handleDishInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50"
                   required
@@ -988,10 +1065,7 @@ function Menus() {
 
         {/* Modal thêm/sửa loại món ăn */}
         {isCategoryModalOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                  transform -translate-x-1/2 -translate-y-1/2"
-          >
+          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 rounded-lg p-6 w-full max-w-sm shadow-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               {isCategoryEditMode ? "Sửa loại món ăn" : "Thêm loại món ăn"}
             </h3>
@@ -1004,9 +1078,15 @@ function Menus() {
                   type="text"
                   name="name"
                   value={categoryFormData.name}
-                  onChange={handleCategoryInputChange}
-                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50"
+                  onChange={(e) =>
+                    setCategoryFormData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                   required
+                  minLength={2}
                 />
               </div>
               <div className="flex justify-end space-x-3">
@@ -1019,7 +1099,7 @@ function Menus() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600"
+                  className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
                 >
                   {isCategoryEditMode ? "Cập nhật" : "Thêm"}
                 </button>

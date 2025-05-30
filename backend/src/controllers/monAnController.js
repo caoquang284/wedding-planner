@@ -3,7 +3,7 @@ import MonAn from '../models/MonAn.js';
 
 const createMonAn = async (req, res) => {
   try {
-    const { tenMonAn, maLoaiMonAn, donGia, ghiChu } = req.body;
+    const { tenMonAn, maLoaiMonAn, donGia, ghiChu, anhURL } = req.body;
     const loaiMonAnExists = await MonAn.isLoaiMonAnExists(maLoaiMonAn);
     if (!loaiMonAnExists) {
       return res.status(400).json({ error: 'Loại món ăn không tồn tại' });
@@ -13,6 +13,7 @@ const createMonAn = async (req, res) => {
       MaLoaiMonAn: maLoaiMonAn,
       DonGia: donGia,
       GhiChu: ghiChu || null,
+      AnhURL: anhURL || null,
     });
     const monAnWithDetails = await MonAn.findById(monAn.MaMonAn);
     return res.status(201).json(monAnWithDetails);

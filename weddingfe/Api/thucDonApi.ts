@@ -52,6 +52,7 @@ export interface CreateThucDonData {
   donGiaHienTai: number;
   ghiChu?: string;
   coverImg?: string;
+  monAnIds: number[];
 }
 
 export interface AddMonAnToThucDonData {

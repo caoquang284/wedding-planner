@@ -8,9 +8,9 @@ const router = Router();
 
 router.post(
   '/tao',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateMonAn,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateMonAn,
   monAnController.createMonAn
 );
 router.get(
@@ -36,9 +36,9 @@ router.put(
 );
 router.delete(
   '/xoa/:id',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
   monAnController.deleteMonAn
 );
 

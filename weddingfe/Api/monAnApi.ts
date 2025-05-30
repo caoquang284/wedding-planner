@@ -1,8 +1,8 @@
 import axios from "axios";
 
 // Định nghĩa base URL của backend
-const API_URL = "http://localhost:3000/api/monan";
-const LOAI_MON_AN_URL = "http://localhost:3000/api/loaimonan";
+const API_URL = "http://localhost:3000/api/mon-an";
+const LOAI_MON_AN_URL = "http://localhost:3000/api/loai-mon-an";
 
 // Lấy token từ localStorage hoặc nơi bạn lưu trữ token
 const getToken = () => localStorage.getItem("token") || "";

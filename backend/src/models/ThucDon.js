@@ -35,13 +35,44 @@ const ThucDon = {
   },
 
   findAllWithMonAnCount: async () => {
-    return await knex('THUCDON')
+    return await knex('THUCDON as td')
+      .leftJoin('THUCDON_MONAN as tdm', 'td.MaThucDon', 'tdm.MaThucDon')
+      .select('td.*', knex.raw('COUNT(tdm."MaMonAn") as "SoLuongMonAn"'))
+      .groupBy('td.MaThucDon');
+  },
+
+  findAllWithMonAnNames: async () => {
+    const rows = await knex('THUCDON as td')
+      .leftJoin('THUCDON_MONAN as tdm', 'td.MaThucDon', 'tdm.MaThucDon')
+      .leftJoin('MONAN as ma', 'tdm.MaMonAn', 'ma.MaMonAn')
       .select(
-        'THUCDON.*',
-        knex.raw('COUNT(THUCDON_MONAN.MaMonAn) as SoLuongMonAn')
-      )
-      .leftJoin('THUCDON_MONAN', 'THUCDON.MaThucDon', 'THUCDON_MONAN.MaThucDon')
-      .groupBy('THUCDON.MaThucDon');
+        'td.MaThucDon',
+        'td.TenThucDon',
+        'td.DonGiaHienTai',
+        'td.GhiChu',
+        'ma.TenMonAn'
+      );
+
+    // Gom nhóm tên món ăn theo MaThucDon
+    const grouped = {};
+
+    for (const row of rows) {
+      if (!grouped[row.MaThucDon]) {
+        grouped[row.MaThucDon] = {
+          MaThucDon: row.MaThucDon,
+          TenThucDon: row.TenThucDon,
+          DonGiaHienTai: row.DonGiaHienTai,
+          GhiChu: row.GhiChu,
+          TenMonAnList: [],
+        };
+      }
+
+      if (row.TenMonAn) {
+        grouped[row.MaThucDon].TenMonAnList.push(row.TenMonAn);
+      }
+    }
+
+    return Object.values(grouped);
   },
 
   update: async (id, data) => {
