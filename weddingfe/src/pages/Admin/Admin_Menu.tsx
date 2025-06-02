@@ -45,7 +45,7 @@ interface Menu {
 interface MenuFormData {
   id: number | null;
   name: string;
-  price: string;
+  price: number | null;
   dishIds: number[];
 }
 
@@ -121,7 +121,7 @@ function Menus() {
   const [menuFormData, setMenuFormData] = useState<MenuFormData>({
     id: null,
     name: "",
-    price: "",
+    price: null,
     dishIds: [],
   });
   const [dishFormData, setDishFormData] = useState<DishFormData>({
@@ -156,7 +156,7 @@ function Menus() {
 
   // Mở modal để thêm/sửa thực đơn
   const openAddMenuModal = () => {
-    setMenuFormData({ id: null, name: "", price: "", dishIds: [] });
+    setMenuFormData({ id: null, name: "", price: null, dishIds: [] });
     setIsMenuEditMode(false);
     setIsMenuModalOpen(true);
   };
@@ -165,7 +165,7 @@ function Menus() {
     setMenuFormData({
       id: menu.id,
       name: menu.name,
-      price: menu.price.toString(),
+      price: menu.price,
       dishIds: [...menu.dishIds],
     });
     setIsMenuEditMode(true);
@@ -261,10 +261,21 @@ function Menus() {
     e.preventDefault();
     const priceNumber = menuFormData.dishIds.reduce((total, dishId) => {
       const dish = dishes.find((d) => d.MaMonAn === dishId);
-      return total + (dish ? dish.DonGia : 0);
+      const dishPrice = dish ? Number(dish.DonGia) : 0;
+      if (isNaN(dishPrice)) {
+        console.warn(`Invalid DonGia for dishId ${dishId}:`, dish?.DonGia);
+        return total;
+      }
+      return total + dishPrice;
     }, 0);
+
     if (menuFormData.dishIds.length === 0) {
       alert("Vui lòng chọn ít nhất một món ăn!");
+      return;
+    }
+
+    if (isNaN(priceNumber) || priceNumber <= 0) {
+      alert("Tổng giá không hợp lệ!");
       return;
     }
 
@@ -889,7 +900,15 @@ function Menus() {
                   {menuFormData.dishIds
                     .reduce((total, dishId) => {
                       const dish = dishes.find((d) => d.MaMonAn === dishId);
-                      return total + (dish ? dish.DonGia : 0);
+                      const dishPrice = dish ? Number(dish.DonGia) : 0;
+                      if (isNaN(dishPrice)) {
+                        console.warn(
+                          `Invalid DonGia for dishId ${dishId}:`,
+                          dish?.DonGia
+                        );
+                        return total;
+                      }
+                      return total + dishPrice;
                     }, 0)
                     .toLocaleString("vi-VN")}{" "}
                   VNĐ

@@ -1,431 +1,467 @@
-import { useState } from "react";
-import { useEffect } from "react";
-interface WeddingBooking {
-  id: number;
-  tenchure: string;
-  tencodau: string;
-  dienthoai: string;
-  ngaydactiec: string;
-  tiendatcoc: number;
-  soluongban: number;
-  soluongbandutru: number;
-  hall?: string;
-  dishes?: number[];
-  services?: string[]; // Sửa từ service thành services
+import { useState, useEffect, useMemo } from "react";
+import { getAllThucDon, getThucDonById } from "../../../Api/thucDonApi";
+import { getAllDichVu, getAllLoaiDichVu } from "../../../Api/dichVuApi";
+import { getAllMonAn, getAllLoaiMonAn } from "../../../Api/monAnApi";
+import { getAllSanh, getAllLoaiSanh } from "../../../Api/sanhApi";
+import { getAllCa } from "../../../Api/caApi";
+import {
+  createDatTiec,
+  getAllDatTiec,
+  updateDatTiec,
+  deleteDatTiec,
+} from "../../../Api/datTiecApi";
+
+// Interface cho món ăn
+interface IMonAn {
+  MaMonAn: number;
+  TenMonAn: string;
+  MaLoaiMonAn: number;
+  TenLoaiMonAn: string;
+  DonGia: number;
+  GhiChu?: string;
+  AnhURL?: string;
 }
 
-interface Hall {
-  id: number;
-  name: string;
-  capacity: number;
-  imageUrl: string;
-  note: string;
+// Interface cho thực đơn
+interface IThucDon {
+  MaThucDon: number;
+  TenThucDon: string;
+  DonGiaHienTai: number;
+  GhiChu?: string;
+  Cover_Img?: string;
+  MonAnList?: IMonAn[];
 }
 
-interface Dish {
-  id: number;
-  name: string;
-  categoryId: number;
-  imageUrl?: string;
-  note: string; // Thêm trường mô tả
-  dongia: number; // Thêm trường đơn giá (giả định là số nguyên, đơn vị VNĐ)
+// Interface cho ca
+interface ICa {
+  MaCa: number;
+  TenCa: string;
 }
 
-interface Menu {
-  id: number;
-  name: string;
-  dishIds: number[];
+// Interface cho đặt tiệc
+interface IDatTiec {
+  MaDatTiec: number;
+  TenChuRe: string;
+  TenCoDau: string;
+  DienThoai: string;
+  NgayDaiTiec: string;
+  TienDatCoc: number;
+  SoLuongBan: number;
+  SoBanDuTru: number;
+  MaSanh: number;
+  MaCa: number;
+  MaThucDon?: number;
+  DichVus?: { MaDichVu: number; SoLuong: number; DonGiaThoiDiemDat: number }[];
+  MonAns?: number[];
 }
 
-interface Category {
-  id: number;
-  name: string;
+// Interface cho loại sảnh
+interface ILoaiSanh {
+  MaLoaiSanh: number;
+  TenLoaiSanh: string;
+  DonGiaBanToiThieu: number;
 }
 
-interface ServiceType {
-  id: number;
-  name: string;
-  imageUrl: string;
+// Interface cho sảnh
+interface ISanh {
+  MaSanh: number;
+  TenSanh: string;
+  MaLoaiSanh: number;
+  SoLuongBanToiDa: number;
+  GhiChu?: string;
+  AnhURL?: string;
 }
 
-interface Service {
-  id: number;
-  name: string;
-  typeId: number; // Liên kết với ServiceType
-  price: number; // Giá tiền
-  note: string;
+// Interface cho loại dịch vụ
+interface ILoaiDichVu {
+  MaLoaiDichVu: number;
+  TenLoaiDichVu: string;
+  HinhAnh?: string;
 }
 
-interface FormData {
-  id: number | null;
-  tenchure: string;
-  tencodau: string;
-  dienthoai: string;
-  ngaydactiec: string;
-  soluongban: string;
-  soluongbandutru: string;
-  tiendatcoc: number; // Sửa thành number
+// Interface cho dịch vụ
+interface IDichVu {
+  MaDichVu: number;
+  TenDichVu: string;
+  MaLoaiDichVu: number;
+  DonGia: number;
+  GhiChu?: string;
 }
-interface ConfirmationModal {
+
+// Interface cho form dữ liệu
+interface IFormData {
+  MaDatTiec: number | null;
+  TenChuRe: string;
+  TenCoDau: string;
+  DienThoai: string;
+  NgayDaiTiec: string;
+  SoLuongBan: string;
+  SoBanDuTru: string;
+  TienDatCoc: string;
+}
+
+// Interface cho modal xác nhận
+interface IModalXacNhan {
   isOpen: boolean;
   message: string;
   onConfirm: () => void;
 }
 
 function Admin_Wedding() {
-  // Dữ liệu mẫu
-  const [bookings, setBookings] = useState<WeddingBooking[]>([
-    {
-      id: 1,
-      tenchure: "Nguyễn Văn A",
-      tencodau: "Trần Thị B",
-      dienthoai: "0901234567",
-      ngaydactiec: "2025-06-15",
-      tiendatcoc: 5000000,
-      soluongban: 20,
-      soluongbandutru: 2,
-    },
-    {
-      id: 2,
-      tenchure: "Lê Minh C",
-      tencodau: "Phạm Thị D",
-      dienthoai: "0912345678",
-      ngaydactiec: "2025-07-20",
-      tiendatcoc: 7000000,
-      soluongban: 30,
-      soluongbandutru: 3,
-    },
-  ]);
+  // API loading states
+  const [isLoadingMenus, setIsLoadingMenus] = useState(true);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
+  const [isLoadingDishes, setIsLoadingDishes] = useState(true);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [isLoadingHalls, setIsLoadingHalls] = useState(true);
+  const [isLoadingCa, setIsLoadingCa] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [halls] = useState<Hall[]>([
-    {
-      id: 1,
-      name: "Sảnh Ngọc Trai",
-      capacity: 50,
-      imageUrl:
-        "https://crystalpalacevn.com/wp-content/uploads/2020/06/classic.jpg",
-      note: "Sảnh sang trọng với ánh sáng lung linh, phù hợp cho tiệc cưới cao cấp.",
-    },
-    {
-      id: 2,
-      name: "Sảnh Phượng Hoàng",
-      capacity: 80,
-      imageUrl:
-        "https://crystalpalacevn.com/wp-content/uploads/2023/03/T4_07087-scaled.jpg",
-      note: "Không gian rộng rãi, phong cách hoàng gia, lý tưởng cho tiệc đông khách.",
-    },
-    {
-      id: 3,
-      name: "Sảnh Hoa Sen",
-      capacity: 30,
-      imageUrl:
-        "https://crystalpalacevn.com/wp-content/uploads/2020/06/royal.png",
-      note: "Sảnh ấm cúng, thiết kế gần gũi thiên nhiên, phù hợp tiệc thân mật.",
-    },
-  ]);
+  // Data states
+  const [apiMenus, setApiMenus] = useState<IThucDon[]>([]);
+  const [apiServices, setApiServices] = useState<IDichVu[]>([]);
+  const [apiServiceTypes, setApiServiceTypes] = useState<ILoaiDichVu[]>([]);
+  const [apiDishes, setApiDishes] = useState<IMonAn[]>([]);
+  const [apiDishTypes, setApiDishTypes] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<IDatTiec[]>([]);
+  const [halls, setHalls] = useState<ISanh[]>([]);
+  const [hallTypes, setHallTypes] = useState<ILoaiSanh[]>([]);
+  const [caList, setCaList] = useState<ICa[]>([]);
 
-  const [dishes] = useState<Dish[]>([
-    {
-      id: 1,
-      name: "Soup bò củ quả xào",
-      categoryId: 1,
-      note: "Món khai vị nóng hổi, kết hợp thịt bò mềm và rau củ tươi ngon.",
-      dongia: 150000,
-      imageUrl: "https://via.placeholder.com/300x200?text=Soup+Bo",
-    },
-    {
-      id: 2,
-      name: "Gỏi cuốn tôm thịt",
-      categoryId: 1,
-      note: "Gỏi cuốn tươi mát với tôm, thịt heo và rau sống, ăn kèm nước chấm đặc biệt.",
-      dongia: 120000,
-      imageUrl: "https://via.placeholder.com/300x200?text=Goi+Cuon",
-    },
-    {
-      id: 3,
-      name: "Cà ri gà + Bánh mì",
-      categoryId: 2,
-      note: "Món chính đậm đà với gà nấu cà ri, phục vụ cùng bánh mì giòn rụm.",
-      dongia: 180000,
-      imageUrl: "https://via.placeholder.com/300x200?text=Ca+Ri+Ga",
-    },
-    {
-      id: 4,
-      name: "Soup củ nâu bắp",
-      categoryId: 1,
-      note: "Soup chay thanh đạm, kết hợp củ nâu và bắp ngọt tự nhiên.",
-      dongia: 100000,
-      imageUrl: "https://via.placeholder.com/300x200?text=Soup+Cu+Nau",
-    },
-    {
-      id: 5,
-      name: "Chả giò hongkong",
-      categoryId: 3,
-      note: "Chả giò giòn rụm theo phong cách Hồng Kông, nhân tôm và rau củ.",
-      dongia: 130000,
-      imageUrl: "https://via.placeholder.com/300x200?text=Cha+Gio",
-    },
-  ]);
-  const [menus, setMenus] = useState<Menu[]>([
-    { id: 1, name: "Menu 1", dishIds: [1, 2, 3] },
-    { id: 2, name: "Menu 2", dishIds: [4, 5] },
-  ]);
-
-  const [categories] = useState<Category[]>([
-    { id: 1, name: "Khai vị" },
-    { id: 2, name: "Chính" },
-    { id: 3, name: "Tráng miệng" },
-  ]);
-
-  // Dữ liệu mẫu cho loại dịch vụ và dịch vụ
-  const [serviceTypes] = useState<ServiceType[]>([
-    {
-      id: 1,
-      name: "Chụp Ảnh",
-      imageUrl:
-        "https://khoistudio.vn/wp-content/uploads/2023/09/chup-anh-cuoi-27.jpg",
-    },
-    {
-      id: 2,
-      name: "Âm Thanh Ánh Sáng",
-      imageUrl:
-        "https://amthanhanhsangsukien.com/wp-content/uploads/2019/10/IMG_8655.jpg",
-    },
-    {
-      id: 3,
-      name: "Thiệp Cưới",
-      imageUrl: "https://thiepcuoikk.com/upload/news/1-7-8216.jpg",
-    },
-    {
-      id: 4,
-      name: "Váy Cưới",
-      imageUrl:
-        "https://maxi.vn/wp-content/uploads/2024/06/z5544165856412_593d24ced318fd7645232a00f00dc759.jpg",
-    },
-  ]);
-
-  const [services] = useState<Service[]>([
-    {
-      id: 1,
-      name: "Chụp Ảnh Cơ Bản",
-      typeId: 1,
-      price: 5000000,
-      note: "Gói chụp ảnh cơ bản với 200 ảnh chỉnh sửa, phù hợp cho tiệc cưới nhỏ.",
-    },
-    {
-      id: 2,
-      name: "Chụp Ảnh Chuyên Nghiệp",
-      typeId: 1,
-      price: 10000000,
-      note: "Gói chụp ảnh chuyên nghiệp với 400 ảnh chỉnh sửa, bao gồm album cao cấp.",
-    },
-    {
-      id: 3,
-      name: "Chụp Ảnh Drone",
-      typeId: 1,
-      price: 15000000,
-      note: "Chụp ảnh flycam toàn cảnh, lý tưởng cho không gian ngoài trời.",
-    },
-    {
-      id: 4,
-      name: "Âm Thanh Cơ Bản",
-      typeId: 2,
-      price: 3000000,
-      note: "Hệ thống âm thanh cơ bản, phù hợp cho tiệc cưới dưới 50 bàn.",
-    },
-    {
-      id: 5,
-      name: "Ánh Sáng Sân Khấu",
-      typeId: 2,
-      price: 5000000,
-      note: "Hệ thống ánh sáng sân khấu đa sắc, tạo không gian lung linh cho tiệc cưới.",
-    },
-    {
-      id: 6,
-      name: "Ban Nhạc Sống",
-      typeId: 2,
-      price: 8000000,
-      note: "Ban nhạc sống biểu diễn 2 giờ, phong cách đa dạng từ cổ điển đến hiện đại.",
-    },
-    {
-      id: 7,
-      name: "Thiệp Cưới Tiêu Chuẩn",
-      typeId: 3,
-      price: 2000000,
-      note: "Gói 100 thiệp cưới thiết kế đơn giản, in ấn chất lượng cao.",
-    },
-    {
-      id: 8,
-      name: "Thiệp Cưới Cao Cấp",
-      typeId: 3,
-      price: 4000000,
-      note: "Gói 100 thiệp cưới thiết kế tinh tế, chất liệu nhập khẩu, kèm phong bì sang trọng.",
-    },
-    {
-      id: 9,
-      name: "Váy Cưới Thiết Kế",
-      typeId: 4,
-      price: 10000000,
-      note: "Váy cưới thiết kế riêng, phong cách hiện đại, may đo theo số đo cô dâu.",
-    },
-    {
-      id: 10,
-      name: "Váy Cưới Nhập Khẩu",
-      typeId: 4,
-      price: 20000000,
-      note: "Váy cưới nhập khẩu từ Ý, chất liệu cao cấp, đính đá thủ công tinh xảo.",
-    },
-  ]);
-
-  // State quản lý wizard
+  // Wizard state
   const [showWizard, setShowWizard] = useState<boolean>(false);
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [selectedHall, setSelectedHall] = useState<string | null>(null);
+  const [selectedHallType, setSelectedHallType] = useState<number | null>(null);
+  const [selectedHall, setSelectedHall] = useState<number | null>(null);
+  const [selectedCa, setSelectedCa] = useState<number | null>(null);
   const [selectedDishes, setSelectedDishes] = useState<number[]>([]);
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]); // Sửa từ selectedService
-
+  const [selectedServices, setSelectedServices] = useState<
+    { MaDichVu: number; SoLuong: number; DonGiaThoiDiemDat: number }[]
+  >([]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormData>({
-    id: null,
-    tenchure: "",
-    tencodau: "",
-    dienthoai: "",
-    ngaydactiec: "",
-    tiendatcoc: 0,
-    soluongban: "",
-    soluongbandutru: "",
+  const [formData, setFormData] = useState<IFormData>({
+    MaDatTiec: null,
+    TenChuRe: "",
+    TenCoDau: "",
+    DienThoai: "",
+    NgayDaiTiec: "",
+    SoLuongBan: "",
+    SoBanDuTru: "",
+    TienDatCoc: "",
   });
+  const [totalCost, setTotalCost] = useState(0);
+  const [minDeposit, setMinDeposit] = useState(0);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedServiceType, setSelectedServiceType] = useState<number | null>(
     null
   );
-  // State cho modal xác nhận
-  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>(
-    {
-      isOpen: false,
-      message: "",
-      onConfirm: () => {},
-    }
-  );
+  const [confirmationModal, setConfirmationModal] = useState<IModalXacNhan>({
+    isOpen: false,
+    message: "",
+    onConfirm: () => {},
+  });
 
-  // Handler mở modal thêm
+  useEffect(() => {
+    const calculateCosts = () => {
+      const dishCost = selectedDishes.reduce((total, dishId) => {
+        const dish = dishes.find((d) => d.id === dishId);
+        return total + (dish ? Number(dish.dongia) || 0 : 0);
+      }, 0);
+      const totalBan =
+        (Number(formData.SoLuongBan) || 0) + (Number(formData.SoBanDuTru) || 0);
+      const serviceCost = selectedServices.reduce(
+        (total, service) =>
+          total +
+          (Number(service.DonGiaThoiDiemDat) || 0) *
+            (Number(service.SoLuong) || 0),
+        0
+      );
+      const total = dishCost * totalBan + serviceCost;
+      const minDeposit = Math.ceil(total * 0.3);
+      setTotalCost(total);
+      setMinDeposit(minDeposit);
+    };
+
+    if (dishes) {
+      calculateCosts();
+    }
+  }, [
+    selectedDishes,
+    formData.SoLuongBan,
+    formData.SoBanDuTru,
+    selectedServices,
+  ]);
+
+  // Load data from APIs
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load menus
+        setIsLoadingMenus(true);
+        const menusData = await getAllThucDon();
+        const limitedMenusData = menusData.slice(0, 6); // Lấy 6 bản ghi đầu tiên
+        const menusWithDetails = await Promise.all(
+          limitedMenusData.map(async (menu: IThucDon) => {
+            const menuDetail = await getThucDonById(menu.MaThucDon);
+            return {
+              ...menu,
+              MonAnList: menuDetail.MonAnList || [],
+            };
+          })
+        );
+        setApiMenus(menusWithDetails);
+        setIsLoadingMenus(false);
+        setApiMenus(menusWithDetails);
+        setIsLoadingMenus(false);
+
+        // Load services and service types
+        setIsLoadingServices(true);
+        const [servicesData, serviceTypesData] = await Promise.all([
+          getAllDichVu(),
+          getAllLoaiDichVu(),
+        ]);
+        setApiServices(servicesData);
+        setApiServiceTypes(serviceTypesData);
+        setIsLoadingServices(false);
+
+        // Load dishes and dish types
+        setIsLoadingDishes(true);
+        const [dishesData, dishTypesData] = await Promise.all([
+          getAllMonAn(),
+          getAllLoaiMonAn(),
+        ]);
+        setApiDishes(dishesData);
+        setApiDishTypes(dishTypesData);
+        setIsLoadingDishes(false);
+
+        // Load bookings
+        setIsLoadingBookings(true);
+        const bookingsData = await getAllDatTiec();
+        setBookings(bookingsData);
+        setIsLoadingBookings(false);
+
+        // Load halls and hall types
+        setIsLoadingHalls(true);
+        const [hallsData, hallTypesData] = await Promise.all([
+          getAllSanh(),
+          getAllLoaiSanh(),
+        ]);
+        setHalls(hallsData);
+        setHallTypes(hallTypesData);
+        setIsLoadingHalls(false);
+
+        // Load ca list
+        setIsLoadingCa(true);
+        const caData = await getAllCa();
+        setCaList(caData);
+        setIsLoadingCa(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Lỗi khi tải dữ liệu");
+        setIsLoadingMenus(false);
+        setIsLoadingServices(false);
+        setIsLoadingDishes(false);
+        setIsLoadingBookings(false);
+        setIsLoadingHalls(false);
+        setIsLoadingCa(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Convert API dishes data
+  const dishes = apiDishes.map((dish) => ({
+    id: dish.MaMonAn,
+    name: dish.TenMonAn,
+    categoryId: dish.MaLoaiMonAn,
+    note: dish.GhiChu || "",
+    dongia: dish.DonGia,
+    imageUrl: dish.AnhURL,
+  }));
+
+  // Convert API service types and services
+  const serviceTypes = apiServiceTypes.map((type) => ({
+    MaLoaiDichVu: type.MaLoaiDichVu,
+    TenLoaiDichVu: type.TenLoaiDichVu,
+    HinhAnh: type.HinhAnh || "https://via.placeholder.com/300x200",
+  }));
+
+  const services = apiServices.map((service) => ({
+    MaDichVu: service.MaDichVu,
+    TenDichVu: service.TenDichVu,
+    MaLoaiDichVu: service.MaLoaiDichVu,
+    DonGia: service.DonGia,
+    GhiChu: service.GhiChu || "",
+  }));
+
+  // Handlers
   const openAddModal = () => {
     setFormData({
-      id: null,
-      tenchure: "",
-      tencodau: "",
-      dienthoai: "",
-      ngaydactiec: "",
-      tiendatcoc: 0,
-      soluongban: "",
-      soluongbandutru: "",
+      MaDatTiec: null,
+      TenChuRe: "",
+      TenCoDau: "",
+      DienThoai: "",
+      NgayDaiTiec: "",
+      SoLuongBan: "",
+      SoBanDuTru: "",
+      TienDatCoc: "",
     });
     setIsEditMode(false);
-    setCurrentStep(1);
+    setSelectedHallType(null);
     setSelectedHall(null);
+    setSelectedCa(null);
     setSelectedDishes([]);
     setSelectedMenu(null);
-    setSelectedServices([]); // Reset danh sách dịch vụ
-    setSelectedServiceType(null); // Reset loại dịch vụ
-    setShowWizard(true);
-  };
-
-  // Handler mở modal sửa
-  const openEditModal = (booking: WeddingBooking) => {
-    setFormData({
-      id: booking.id,
-      tenchure: booking.tenchure,
-      tencodau: booking.tencodau,
-      dienthoai: booking.dienthoai,
-      ngaydactiec: booking.ngaydactiec,
-      tiendatcoc: booking.tiendatcoc,
-      soluongban: booking.soluongban.toString(),
-      soluongbandutru: booking.soluongbandutru.toString(),
-    });
-    setIsEditMode(true);
-    setCurrentStep(1);
-    setSelectedHall(booking.hall || null);
-    setSelectedDishes(booking.dishes || []);
-    setSelectedMenu(null);
-    setSelectedServices(booking.services || []);
+    setSelectedServices([]);
     setSelectedServiceType(null);
     setShowWizard(true);
   };
 
-  // Handler đóng wizard
+  const openEditModal = (booking: IDatTiec) => {
+    setFormData({
+      MaDatTiec: booking.MaDatTiec,
+      TenChuRe: booking.TenChuRe,
+      TenCoDau: booking.TenCoDau,
+      DienThoai: booking.DienThoai,
+      NgayDaiTiec: booking.NgayDaiTiec,
+      SoLuongBan: booking.SoLuongBan.toString(),
+      SoBanDuTru: booking.SoBanDuTru.toString(),
+      TienDatCoc: booking.TienDatCoc.toString(),
+    });
+    setIsEditMode(true);
+    setSelectedHallType(null);
+    setSelectedHall(booking.MaSanh);
+    setSelectedCa(booking.MaCa);
+    setSelectedDishes(booking.MonAns || []);
+    setSelectedMenu(booking.MaThucDon || null);
+    setSelectedServices(booking.DichVus || []);
+    setSelectedServiceType(null);
+    setShowWizard(true);
+  };
+
   const closeWizard = () => {
     setShowWizard(false);
-    setCurrentStep(1);
+    setSelectedHallType(null);
     setSelectedHall(null);
+    setSelectedCa(null);
     setSelectedDishes([]);
     setSelectedMenu(null);
-    setSelectedServices([]); // Sửa từ setSelectedService(null)
-    setSelectedServiceType(null); // Reset loại dịch vụ
+    setSelectedServices([]);
+    setSelectedServiceType(null);
   };
+
   const closeConfirmationModal = () => {
     setConfirmationModal({ isOpen: false, message: "", onConfirm: () => {} });
   };
+
   const handleConfirm = () => {
     confirmationModal.onConfirm();
     closeConfirmationModal();
   };
-  // Handler thay đổi input
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === "tiendatcoc") {
-      const soluongban =
-        (Number(formData.soluongban) || 0) +
-        (Number(formData.soluongbandutru) || 0);
-      const totalDishCost = selectedDishes.reduce((total, dishId) => {
-        const dish = dishes.find((d) => d.id === dishId);
-        return total + (dish ? dish.dongia : 0);
-      }, 0);
-      const totalServiceCost = selectedServices.reduce((total, serviceName) => {
-        const service = services.find((s) => s.name === serviceName);
-        return total + (service ? service.price : 0);
-      }, 0);
-      const totalCost = totalDishCost * soluongban + totalServiceCost;
-      const minDeposit = Math.ceil(totalCost * 0.2);
+
+    // Reset selectedCa when changing NgayDaiTiec
+    if (name === "NgayDaiTiec") {
+      setSelectedCa(null);
+    }
+
+    // Validate số lượng bàn và bàn dự trữ
+    if (["SoLuongBan", "SoBanDuTru"].includes(name)) {
+      if (value && isNaN(Number(value))) {
+        alert("Vui lòng nhập số hợp lệ");
+        return;
+      }
+      if (Number(value) < 0) {
+        alert("Giá trị không được âm");
+        return;
+      }
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      return;
+    }
+
+    // Cho phép nhập tự do cho Tiền Đặt Cọc, validate sau
+    if (name === "TienDatCoc") {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Xử lý khi rời khỏi ô input
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "TienDatCoc") {
+      if (value === "") {
+        alert("Tiền đặt cọc không được để trống");
+        setFormData((prev) => ({ ...prev, TienDatCoc: minDeposit.toString() }));
+        return;
+      }
       const newValue = Number(value);
+      if (isNaN(newValue) || newValue < 0) {
+        alert("Tiền đặt cọc phải là số không âm");
+        setFormData((prev) => ({ ...prev, TienDatCoc: minDeposit.toString() }));
+        return;
+      }
       if (newValue < minDeposit) {
         alert(
           `Tiền đặt cọc phải ít nhất ${minDeposit.toLocaleString(
             "vi-VN"
-          )} VNĐ (20% tổng tiền).`
+          )} VNĐ (30% tổng tiền).`
         );
+        setFormData((prev) => ({ ...prev, TienDatCoc: minDeposit.toString() }));
         return;
       }
-      setFormData((prev) => ({ ...prev, [name]: newValue }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // Handler chọn thực đơn
-  const handleMenuSelect = (menu: Menu) => {
-    setSelectedMenu(menu.id);
-    setSelectedDishes(menu.dishIds);
+  const handleMenuSelect = (menu: IThucDon) => {
+    setSelectedMenu(menu.MaThucDon);
+    const dishIds = (menu.MonAnList || []).map((dish) => dish.MaMonAn);
+    setSelectedDishes(dishIds);
   };
 
-  // Handler submit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleServiceSelect = (
+    service: IDichVu,
+    checked: boolean,
+    soLuong: number = 1
+  ) => {
+    setSelectedServices((prev) => {
+      if (checked) {
+        return [
+          ...prev,
+          {
+            MaDichVu: service.MaDichVu,
+            SoLuong: soLuong,
+            DonGiaThoiDiemDat: service.DonGia,
+          },
+        ];
+      } else {
+        return prev.filter((s) => s.MaDichVu !== service.MaDichVu);
+      }
+    });
+  };
+
+  // Trong hàm handleSubmit
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate dữ liệu
-    const tiendatcocNumber = Number(formData.tiendatcoc);
-    const soluongbanNumber = Number(formData.soluongban);
-    const soluongbandutruNumber = Number(formData.soluongbandutru);
-
-    if (isNaN(tiendatcocNumber) || tiendatcocNumber < 0) {
+    const tienDatCocNumber = Number(formData.TienDatCoc);
+    const soLuongBan = Number(formData.SoLuongBan);
+    const soBanDuTru = Number(formData.SoBanDuTru);
+    const tienDatCoc = Number(formData.TienDatCoc);
+    if (isNaN(tienDatCocNumber) || tienDatCocNumber < 0) {
       alert("Tiền đặt cọc phải là số không âm");
       return;
     }
-    if (isNaN(soluongbanNumber) || soluongbanNumber <= 0) {
+    if (isNaN(soLuongBan) || soLuongBan <= 0) {
       alert("Số lượng bàn phải là số dương");
       return;
     }
-    if (isNaN(soluongbandutruNumber) || soluongbandutruNumber < 0) {
+    if (isNaN(soBanDuTru) || soBanDuTru < 0) {
       alert("Số lượng bàn dự trữ phải là số không âm");
       return;
     }
@@ -441,129 +477,149 @@ function Admin_Wedding() {
       alert("Vui lòng chọn ít nhất một dịch vụ");
       return;
     }
-    // Kiểm tra sức chứa sảnh
-    const selectedHallData = halls.find((hall) => hall.name === selectedHall);
+    const selectedHallData = halls.find((hall) => hall.MaSanh === selectedHall);
     if (
       selectedHallData &&
-      soluongbanNumber + soluongbandutruNumber > selectedHallData.capacity
+      soLuongBan + soBanDuTru > selectedHallData.SoLuongBanToiDa
     ) {
       alert("Tổng số bàn vượt quá sức chứa của sảnh");
       return;
     }
+    if (isNaN(tienDatCoc) || tienDatCoc < minDeposit) {
+      alert(
+        `Tiền đặt cọc phải ít nhất ${minDeposit.toLocaleString(
+          "vi-VN"
+        )} VNĐ (30% tổng tiền).`
+      );
+      setFormData((prev) => ({ ...prev, TienDatCoc: minDeposit.toString() }));
+      return;
+    }
 
-    // Mở dialog xác nhận
+    // Chuẩn bị dữ liệu gửi API, đổi tên thuộc tính để khớp với datTiecApi.ts
+    const datTiecData = {
+      tenChuRe: formData.TenChuRe,
+      tenCoDau: formData.TenCoDau,
+      dienThoai: formData.DienThoai,
+      ngayDaiTiec: formData.NgayDaiTiec,
+      maCa: selectedCa || 1,
+      maSanh: selectedHall,
+      maThucDon: selectedMenu || 1, // Nếu không chọn thực đơn, dùng mặc định
+      soLuongBan: soLuongBan,
+      soBanDuTru: soBanDuTru,
+      dichVus: selectedServices.map((service) => ({
+        maDichVu: service.MaDichVu,
+        soLuong: service.SoLuong,
+        donGiaThoiDiemDat: service.DonGiaThoiDiemDat,
+      })),
+    };
+
     setConfirmationModal({
       isOpen: true,
       message: isEditMode
-        ? "Bạn có chắc chắn muốn cập nhật thông tin đặt tiệc này?"
+        ? "Bạn có chắc chắn muốn cập nhật đặt tiệc này?"
         : "Bạn có chắc chắn muốn thêm đặt tiệc này?",
-      onConfirm: () => {
-        if (isEditMode) {
-          setBookings((prev) =>
-            prev.map((booking) =>
-              booking.id === formData.id
-                ? {
-                    ...booking,
-                    tenchure: formData.tenchure,
-                    tencodau: formData.tencodau,
-                    dienthoai: formData.dienthoai,
-                    ngaydactiec: formData.ngaydactiec,
-                    tiendatcoc: tiendatcocNumber,
-                    soluongban: soluongbanNumber,
-                    soluongbandutru: soluongbandutruNumber,
-                    hall: selectedHall,
-                    dishes: selectedDishes,
-                    services: selectedServices,
-                  }
-                : booking
-            )
-          );
-        } else {
-          const newBooking: WeddingBooking = {
-            id:
-              bookings.length > 0
-                ? Math.max(...bookings.map((b) => b.id)) + 1
-                : 1,
-            tenchure: formData.tenchure,
-            tencodau: formData.tencodau,
-            dienthoai: formData.dienthoai,
-            ngaydactiec: formData.ngaydactiec,
-            tiendatcoc: tiendatcocNumber,
-            soluongban: soluongbanNumber,
-            soluongbandutru: soluongbandutruNumber,
-            hall: selectedHall,
-            dishes: selectedDishes,
-            services: selectedServices,
-          };
-          setBookings((prev) => [...prev, newBooking]);
+      onConfirm: async () => {
+        try {
+          if (isEditMode && formData.MaDatTiec) {
+            const updatedBooking = await updateDatTiec(
+              formData.MaDatTiec,
+              datTiecData
+            );
+            setBookings((prev) =>
+              prev.map((booking) =>
+                booking.MaDatTiec === formData.MaDatTiec
+                  ? {
+                      ...booking,
+                      ...updatedBooking, // Sử dụng dữ liệu trả về từ API
+                      MonAns: selectedDishes, // Giữ selectedDishes
+                      DichVus: selectedServices, // Cập nhật dịch vụ
+                    }
+                  : booking
+              )
+            );
+          } else {
+            const newBooking = await createDatTiec(datTiecData);
+            setBookings((prev) => [
+              ...prev,
+              {
+                ...newBooking, // Sử dụng dữ liệu trả về từ API
+                MonAns: selectedDishes, // Thêm selectedDishes
+                DichVus: selectedServices, // Thêm dịch vụ
+              },
+            ]);
+          }
+          closeWizard();
+        } catch (error: any) {
+          alert("Lỗi: " + (error.message || "Không thể lưu đặt tiệc"));
         }
-        closeWizard();
       },
     });
   };
 
-  // Handler chọn dịch vụ
-  const handleServiceSelect = (serviceName: string, checked: boolean) => {
-    setSelectedServices((prev) =>
-      checked
-        ? [...prev, serviceName]
-        : prev.filter((name) => name !== serviceName)
-    );
-  };
-
-  // Handler xóa đặt tiệc
   const handleDelete = (id: number) => {
     setConfirmationModal({
       isOpen: true,
       message: "Bạn có chắc chắn muốn xóa đặt tiệc này?",
-      onConfirm: () => {
-        setBookings((prev) => prev.filter((booking) => booking.id !== id));
+      onConfirm: async () => {
+        try {
+          await deleteDatTiec(id);
+          setBookings((prev) =>
+            prev.filter((booking) => booking.MaDatTiec !== id)
+          );
+        } catch (error: any) {
+          alert("Lỗi: " + (error.message || "Không thể xóa đặt tiệc"));
+        }
       },
     });
   };
 
-  // Handler tìm kiếm
   const filteredBookings = bookings.filter(
     (booking) =>
-      booking.tenchure.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.tencodau.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.dienthoai.includes(searchTerm)
+      booking.TenChuRe.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.TenCoDau.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.DienThoai.includes(searchTerm)
   );
-  useEffect(() => {
-    const totalTables =
-      (Number(formData.soluongban) || 0) +
-      (Number(formData.soluongbandutru) || 0);
-    const totalDishCost = selectedDishes.reduce((total, dishId) => {
-      const dish = dishes.find((d) => d.id === dishId);
-      return total + (dish ? dish.dongia : 0);
-    }, 0);
-    const totalServiceCost = selectedServices.reduce((total, serviceName) => {
-      const service = services.find((s) => s.name === serviceName);
-      return total + (service ? service.price : 0);
-    }, 0);
-    const totalCost = totalDishCost * totalTables + totalServiceCost;
-    const defaultDeposit = Math.ceil(totalCost * 0.2);
-    if (defaultDeposit !== formData.tiendatcoc) {
-      setFormData((prev) => ({
-        ...prev,
-        tiendatcoc: defaultDeposit,
-      }));
-    }
-  }, [
-    selectedDishes,
-    selectedServices,
-    formData.soluongban,
-    formData.soluongbandutru,
-    dishes,
-    services,
-  ]);
+
+  // Loading UI
+  if (
+    isLoadingMenus ||
+    isLoadingServices ||
+    isLoadingDishes ||
+    isLoadingBookings ||
+    isLoadingHalls ||
+    isLoadingCa
+  ) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center text-red-600">
+          <p>Lỗi: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Trang danh sách đặt tiệc */}
         {!showWizard ? (
           <>
-            {/* Tiêu đề và tìm kiếm */}
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
                 Quản Lý Đặt Tiệc Cưới
@@ -585,9 +641,7 @@ function Admin_Wedding() {
               </div>
             </div>
 
-            {/* Danh sách đặt tiệc */}
             <div>
-              {/* Bảng trên desktop */}
               <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -620,29 +674,29 @@ function Admin_Wedding() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredBookings.map((booking) => (
-                      <tr key={booking.id}>
+                      <tr key={booking.MaDatTiec}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {booking.tenchure}
+                          {booking.TenChuRe}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {booking.tencodau}
+                          {booking.TenCoDau}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {booking.dienthoai}
+                          {booking.DienThoai}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(booking.ngaydactiec).toLocaleDateString(
+                          {new Date(booking.NgayDaiTiec).toLocaleDateString(
                             "vi-VN"
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {booking.tiendatcoc.toLocaleString("vi-VN")}
+                          {booking.TienDatCoc.toLocaleString("vi-VN")}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {booking.soluongban}
+                          {booking.SoLuongBan}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {booking.soluongbandutru}
+                          {booking.SoBanDuTru}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
@@ -652,7 +706,7 @@ function Admin_Wedding() {
                             Sửa
                           </button>
                           <button
-                            onClick={() => handleDelete(booking.id)}
+                            onClick={() => handleDelete(booking.MaDatTiec)}
                             className="text-red-600 hover:text-red-800"
                           >
                             Xóa
@@ -664,17 +718,16 @@ function Admin_Wedding() {
                 </table>
               </div>
 
-              {/* Card trên mobile */}
               <div className="block sm:hidden space-y-4">
                 {filteredBookings.map((booking) => (
                   <div
-                    key={booking.id}
+                    key={booking.MaDatTiec}
                     className="bg-white shadow-md rounded-lg p-4"
                   >
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-between">
                         <h3 className="text-lg font-medium text-gray-900">
-                          {booking.tenchure} & {booking.tencodau}
+                          {booking.TenChuRe} & {booking.TenCoDau}
                         </h3>
                         <div className="flex gap-2">
                           <button
@@ -684,7 +737,7 @@ function Admin_Wedding() {
                             Sửa
                           </button>
                           <button
-                            onClick={() => handleDelete(booking.id)}
+                            onClick={() => handleDelete(booking.MaDatTiec)}
                             className="text-red-600 hover:text-red-800 text-sm"
                           >
                             Xóa
@@ -692,21 +745,21 @@ function Admin_Wedding() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-500">
-                        Điện thoại: {booking.dienthoai}
+                        Điện thoại: {booking.DienThoai}
                       </p>
                       <p className="text-sm text-gray-500">
                         Ngày đặt tiệc:{" "}
-                        {new Date(booking.ngaydactiec).toLocaleDateString(
+                        {new Date(booking.NgayDaiTiec).toLocaleDateString(
                           "vi-VN"
                         )}
                       </p>
                       <p className="text-sm text-gray-500">
                         Tiền đặt cọc:{" "}
-                        {booking.tiendatcoc.toLocaleString("vi-VN")} VNĐ
+                        {booking.TienDatCoc.toLocaleString("vi-VN")} VNĐ
                       </p>
                       <p className="text-sm text-gray-500">
-                        Số lượng bàn: {booking.soluongban} (Dự trữ:{" "}
-                        {booking.soluongbandutru})
+                        Số lượng bàn: {booking.SoLuongBan} (Dự trữ:{" "}
+                        {booking.SoBanDuTru})
                       </p>
                     </div>
                   </div>
@@ -715,7 +768,6 @@ function Admin_Wedding() {
             </div>
           </>
         ) : (
-          /* Trang wizard */
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
               {isEditMode ? "Sửa Đặt Tiệc" : "Thêm Đặt Tiệc"}
@@ -733,8 +785,8 @@ function Admin_Wedding() {
                   </label>
                   <input
                     type="text"
-                    name="tenchure"
-                    value={formData.tenchure}
+                    name="TenChuRe"
+                    value={formData.TenChuRe}
                     onChange={handleInputChange}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
@@ -746,8 +798,8 @@ function Admin_Wedding() {
                   </label>
                   <input
                     type="text"
-                    name="tencodau"
-                    value={formData.tencodau}
+                    name="TenCoDau"
+                    value={formData.TenCoDau}
                     onChange={handleInputChange}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
@@ -759,8 +811,8 @@ function Admin_Wedding() {
                   </label>
                   <input
                     type="text"
-                    name="dienthoai"
-                    value={formData.dienthoai}
+                    name="DienThoai"
+                    value={formData.DienThoai}
                     onChange={handleInputChange}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
@@ -772,8 +824,8 @@ function Admin_Wedding() {
                   </label>
                   <input
                     type="date"
-                    name="ngaydactiec"
-                    value={formData.ngaydactiec}
+                    name="NgayDaiTiec"
+                    value={formData.NgayDaiTiec}
                     onChange={handleInputChange}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
@@ -782,50 +834,190 @@ function Admin_Wedding() {
               </div>
             </div>
 
+            {/* Chọn sảnh */}
+            <div className="mb-8">
+              <h4 className="text-lg font-semibold text-gray-700 mb-4">
+                Chọn Sảnh
+              </h4>
+
+              {/* Chọn loại sảnh */}
+              <div className="mb-6">
+                <h5 className="text-sm font-medium text-gray-600 mb-3">
+                  Chọn Loại Sảnh
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {hallTypes.map((hallType) => (
+                    <div
+                      key={hallType.MaLoaiSanh}
+                      onClick={() => {
+                        setSelectedHallType(hallType.MaLoaiSanh);
+                        setSelectedHall(null); // Reset selected hall when changing hall type
+                      }}
+                      className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
+                        selectedHallType === hallType.MaLoaiSanh
+                          ? "bg-blue-50 border-blue-500 shadow-lg"
+                          : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                      }`}
+                    >
+                      <div className="p-4">
+                        <h5 className="text-lg font-medium text-gray-800 mb-2">
+                          {hallType.TenLoaiSanh}
+                        </h5>
+                        <p className="text-sm text-gray-600">
+                          Đơn giá tối thiểu:{" "}
+                          {hallType.DonGiaBanToiThieu.toLocaleString("vi-VN")}{" "}
+                          VNĐ/bàn
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hiển thị sảnh theo loại sảnh đã chọn */}
+              {selectedHallType && (
+                <div className="mt-6">
+                  <h5 className="text-sm font-medium text-gray-600 mb-3">
+                    Chọn Sảnh thuộc{" "}
+                    {
+                      hallTypes.find(
+                        (type) => type.MaLoaiSanh === selectedHallType
+                      )?.TenLoaiSanh
+                    }
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {halls
+                      .filter((hall) => hall.MaLoaiSanh === selectedHallType)
+                      .map((hall) => (
+                        <div
+                          key={hall.MaSanh}
+                          onClick={() => setSelectedHall(hall.MaSanh)}
+                          className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
+                            selectedHall === hall.MaSanh
+                              ? "bg-blue-50 border-blue-500 shadow-lg"
+                              : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                          }`}
+                        >
+                          <div className="h-48 overflow-hidden rounded-t-lg">
+                            <img
+                              src={
+                                hall.AnhURL ||
+                                "https://via.placeholder.com/300x200"
+                              }
+                              alt={hall.TenSanh}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="p-4">
+                            <h5 className="text-lg font-medium text-gray-800 mb-2">
+                              {hall.TenSanh}
+                            </h5>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Sức chứa: {hall.SoLuongBanToiDa} bàn
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {hall.GhiChu}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sau phần chọn sảnh, thêm phần chọn ca */}
+            {selectedHall && (
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-700 mb-4">
+                  Chọn Ca
+                </h4>
+
+                {formData.NgayDaiTiec ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {caList.map((ca) => {
+                      // Kiểm tra xem ca này đã được đặt chưa
+                      const isBooked = bookings.some(
+                        (booking) =>
+                          booking.NgayDaiTiec === formData.NgayDaiTiec &&
+                          booking.MaCa === ca.MaCa &&
+                          booking.MaSanh === selectedHall &&
+                          (!isEditMode ||
+                            booking.MaDatTiec !== formData.MaDatTiec)
+                      );
+
+                      return (
+                        <div
+                          key={ca.MaCa}
+                          onClick={() => !isBooked && setSelectedCa(ca.MaCa)}
+                          className={`
+                            p-4 rounded-lg border transition-all duration-300 cursor-pointer
+                            ${
+                              isBooked
+                                ? "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed"
+                                : selectedCa === ca.MaCa
+                                ? "bg-blue-50 border-blue-500 shadow-lg"
+                                : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                            }
+                          `}
+                        >
+                          <h5 className="text-lg font-medium text-center text-gray-800">
+                            {ca.TenCa}
+                          </h5>
+                          {isBooked && (
+                            <p className="text-sm text-red-500 text-center mt-2">
+                              Đã đặt
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 p-4 border border-dashed rounded-lg">
+                    Vui lòng chọn ngày đặt tiệc trước khi chọn ca
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Chọn thực đơn */}
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
                 Chọn Thực Đơn
               </h4>
-
-              {/* Thực đơn có sẵn */}
               <div className="mb-6">
                 <h5 className="text-sm font-medium text-gray-600 mb-3">
                   Thực Đơn Có Sẵn
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {menus.map((menu) => {
-                    const menuDishes = menu.dishIds
-                      .map((dishId) =>
-                        dishes.find((dish) => dish.id === dishId)
-                      )
-                      .filter(Boolean) as Dish[];
-
-                    // Lấy imageUrl của món ăn đầu tiên (nếu có)
-                    const firstDishImageUrl = menuDishes[0]?.imageUrl;
+                  {apiMenus.map((menu) => {
+                    const menuDishes = menu.MonAnList || [];
+                    const totalPrice = menuDishes.reduce(
+                      (total, dish) => total + Number(dish.DonGia || 0), // Sửa lỗi tại đây
+                      0
+                    );
+                    const firstDish = menuDishes[0];
 
                     return (
                       <div
-                        key={menu.id}
-                        onClick={() => {
-                          setSelectedMenu(menu.id);
-                          setSelectedDishes([...menu.dishIds]); // Tự động tick các món trong dishIds
-                        }}
+                        key={menu.MaThucDon}
+                        onClick={() => handleMenuSelect(menu)}
                         className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
-                          selectedMenu === menu.id
+                          selectedMenu === menu.MaThucDon
                             ? "bg-blue-50 border-blue-500 shadow-lg"
                             : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
                         }`}
                       >
                         <div className="h-48 overflow-hidden rounded-t-lg">
-                          {firstDishImageUrl ? (
+                          {firstDish?.AnhURL ? (
                             <img
-                              src={firstDishImageUrl}
-                              alt={menu.name}
+                              src={firstDish.AnhURL}
+                              alt={menu.TenThucDon}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.src =
-                                  "https://via.placeholder.com/300x200?text=Fallback+Image";
+                                  "https://via.placeholder.com/300x200?text=Không+có+ảnh";
                               }}
                             />
                           ) : (
@@ -838,19 +1030,25 @@ function Admin_Wedding() {
                         </div>
                         <div className="p-4">
                           <h5 className="text-lg font-medium text-gray-800 mb-2">
-                            {menu.name}
+                            {menu.TenThucDon}
                           </h5>
                           <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                             Món ăn:{" "}
-                            {menuDishes.map((dish) => dish.name).join(", ")}
+                            {menuDishes.length > 0
+                              ? menuDishes
+                                  .map((dish) => dish.TenMonAn)
+                                  .join(", ")
+                              : "Chưa có món ăn"}
                           </p>
                           <p className="text-sm text-gray-600 mb-2">
-                            Tổng đơn giá:{" "}
-                            {menuDishes
-                              .reduce((total, dish) => total + dish.dongia, 0)
-                              .toLocaleString("vi-VN")}{" "}
+                            Tổng đơn giá: {totalPrice.toLocaleString("vi-VN")}{" "}
                             VNĐ
                           </p>
+                          {menu.GhiChu && (
+                            <p className="text-sm text-gray-500 italic">
+                              Ghi chú: {menu.GhiChu}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
@@ -858,51 +1056,49 @@ function Admin_Wedding() {
                 </div>
               </div>
 
-              {/* Tùy chỉnh thực đơn */}
               <div className="mb-6">
                 <h5 className="text-sm font-medium text-gray-600 mb-3">
                   Tùy Chỉnh Thực Đơn
                 </h5>
                 <div className="border rounded-lg p-4 bg-white shadow-sm">
-                  {categories.map((category) => (
-                    <div key={category.id} className="mb-4">
+                  {apiDishTypes.map((category) => (
+                    <div key={category.MaLoaiMonAn} className="mb-4">
                       <h6 className="text-sm font-semibold text-gray-700 mb-2">
-                        {category.name}
+                        {category.TenLoaiMonAn}
                       </h6>
-                      <div className="space-y-2">
-                        {dishes
-                          .filter((dish) => dish.categoryId === category.id)
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {apiDishes
+                          .filter(
+                            (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
+                          )
                           .map((dish) => (
                             <div
-                              key={dish.id}
-                              className="flex items-center gap-3"
+                              key={dish.MaMonAn}
+                              className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
                             >
                               <input
                                 type="checkbox"
-                                checked={selectedDishes.includes(dish.id)}
+                                checked={selectedDishes.includes(dish.MaMonAn)}
                                 onChange={(e) => {
-                                  // Cập nhật danh sách món đã chọn
                                   const newSelectedDishes = e.target.checked
-                                    ? [...selectedDishes, dish.id]
+                                    ? [...selectedDishes, dish.MaMonAn]
                                     : selectedDishes.filter(
-                                        (id) => id !== dish.id
+                                        (id) => id !== dish.MaMonAn
                                       );
                                   setSelectedDishes(newSelectedDishes);
-
-                                  // Bỏ chọn thực đơn có sẵn nếu tùy chỉnh
                                   setSelectedMenu(null);
                                 }}
-                                className="h-4 w-4 text-blue-500 rounded"
+                                className="h-4 w-4 mt-1 text-blue-600 rounded"
                               />
                               <div className="flex-1">
-                                <span className="text-sm text-gray-700">
-                                  {dish.name}
+                                <span className="text-sm font-medium text-gray-700">
+                                  {dish.TenMonAn}
                                 </span>
-                                <p className="text-xs text-gray-500">
-                                  {dish.note}
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {dish.GhiChu || "Không có ghi chú"}
                                 </p>
-                                <p className="text-xs text-green-600">
-                                  {dish.dongia.toLocaleString("vi-VN")} VNĐ
+                                <p className="text-xs text-green-600 mt-1">
+                                  {dish.DonGia.toLocaleString("vi-VN")} VNĐ
                                 </p>
                               </div>
                             </div>
@@ -910,254 +1106,171 @@ function Admin_Wedding() {
                       </div>
                     </div>
                   ))}
-                  {/* Nút Thêm Menu Mới */}
-                  {selectedDishes.length > 0 && (
-                    <button
-                      onClick={() => {
-                        // Kiểm tra xem danh sách món đã chọn có thuộc thực đơn có sẵn nào không
-                        const isCustomMenu = !menus.some(
-                          (menu) =>
-                            menu.dishIds.length === selectedDishes.length &&
-                            menu.dishIds.every((dishId) =>
-                              selectedDishes.includes(dishId)
-                            )
-                        );
-
-                        if (isCustomMenu && selectedDishes.length > 0) {
-                          const newMenuId =
-                            menus.length > 0
-                              ? Math.max(...menus.map((m) => m.id)) + 1
-                              : 1;
-                          const firstDish = dishes.find(
-                            (dish) => dish.id === selectedDishes[0]
-                          );
-                          const newMenu: Menu = {
-                            id: newMenuId,
-                            name: `Thực Đơn Tùy Chỉnh ${newMenuId}`,
-                            dishIds: [...selectedDishes],
-                          };
-                          setMenus((prev) => [...prev, newMenu]); // Thêm thực đơn mới vào danh sách
-                          setSelectedMenu(newMenuId); // Tự động chọn thực đơn mới
-                        }
-                      }}
-                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      Thêm Menu Mới
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
 
-            {/* Chọn loại dịch vụ */}
             <div className="mb-8">
-              {/* Chọn Loại Dịch Vụ */}
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
-                Chọn Loại Dịch Vụ
+                Chọn Dịch Vụ
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 {serviceTypes.map((type) => (
                   <div
-                    key={type.id}
-                    onClick={() => setSelectedServiceType(type.id)}
+                    key={type.MaLoaiDichVu}
+                    onClick={() => setSelectedServiceType(type.MaLoaiDichVu)}
                     className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
-                      selectedServiceType === type.id
-                        ? "bg-blue-50 border-blue-500 shadow-lg"
-                        : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                      selectedServiceType === type.MaLoaiDichVu
+                        ? "bg-blue-50 border-blue-600 shadow-lg"
+                        : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-200"
                     }`}
                   >
                     <div className="h-48 overflow-hidden rounded-t-lg">
                       <img
-                        src={type.imageUrl}
-                        alt={type.name}
+                        src={type.HinhAnh}
+                        alt={type.TenLoaiDichVu}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="p-4">
                       <h5 className="text-lg font-medium text-gray-800 mb-2">
-                        {type.name}
+                        {type.TenLoaiDichVu}
                       </h5>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Hiển thị danh sách dịch vụ tương ứng */}
               {selectedServiceType && (
-                <div className="mb-8">
-                  <h4 className="text-lg font-semibold text-gray-700 mb-4">
-                    Dịch Vụ Được Chọn:{" "}
+                <div className="mb-6">
+                  <h5 className="text-sm font-medium text-gray-600 mb-3">
+                    Dịch Vụ thuộc{" "}
                     {
                       serviceTypes.find(
-                        (type) => type.id === selectedServiceType
-                      )?.name
+                        (type) => type.MaLoaiDichVu === selectedServiceType
+                      )?.TenLoaiDichVu
                     }
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {services
                       .filter(
-                        (service) => service.typeId === selectedServiceType
+                        (service) =>
+                          service.MaLoaiDichVu === selectedServiceType
                       )
                       .map((service) => (
                         <div
-                          key={service.id}
-                          className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                          key={service.MaDichVu}
+                          className="bg-white rounded-lg shadow-sm p-4"
                         >
-                          <div className="p-4">
-                            <div className="flex items-center mb-2">
-                              <input
-                                type="checkbox"
-                                checked={selectedServices.includes(
-                                  service.name
-                                )}
-                                onChange={(e) =>
-                                  handleServiceSelect(
-                                    service.name,
-                                    e.target.checked
-                                  )
-                                }
-                                className="h-4 w-4 text-blue-500 rounded mr-2"
-                              />
-                              <h5 className="text-lg font-semibold text-gray-800">
-                                {service.name}
-                              </h5>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                              {service.note}
-                            </p>
-                            <p className="text-lg font-medium text-green-600">
-                              {service.price.toLocaleString("vi-VN")} VNĐ
-                            </p>
+                          <div className="flex items-center mb-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedServices.some(
+                                (s) => s.MaDichVu === service.MaDichVu
+                              )}
+                              onChange={(e) =>
+                                handleServiceSelect(service, e.target.checked)
+                              }
+                              className="h-4 w-4 text-blue-600 rounded"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700">
+                              {service.TenDichVu}
+                            </span>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            {service.GhiChu || "Không có ghi chú"}
+                          </p>
+                          <p className="text-xs text-green-600 mt-1">
+                            {service.DonGia.toLocaleString("vi-VN")} VNĐ
+                          </p>
                         </div>
                       ))}
                   </div>
-                  **
-                  {selectedServices.length > 0 && (
-                    <div className="mt-6">
-                      <h5 className="text-sm font-medium text-gray-600 mb-3">
-                        Danh Sách Dịch Vụ Đã Chọn
-                      </h5>
-                      <div className="space-y-2">
-                        {selectedServices.map((serviceName) => {
-                          const service = services.find(
-                            (s) => s.name === serviceName
-                          );
-                          return (
-                            <div
-                              key={serviceName}
-                              className="flex justify-between items-center bg-gray-50 p-3 rounded-lg"
+                </div>
+              )}
+
+              {selectedServices.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-medium text-gray-600 mb-3">
+                    Dịch Vụ Đã Chọn
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {selectedServices.map((service) => {
+                      const serviceInfo = services.find(
+                        (s) => s.MaDichVu === service.MaDichVu
+                      );
+                      return (
+                        <div
+                          key={service.MaDichVu}
+                          className="bg-white rounded-lg shadow-sm p-4"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {serviceInfo?.TenDichVu}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleServiceSelect(serviceInfo!, false)
+                              }
+                              className="text-red-600 hover:text-red-800"
                             >
-                              <div>
-                                <p className="text-sm font-medium text-gray-700">
-                                  {serviceName}
-                                </p>
-                                <p className="text-xs text-green-600">
-                                  {service?.price.toLocaleString("vi-VN")} VNĐ
-                                </p>
-                              </div>
-                              <button
-                                onClick={() =>
-                                  handleServiceSelect(serviceName, false)
-                                }
-                                className="text-red-600 hover:text-red-800 text-sm"
-                              >
-                                Xóa
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  **
+                              Xóa
+                            </button>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Số lượng: {service.SoLuong}
+                          </p>
+                          <p className="text-xs text-green-600">
+                            {service.DonGiaThoiDiemDat.toLocaleString("vi-VN")}{" "}
+                            VNĐ
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Tổng kết và tiền đặt cọc (di chuyển xuống dưới cùng) */}
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-gray-700 mb-4">
-                Tổng Kết và Tiền Đặt Cọc
+                Tổng Kết
               </h4>
-
-              {/* Hiển thị tổng tiền thực đơn và dịch vụ */}
-              <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-600 mb-3">
-                  Tổng Chi Phí
-                </h5>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  {/* Tổng tiền thực đơn */}
-                  {(() => {
-                    const soluongban =
-                      (Number(formData.soluongban) || 0) +
-                      (Number(formData.soluongbandutru) || 0);
-                    const totalDishCost = selectedDishes.reduce(
-                      (total, dishId) => {
-                        const dish = dishes.find((d) => d.id === dishId);
-                        return total + (dish ? dish.dongia : 0);
-                      },
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <p className="text-sm text-gray-700 mb-2">
+                  Tổng tiền thực đơn:{" "}
+                  {(
+                    selectedDishes.reduce((total, dishId) => {
+                      const dish = dishes.find((d) => d.id === dishId);
+                      return total + (dish ? Number(dish.dongia) || 0 : 0);
+                    }, 0) *
+                    ((Number(formData.SoLuongBan) || 0) +
+                      (Number(formData.SoBanDuTru) || 0))
+                  ).toLocaleString("vi-VN")}{" "}
+                  VNĐ
+                </p>
+                <p className="text-sm text-gray-700 mb-2">
+                  Tổng tiền dịch vụ:{" "}
+                  {selectedServices
+                    .reduce(
+                      (total, service) =>
+                        total +
+                        (Number(service.DonGiaThoiDiemDat) || 0) *
+                          (Number(service.SoLuong) || 0),
                       0
-                    );
-                    const totalMenuCost = totalDishCost * soluongban;
-                    return (
-                      <p className="text-sm text-gray-700 mb-2">
-                        Tổng tiền thực đơn (x {soluongban} bàn):{" "}
-                        {totalMenuCost.toLocaleString("vi-VN")} VNĐ
-                      </p>
-                    );
-                  })()}
-                  {/* Tổng tiền dịch vụ */}
-                  {(() => {
-                    const totalServiceCost = selectedServices.reduce(
-                      (total, serviceName) => {
-                        const service = services.find(
-                          (s) => s.name === serviceName
-                        );
-                        return total + (service ? service.price : 0);
-                      },
-                      0
-                    );
-                    return (
-                      <p className="text-sm text-gray-700 mb-2">
-                        Tổng tiền dịch vụ:{" "}
-                        {totalServiceCost.toLocaleString("vi-VN")} VNĐ
-                      </p>
-                    );
-                  })()}
-                  {/* Tổng cộng */}
-                  {(() => {
-                    const soluongban =
-                      (Number(formData.soluongban) || 0) +
-                      (Number(formData.soluongbandutru) || 0);
-                    const totalDishCost = selectedDishes.reduce(
-                      (total, dishId) => {
-                        const dish = dishes.find((d) => d.id === dishId);
-                        return total + (dish ? dish.dongia : 0);
-                      },
-                      0
-                    );
-                    const totalServiceCost = selectedServices.reduce(
-                      (total, serviceName) => {
-                        const service = services.find(
-                          (s) => s.name === serviceName
-                        );
-                        return total + (service ? service.price : 0);
-                      },
-                      0
-                    );
-                    const totalCost =
-                      totalDishCost * soluongban + totalServiceCost;
-                    return (
-                      <p className="text-lg font-semibold text-green-600">
-                        Tổng cộng: {totalCost.toLocaleString("vi-VN")} VNĐ
-                      </p>
-                    );
-                  })()}
-                </div>
+                    )
+                    .toLocaleString("vi-VN")}{" "}
+                  VNĐ
+                </p>
+                <p className="text-lg font-semibold text-green-600">
+                  Tổng cộng: {totalCost.toLocaleString("vi-VN")} VNĐ
+                </p>
+                <p className="text-sm text-gray-600 mt-2">
+                  Tiền đặt cọc tối thiểu (30%):{" "}
+                  {minDeposit.toLocaleString("vi-VN")} VNĐ
+                </p>
               </div>
 
-              {/* Số bàn và tiền đặt cọc */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
@@ -1165,80 +1278,58 @@ function Admin_Wedding() {
                   </label>
                   <input
                     type="number"
-                    name="soluongban"
-                    value={formData.soluongban}
+                    name="SoLuongBan"
+                    value={formData.SoLuongBan}
                     onChange={handleInputChange}
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    onBlur={handleBlur}
+                    className="py-2 px-3 mt-1 border border-gray-300 rounded-md w-full"
                     required
+                    min="0"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Số Lượng Bàn Dự Trữ
+                    Số Bàn Dự Trữ
                   </label>
                   <input
                     type="number"
-                    name="soluongbandutru"
-                    value={formData.soluongbandutru}
+                    name="SoBanDuTru"
+                    value={formData.SoBanDuTru}
                     onChange={handleInputChange}
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    onBlur={handleBlur}
+                    className="py-2 px-3 mt-1 border border-gray-300 rounded-md w-full"
                     required
+                    min="0"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Tiền Đặt Cọc (VNĐ)
+                    Tiền Đặt Cọc
                   </label>
                   <input
                     type="number"
-                    name="tiendatcoc"
-                    value={formData.tiendatcoc}
+                    name="TienDatCoc"
+                    value={formData.TienDatCoc}
                     onChange={handleInputChange}
-                    min={(() => {
-                      const soluongban =
-                        (Number(formData.soluongban) || 0) +
-                        (Number(formData.soluongbandutru) || 0);
-                      const totalDishCost = selectedDishes.reduce(
-                        (total, dishId) => {
-                          const dish = dishes.find((d) => d.id === dishId);
-                          return total + (dish ? dish.dongia : 0);
-                        },
-                        0
-                      );
-                      const totalServiceCost = selectedServices.reduce(
-                        (total, serviceName) => {
-                          const service = services.find(
-                            (s) => s.name === serviceName
-                          );
-                          return total + (service ? service.price : 0);
-                        },
-                        0
-                      );
-                      return Math.ceil(
-                        (totalDishCost * soluongban + totalServiceCost) * 0.2
-                      );
-                    })()}
-                    title="Tiền đặt cọc phải ít nhất 20% tổng tiền"
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    onBlur={handleBlur}
+                    className="py-2 px-3 mt-1 border border-gray-300 rounded-md w-full"
                     required
+                    min={minDeposit}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Nút điều hướng */}
-            <div className="flex justify-between space-x-3">
+            <div className="flex justify-between">
               <button
-                type="button"
                 onClick={closeWizard}
-                className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                className="bg-gray-300 text-gray-700 rounded-md py-2 px-4"
               >
                 Hủy
               </button>
               <button
-                type="button"
                 onClick={handleSubmit}
-                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                className="bg-blue-600 text-white rounded-md py-2 px-4"
                 disabled={!selectedHall || selectedDishes.length === 0}
               >
                 {isEditMode ? "Cập Nhật" : "Thêm"}
@@ -1247,28 +1338,24 @@ function Admin_Wedding() {
           </div>
         )}
         {confirmationModal.isOpen && (
-          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm bg-white rounded-lg p-6 shadow-lg border border-gray-300 transform -translate-x-1/2 -translate-y-1/2">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Xác nhận
-            </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              {confirmationModal.message}
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={closeConfirmationModal}
-                className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirm}
-                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
-              >
-                Xác nhận
-              </button>
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Xác nhận</h3>
+              <p className="text-gray-600 mb-6">{confirmationModal.message}</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={closeConfirmationModal}
+                  className="bg-gray-300 text-gray-700 rounded-md py-2 px-4"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  className="bg-red-600 text-white rounded-md py-2 px-4"
+                >
+                  Xác nhận
+                </button>
+              </div>
             </div>
           </div>
         )}

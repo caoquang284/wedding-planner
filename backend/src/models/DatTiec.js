@@ -1,5 +1,25 @@
 import { knex } from '../config/database.js';
 
+const isCaExists = async (maCa) => {
+  const ca = await knex('CA').where({ MaCa: maCa }).first();
+  return !!ca;
+};
+
+const isSanhExists = async (maSanh) => {
+  const sanh = await knex('SANH').where({ MaSanh: maSanh }).first();
+  return !!sanh;
+};
+
+const isThucDonExists = async (maThucDon) => {
+  const thucDon = await knex('THUCDON').where({ MaThucDon: maThucDon }).first();
+  return !!thucDon;
+};
+
+const isDichVuExists = async (maDichVu) => {
+  const dichVu = await knex('DICHVU').where({ MaDichVu: maDichVu }).first();
+  return !!dichVu;
+};
+
 const DatTiec = {
   create: async (data) => {
     const [datTiec] = await knex('DATTIEC').insert(data).returning('*');

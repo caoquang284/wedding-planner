@@ -10,6 +10,9 @@ import loaiDichVuRoutes from './src/routes/loaiDichVu.js';
 import loaiMonAnRoutes from './src/routes/loaiMonAn.js';
 import monAnRoutes from './src/routes/monAn.js';
 import thucDonRoutes from './src/routes/thucDon.js';
+import sanhRoutes from './src/routes/sanh.js';
+import loaiSanhRoutes from './src/routes/loaiSanh.js';
+import caRoutes from './src/routes/ca.js';
 
 config();
 
@@ -34,6 +37,9 @@ app.use('/api/loaidichvu', loaiDichVuRoutes);
 app.use('/api/loaimonan', loaiMonAnRoutes);
 app.use('/api/monan', monAnRoutes);
 app.use('/api/thucdon', thucDonRoutes);
+app.use('/api/sanh', sanhRoutes);
+app.use('/api/loaisanh', loaiSanhRoutes);
+app.use('/api/ca', caRoutes);
 // Error handling
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {

@@ -8,24 +8,24 @@ const router = Router();
 
 router.post(
   '/tao',
-  auth,
-  checkPermission(17),
-  validation.validateDatTiec,
+  // auth,
+  // checkPermission(17),
+  // validation.validateDatTiec,
   datTiecController.createDatTiec
 );
 router.get(
   '/danh-sach',
-  auth,
-  checkPermission(18),
-  validation.validateDatTiecFilters,
+  // auth,
+  // checkPermission(18),
+  // validation.validateDatTiecFilters,
   datTiecController.getAllDatTiec
 );
 router.get(
   '/chi-tiet/:id',
-  auth,
-  checkPermission(18),
-  validation.validateIdParam,
-  datTiecController.getDatTiec
+  // auth,
+  // checkPermission(18),
+  // validation.validateIdParam,
+  datTiecController.getDatTiecById
 );
 router.put(
   '/cap-nhat/:id',

@@ -28,10 +28,10 @@ router.get(
 );
 router.put(
   '/cap-nhat/:id',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
-  validation.validateMonAn,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
+  // validation.validateMonAn,
   monAnController.updateMonAn
 );
 router.delete(

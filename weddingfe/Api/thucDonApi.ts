@@ -23,69 +23,42 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// Interface cho ThucDon
-export interface ThucDon {
-  MaThucDon: number;
-  TenThucDon: string;
-  DonGiaThoiDiemDat: number;
-  DonGiaHienTai: number;
-  GhiChu?: string;
-  Cover_Img?: string;
-  SoLuongMonAn?: number;
-  TongTien?: number;
-  MonAnList?: MonAnInThucDon[];
-}
+// CRUD Thực đơn
+export const getAllThucDon = async () => {
+  const response = await axiosInstance.get("/danh-sach");
+  return response.data;
+};
 
-export interface MonAnInThucDon {
-  MaMonAn: number;
-  TenMonAn: string;
-  MaLoaiMonAn: number;
-  TenLoaiMonAn: string;
-  DonGia: number;
-  GhiChu?: string;
-  DonGiaThoiDiemDat: number;
-}
+export const getThucDonById = async (id: number) => {
+  const response = await axiosInstance.get(`/chi-tiet/${id}`);
+  return response.data;
+};
 
-export interface CreateThucDonData {
+export const createThucDon = async (data: {
   tenThucDon: string;
   donGiaThoiDiemDat: number;
   donGiaHienTai: number;
   ghiChu?: string;
   coverImg?: string;
   monAnIds: number[];
-}
-
-export interface AddMonAnToThucDonData {
-  maMonAn: number;
-  donGiaThoiDiemDat: number;
-}
-
-export interface UpdateMonAnInThucDonData {
-  donGiaThoiDiemDat: number;
-}
-
-// CRUD Thực đơn
-export const getAllThucDon = async (): Promise<ThucDon[]> => {
-  const response = await axiosInstance.get("/danh-sach");
-  return response.data;
-};
-
-export const getThucDonById = async (id: number): Promise<ThucDon> => {
-  const response = await axiosInstance.get(`/chi-tiet/${id}`);
-  return response.data;
-};
-
-export const createThucDon = async (data: CreateThucDonData): Promise<ThucDon> => {
+}) => {
   const response = await axiosInstance.post("/tao", data);
   return response.data;
 };
 
-export const updateThucDon = async (id: number, data: CreateThucDonData): Promise<ThucDon> => {
+export const updateThucDon = async (id: number, data: {
+  tenThucDon: string;
+  donGiaThoiDiemDat: number;
+  donGiaHienTai: number;
+  ghiChu?: string;
+  coverImg?: string;
+  monAnIds: number[];
+}) => {
   const response = await axiosInstance.put(`/cap-nhat/${id}`, data);
   return response.data;
 };
 
-export const deleteThucDon = async (id: number): Promise<{message: string}> => {
+export const deleteThucDon = async (id: number) => {
   const response = await axiosInstance.delete(`/xoa/${id}`);
   return response.data;
 };
@@ -93,8 +66,11 @@ export const deleteThucDon = async (id: number): Promise<{message: string}> => {
 // Quản lý món ăn trong thực đơn
 export const addMonAnToThucDon = async (
   thucDonId: number, 
-  data: AddMonAnToThucDonData
-): Promise<{message: string, data: any}> => {
+  data: {
+    maMonAn: number;
+    donGiaThoiDiemDat: number;
+  }
+) => {
   const response = await axiosInstance.post(`/${thucDonId}/them-mon-an`, data);
   return response.data;
 };
@@ -102,7 +78,7 @@ export const addMonAnToThucDon = async (
 export const removeMonAnFromThucDon = async (
   thucDonId: number, 
   maMonAn: number
-): Promise<{message: string}> => {
+) => {
   const response = await axiosInstance.delete(`/${thucDonId}/xoa-mon-an/${maMonAn}`);
   return response.data;
 };
@@ -110,8 +86,10 @@ export const removeMonAnFromThucDon = async (
 export const updateMonAnInThucDon = async (
   thucDonId: number, 
   maMonAn: number, 
-  data: UpdateMonAnInThucDonData
-): Promise<{message: string, data: any}> => {
+  data: {
+    donGiaThoiDiemDat: number;
+  }
+) => {
   const response = await axiosInstance.put(`/${thucDonId}/cap-nhat-mon-an/${maMonAn}`, data);
   return response.data;
 };

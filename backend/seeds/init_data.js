@@ -1,6 +1,8 @@
 import { hash } from 'bcrypt';
 
 export async function seed(knex) {
+  await knex('DATTIEC_DICHVU').del();
+  await knex('DATTIEC').del();
   await knex('THUCDON_MONAN').del();
   await knex('THUCDON').del();
   await knex('MONAN').del();
@@ -10,6 +12,7 @@ export async function seed(knex) {
   await knex('NGUOIDUNG').del();
   await knex('NHOMNGUOIDUNG').del();
   await knex('CHUCNANG').del();
+  await knex('SANH').del();
   await knex('LOAISANH').del();
   await knex('CA').del();
   await knex('THAMSO').del();
@@ -104,20 +107,115 @@ export async function seed(knex) {
       MaNhom: 1,
     },
   ]);
-
-  // Seed bảng LOAISANH (5 loại sảnh với đơn giá bàn tối thiểu)
-  await knex('LOAISANH').insert([
-    { MaLoaiSanh: 1, TenLoaiSanh: 'A', DonGiaBanToiThieu: 1000000 },
-    { MaLoaiSanh: 2, TenLoaiSanh: 'B', DonGiaBanToiThieu: 1100000 },
-    { MaLoaiSanh: 3, TenLoaiSanh: 'C', DonGiaBanToiThieu: 1200000 },
-    { MaLoaiSanh: 4, TenLoaiSanh: 'D', DonGiaBanToiThieu: 1400000 },
-    { MaLoaiSanh: 5, TenLoaiSanh: 'E', DonGiaBanToiThieu: 1600000 },
-  ]);
-
   // Seed bảng CA (2 ca: Trưa, Tối)
   await knex('CA').insert([
     { MaCa: 1, TenCa: 'Trưa' },
     { MaCa: 2, TenCa: 'Tối' },
+    { MaCa: 3, TenCa: 'Sáng' },
+    { MaCa: 4, TenCa: 'Chiều' },
+    { MaCa: 5, TenCa: 'Đêm' },
+  ]);
+
+  await knex('LOAISANH').insert([
+    {
+      MaLoaiSanh: 1,
+      TenLoaiSanh: 'Thường',
+      DonGiaBanToiThieu: 500000.0,
+    },
+    {
+      MaLoaiSanh: 2,
+      TenLoaiSanh: 'VIP',
+      DonGiaBanToiThieu: 800000.0,
+    },
+    {
+      MaLoaiSanh: 3,
+      TenLoaiSanh: 'Cao cấp',
+      DonGiaBanToiThieu: 1200000.0,
+    },
+  ]);
+
+  // Seed bảng SANH (10 sảnh)
+  await knex('SANH').insert([
+    {
+      MaSanh: 1,
+      TenSanh: 'Sảnh Ngọc',
+      MaLoaiSanh: 1, // Thường
+      SoLuongBanToiDa: 50,
+      GhiChu: 'Sảnh nhỏ gọn, phù hợp cho tiệc gia đình',
+      AnhURL: 'https://example.com/images/sanh-ngoc.jpg',
+    },
+    {
+      MaSanh: 2,
+      TenSanh: 'Sảnh Bích Thủy',
+      MaLoaiSanh: 1, // Thường
+      SoLuongBanToiDa: 40,
+      GhiChu: 'Sảnh ấm cúng, thích hợp cho tiệc sinh nhật',
+      AnhURL: 'https://example.com/images/sanh-bich-thuy.jpg',
+    },
+    {
+      MaSanh: 3,
+      TenSanh: 'Sảnh Kim Cương',
+      MaLoaiSanh: 2, // VIP
+      SoLuongBanToiDa: 80,
+      GhiChu: 'Sảnh sang trọng, thích hợp cho tiệc cưới lớn',
+      AnhURL: 'https://example.com/images/sanh-kim-cuong.jpg',
+    },
+    {
+      MaSanh: 4,
+      TenSanh: 'Sảnh Pha Lê',
+      MaLoaiSanh: 2, // VIP
+      SoLuongBanToiDa: 60,
+      GhiChu: 'Sảnh hiện đại với hệ thống ánh sáng cao cấp',
+      AnhURL: 'https://example.com/images/sanh-pha-le.jpg',
+    },
+    {
+      MaSanh: 5,
+      TenSanh: 'Sảnh Hồng Ngọc',
+      MaLoaiSanh: 2, // VIP
+      SoLuongBanToiDa: 70,
+      GhiChu: 'Sảnh tinh tế, phù hợp cho sự kiện doanh nghiệp',
+      AnhURL: 'https://example.com/images/sanh-hong-ngoc.jpg',
+    },
+    {
+      MaSanh: 6,
+      TenSanh: 'Sảnh Hoàng Gia',
+      MaLoaiSanh: 3, // Cao cấp
+      SoLuongBanToiDa: 100,
+      GhiChu: 'Sảnh đẳng cấp, dành cho các sự kiện đặc biệt',
+      AnhURL: 'https://example.com/images/sanh-hoang-gia.jpg',
+    },
+    {
+      MaSanh: 7,
+      TenSanh: 'Sảnh Thiên Thanh',
+      MaLoaiSanh: 3, // Cao cấp
+      SoLuongBanToiDa: 90,
+      GhiChu: 'Sảnh rộng rãi, trang trí lộng lẫy',
+      AnhURL: 'https://example.com/images/sanh-thien-thanh.jpg',
+    },
+    {
+      MaSanh: 8,
+      TenSanh: 'Sảnh Vàng',
+      MaLoaiSanh: 3, // Cao cấp
+      SoLuongBanToiDa: 120,
+      GhiChu: 'Sảnh lớn nhất, phù hợp cho tiệc cưới hoàng tráng',
+      AnhURL: 'https://example.com/images/sanh-vang.jpg',
+    },
+    {
+      MaSanh: 9,
+      TenSanh: 'Sảnh Lục Bảo',
+      MaLoaiSanh: 1, // Thường
+      SoLuongBanToiDa: 45,
+      GhiChu: 'Sảnh thân thiện, phù hợp cho tiệc họp mặt',
+      AnhURL: 'https://example.com/images/sanh-luc-bao.jpg',
+    },
+    {
+      MaSanh: 10,
+      TenSanh: 'Sảnh Sapphire',
+      MaLoaiSanh: 2, // VIP
+      SoLuongBanToiDa: 65,
+      GhiChu: 'Sảnh thanh lịch, lý tưởng cho tiệc cưới trung bình',
+      AnhURL: 'https://example.com/images/sanh-sapphire.jpg',
+    },
   ]);
 
   // Seed bảng THAMSO (phạt 1% mỗi ngày)
@@ -587,4 +685,352 @@ export async function seed(knex) {
     `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT MAX("MaThucDon") FROM "THUCDON"))`
   );
   // Bảng THUCDON_MONAN không có cột SERIAL nên không cần reset sequence cho nó.
+  await knex('DATTIEC').insert([
+    {
+      MaDatTiec: 1,
+      TenChuRe: 'Nguyễn Văn An',
+      TenCoDau: 'Trần Thị Bình',
+      DienThoai: '0901234567',
+      NgayDaiTiec: '2025-06-15',
+      MaCa: 1,
+      MaSanh: 1,
+      MaThucDon: 1,
+      TienDatCoc: 12000000.0,
+      SoLuongBan: 30,
+      SoBanDuTru: 5,
+    },
+    {
+      MaDatTiec: 2,
+      TenChuRe: 'Lê Hoàng Bảo',
+      TenCoDau: 'Phạm Ngọc Châu',
+      DienThoai: '0912345678',
+      NgayDaiTiec: '2025-07-20',
+      MaCa: 2,
+      MaSanh: 2,
+      MaThucDon: 2,
+      TienDatCoc: 15000000.0,
+      SoLuongBan: 40,
+      SoBanDuTru: 8,
+    },
+    {
+      MaDatTiec: 3,
+      TenChuRe: 'Trần Quốc Cường',
+      TenCoDau: 'Nguyễn Thị Dung',
+      DienThoai: '0923456789',
+      NgayDaiTiec: '2025-08-10',
+      MaCa: 3,
+      MaSanh: 3,
+      MaThucDon: 3,
+      TienDatCoc: 10000000.0,
+      SoLuongBan: 25,
+      SoBanDuTru: 3,
+    },
+    {
+      MaDatTiec: 4,
+      TenChuRe: 'Phạm Văn Dũng',
+      TenCoDau: 'Lê Thị Hà',
+      DienThoai: '0934567890',
+      NgayDaiTiec: '2025-09-05',
+      MaCa: 4,
+      MaSanh: 4,
+      MaThucDon: 4,
+      TienDatCoc: 13000000.0,
+      SoLuongBan: 35,
+      SoBanDuTru: 5,
+    },
+    {
+      MaDatTiec: 5,
+      TenChuRe: 'Ngô Minh Hùng',
+      TenCoDau: 'Võ Thị Kim',
+      DienThoai: '0945678901',
+      NgayDaiTiec: '2025-10-12',
+      MaCa: 5,
+      MaSanh: 5,
+      MaThucDon: 5,
+      TienDatCoc: 11000000.0,
+      SoLuongBan: 28,
+      SoBanDuTru: 4,
+    },
+    {
+      MaDatTiec: 6,
+      TenChuRe: 'Vũ Thành Long',
+      TenCoDau: 'Đỗ Thị Mai',
+      DienThoai: '0956789012',
+      NgayDaiTiec: '2025-11-18',
+      MaCa: 1,
+      MaSanh: 6,
+      MaThucDon: 6,
+      TienDatCoc: 14000000.0,
+      SoLuongBan: 38,
+      SoBanDuTru: 6,
+    },
+    {
+      MaDatTiec: 7,
+      TenChuRe: 'Bùi Quốc Nam',
+      TenCoDau: 'Hà Thị Ngọc',
+      DienThoai: '0967890123',
+      NgayDaiTiec: '2025-12-01',
+      MaCa: 2,
+      MaSanh: 7,
+      MaThucDon: 7,
+      TienDatCoc: 9000000.0,
+      SoLuongBan: 20,
+      SoBanDuTru: 2,
+    },
+    {
+      MaDatTiec: 8,
+      TenChuRe: 'Đặng Văn Phong',
+      TenCoDau: 'Trương Thị Quỳnh',
+      DienThoai: '0978901234',
+      NgayDaiTiec: '2025-06-25',
+      MaCa: 3,
+      MaSanh: 8,
+      MaThucDon: 8,
+      TienDatCoc: 16000000.0,
+      SoLuongBan: 45,
+      SoBanDuTru: 5,
+    },
+    {
+      MaDatTiec: 9,
+      TenChuRe: 'Hoàng Minh Quân',
+      TenCoDau: 'Ngô Thị Thu',
+      DienThoai: '0989012345',
+      NgayDaiTiec: '2025-07-30',
+      MaCa: 4,
+      MaSanh: 9,
+      MaThucDon: 1,
+      TienDatCoc: 10500000.0,
+      SoLuongBan: 27,
+      SoBanDuTru: 3,
+    },
+    {
+      MaDatTiec: 10,
+      TenChuRe: 'Lý Văn Sơn',
+      TenCoDau: 'Phan Thị Uyên',
+      DienThoai: '0990123456',
+      NgayDaiTiec: '2025-08-15',
+      MaCa: 5,
+      MaSanh: 10,
+      MaThucDon: 2,
+      TienDatCoc: 12500000.0,
+      SoLuongBan: 32,
+      SoBanDuTru: 4,
+    },
+  ]);
+  // Thêm dữ liệu vào DATTIEC_DICHVU
+  await knex('DATTIEC_DICHVU').insert([
+    // Đặt tiệc 1
+    {
+      MaDatTiec: 1,
+      MaDichVu: 1,
+      SoLuong: 2,
+      DonGiaThoiDiemDat: 5000000,
+      ThanhTien: 10000000,
+    },
+    {
+      MaDatTiec: 1,
+      MaDichVu: 6,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 15000000,
+      ThanhTien: 15000000,
+    },
+    {
+      MaDatTiec: 1,
+      MaDichVu: 10,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 7000000,
+      ThanhTien: 7000000,
+    },
+    // Đặt tiệc 2
+    {
+      MaDatTiec: 2,
+      MaDichVu: 2,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 10000000,
+      ThanhTien: 10000000,
+    },
+    {
+      MaDatTiec: 2,
+      MaDichVu: 7,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 8000000,
+      ThanhTien: 8000000,
+    },
+    {
+      MaDatTiec: 2,
+      MaDichVu: 14,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 5000000,
+      ThanhTien: 5000000,
+    },
+    {
+      MaDatTiec: 2,
+      MaDichVu: 18,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 5000000,
+      ThanhTien: 5000000,
+    },
+    // Đặt tiệc 3
+    {
+      MaDatTiec: 3,
+      MaDichVu: 3,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 3000000,
+      ThanhTien: 3000000,
+    },
+    {
+      MaDatTiec: 3,
+      MaDichVu: 8,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 5000000,
+      ThanhTien: 5000000,
+    },
+    // Đặt tiệc 4
+    {
+      MaDatTiec: 4,
+      MaDichVu: 4,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 4000000,
+      ThanhTien: 4000000,
+    },
+    {
+      MaDatTiec: 4,
+      MaDichVu: 11,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 10000000,
+      ThanhTien: 10000000,
+    },
+    {
+      MaDatTiec: 4,
+      MaDichVu: 15,
+      SoLuong: 2,
+      DonGiaThoiDiemDat: 2000000,
+      ThanhTien: 4000000,
+    },
+    // Đặt tiệc 5
+    {
+      MaDatTiec: 5,
+      MaDichVu: 5,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 2000000,
+      ThanhTien: 2000000,
+    },
+    {
+      MaDatTiec: 5,
+      MaDichVu: 9,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 6000000,
+      ThanhTien: 6000000,
+    },
+    {
+      MaDatTiec: 5,
+      MaDichVu: 12,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 3000000,
+      ThanhTien: 3000000,
+    },
+    // Đặt tiệc 6
+    {
+      MaDatTiec: 6,
+      MaDichVu: 1,
+      SoLuong: 3,
+      DonGiaThoiDiemDat: 5000000,
+      ThanhTien: 15000000,
+    },
+    {
+      MaDatTiec: 6,
+      MaDichVu: 13,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 12000000,
+      ThanhTien: 12000000,
+    },
+    {
+      MaDatTiec: 6,
+      MaDichVu: 16,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 3000000,
+      ThanhTien: 3000000,
+    },
+    // Đặt tiệc 7
+    {
+      MaDatTiec: 7,
+      MaDichVu: 2,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 10000000,
+      ThanhTien: 10000000,
+    },
+    {
+      MaDatTiec: 7,
+      MaDichVu: 19,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 4000000,
+      ThanhTien: 4000000,
+    },
+    // Đặt tiệc 8
+    {
+      MaDatTiec: 8,
+      MaDichVu: 3,
+      SoLuong: 2,
+      DonGiaThoiDiemDat: 3000000,
+      ThanhTien: 6000000,
+    },
+    {
+      MaDatTiec: 8,
+      MaDichVu: 6,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 15000000,
+      ThanhTien: 15000000,
+    },
+    {
+      MaDatTiec: 8,
+      MaDichVu: 20,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 3000000,
+      ThanhTien: 3000000,
+    },
+    {
+      MaDatTiec: 8,
+      MaDichVu: 14,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 5000000,
+      ThanhTien: 5000000,
+    },
+    // Đặt tiệc 9
+    {
+      MaDatTiec: 9,
+      MaDichVu: 4,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 4000000,
+      ThanhTien: 4000000,
+    },
+    {
+      MaDatTiec: 9,
+      MaDichVu: 10,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 7000000,
+      ThanhTien: 7000000,
+    },
+    // Đặt tiệc 10
+    {
+      MaDatTiec: 10,
+      MaDichVu: 5,
+      SoLuong: 2,
+      DonGiaThoiDiemDat: 2000000,
+      ThanhTien: 4000000,
+    },
+    {
+      MaDatTiec: 10,
+      MaDichVu: 7,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 8000000,
+      ThanhTien: 8000000,
+    },
+    {
+      MaDatTiec: 10,
+      MaDichVu: 17,
+      SoLuong: 1,
+      DonGiaThoiDiemDat: 2500000,
+      ThanhTien: 2500000,
+    },
+  ]);
 }

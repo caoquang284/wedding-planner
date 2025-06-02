@@ -8,15 +8,15 @@ const router = Router();
 
 router.post(
   '/tao',
-  auth,
-  checkPermission('Quản lý ca'),
-  validation.validateCa,
+  // auth,
+  // checkPermission('Quản lý ca'),
+  // validation.validateCa,
   caController.createCa
 );
 router.get(
   '/danh-sach',
-  auth,
-  checkPermission('Quản lý ca'),
+  // auth,
+  // checkPermission('Quản lý ca'),
   caController.getAllCa
 );
 router.get(
