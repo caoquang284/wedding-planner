@@ -567,11 +567,11 @@ function Menus() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hàng đầu tiên: Tìm kiếm và thêm thực đơn */}
         <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
             Danh sách thực đơn có sẵn
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -580,11 +580,11 @@ function Menus() {
               placeholder="Tìm kiếm thực đơn..."
               value={menuSearchTerm}
               onChange={(e) => setMenuSearchTerm(e.target.value)}
-              className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
             />
             <button
               onClick={openAddMenuModal}
-              className="w-full sm:w-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+              className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#00152A]"
             >
               Thêm thực đơn
             </button>
@@ -596,21 +596,21 @@ function Menus() {
           {/* Ẩn bảng trên mobile */}
           <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-[#FAFAFA]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Tên thực đơn
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Giá (VNĐ)
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Danh sách món ăn
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Ghi chú
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Hành động
                   </th>
                 </tr>
@@ -635,13 +635,13 @@ function Menus() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => openEditMenuModal(menu)}
-                        className="text-blue-600 hover:text-blue-800 mr-4"
+                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
                       >
                         Sửa
                       </button>
                       <button
                         onClick={() => handleDeleteMenu(menu.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-[#D4B2B2] hover:text-[#B89999]"
                       >
                         Xóa
                       </button>
@@ -655,7 +655,10 @@ function Menus() {
           {/* Hiển thị dạng card trên mobile */}
           <div className="block sm:hidden space-y-4">
             {filteredMenus.map((menu) => (
-              <div key={menu.id} className="bg-white shadow-md rounded-lg p-4">
+              <div
+                key={menu.id}
+                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
+              >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-medium text-gray-900">
@@ -676,13 +679,13 @@ function Menus() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => openEditMenuModal(menu)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="text-[#B8860B] hover:text-[#8B6508] text-sm"
                     >
                       Sửa
                     </button>
                     <button
                       onClick={() => handleDeleteMenu(menu.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="text-[#D4B2B2] hover:text-[#B89999] text-sm"
                     >
                       Xóa
                     </button>
@@ -695,7 +698,7 @@ function Menus() {
 
         {/* Hàng thứ hai: Tìm kiếm và thêm món ăn, loại món ăn */}
         <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
             Quản lý món ăn
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -705,12 +708,12 @@ function Menus() {
                 placeholder="Tìm kiếm món ăn..."
                 value={dishSearchTerm}
                 onChange={(e) => setDishSearchTerm(e.target.value)}
-                className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
               />
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full sm:w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
               >
                 <option value="">Tất cả loại món ăn</option>
                 {categories.map((category) => (
@@ -723,13 +726,13 @@ function Menus() {
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={openAddDishModal}
-                className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                className="w-full sm:w-auto bg-[#D4B2B2] text-white py-2 px-4 rounded hover:bg-[#B89999]"
               >
                 Thêm món ăn
               </button>
               <button
                 onClick={openAddCategoryModal}
-                className="w-full sm:w-auto bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600"
+                className="w-full sm:w-auto bg-[#B8860B] text-white py-2 px-4 rounded hover:bg-[#8B6508]"
               >
                 Thêm loại món ăn
               </button>
@@ -871,11 +874,8 @@ function Menus() {
 
         {/* Modal thêm/sửa thực đơn */}
         {isMenuModalOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-[#E6C3C3] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               {isMenuEditMode ? "Sửa thực đơn" : "Thêm thực đơn"}
             </h3>
             <form onSubmit={handleMenuSubmit}>
@@ -969,13 +969,13 @@ function Menus() {
                 <button
                   type="button"
                   onClick={closeMenuModal}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                  className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                  className="bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#00152A]"
                 >
                   {isMenuEditMode ? "Cập nhật" : "Thêm"}
                 </button>
@@ -986,11 +986,8 @@ function Menus() {
 
         {/* Modal thêm/sửa món ăn */}
         {isDishModalOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                  transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-[#D4B2B2] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               {isDishEditMode ? "Sửa món ăn" : "Thêm món ăn"}
             </h3>
             <form onSubmit={handleDishSubmit}>
@@ -1067,13 +1064,13 @@ function Menus() {
                 <button
                   type="button"
                   onClick={closeDishModal}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                  className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                  className="bg-[#D4B2B2] text-white py-2 px-4 rounded hover:bg-[#B89999]"
                 >
                   {isDishEditMode ? "Cập nhật" : "Thêm"}
                 </button>
@@ -1084,8 +1081,8 @@ function Menus() {
 
         {/* Modal thêm/sửa loại món ăn */}
         {isCategoryModalOpen && (
-          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 rounded-lg p-6 w-full max-w-sm shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-[#B8860B] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               {isCategoryEditMode ? "Sửa loại món ăn" : "Thêm loại món ăn"}
             </h3>
             <form onSubmit={handleCategorySubmit}>
@@ -1112,13 +1109,13 @@ function Menus() {
                 <button
                   type="button"
                   onClick={closeCategoryModal}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                  className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                  className="bg-[#B8860B] text-white py-2 px-4 rounded hover:bg-[#8B6508]"
                 >
                   {isCategoryEditMode ? "Cập nhật" : "Thêm"}
                 </button>
@@ -1129,11 +1126,8 @@ function Menus() {
 
         {/* Modal xác nhận */}
         {confirmationModal.isOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm bg-white rounded-lg p-6 shadow-lg border border-[#D4B2B2] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               Xác nhận
             </h3>
             <p className="text-sm text-gray-600 mb-6">
@@ -1143,14 +1137,14 @@ function Menus() {
               <button
                 type="button"
                 onClick={closeConfirmationModal}
-                className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
               >
                 Hủy
               </button>
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                className="bg-[#D4B2B2] text-white py-2 px-4 rounded hover:bg-[#B89999]"
               >
                 Xác nhận
               </button>

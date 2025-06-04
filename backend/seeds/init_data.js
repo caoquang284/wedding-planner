@@ -142,7 +142,8 @@ export async function seed(knex) {
       MaLoaiSanh: 1, // Thường
       SoLuongBanToiDa: 50,
       GhiChu: 'Sảnh nhỏ gọn, phù hợp cho tiệc gia đình',
-      AnhURL: 'https://example.com/images/sanh-ngoc.jpg',
+      AnhURL:
+        'https://crystalpalacevn.com/wp-content/uploads/2020/06/classic.jpg',
     },
     {
       MaSanh: 2,
@@ -150,7 +151,8 @@ export async function seed(knex) {
       MaLoaiSanh: 1, // Thường
       SoLuongBanToiDa: 40,
       GhiChu: 'Sảnh ấm cúng, thích hợp cho tiệc sinh nhật',
-      AnhURL: 'https://example.com/images/sanh-bich-thuy.jpg',
+      AnhURL:
+        'https://crystalpalacevn.com/wp-content/uploads/2023/03/T4_07087-scaled.jpg',
     },
     {
       MaSanh: 3,
@@ -158,7 +160,8 @@ export async function seed(knex) {
       MaLoaiSanh: 2, // VIP
       SoLuongBanToiDa: 80,
       GhiChu: 'Sảnh sang trọng, thích hợp cho tiệc cưới lớn',
-      AnhURL: 'https://example.com/images/sanh-kim-cuong.jpg',
+      AnhURL:
+        'https://crystalpalacevn.com/wp-content/uploads/2020/06/royal.png',
     },
     {
       MaSanh: 4,
@@ -166,7 +169,8 @@ export async function seed(knex) {
       MaLoaiSanh: 2, // VIP
       SoLuongBanToiDa: 60,
       GhiChu: 'Sảnh hiện đại với hệ thống ánh sáng cao cấp',
-      AnhURL: 'https://example.com/images/sanh-pha-le.jpg',
+      AnhURL:
+        'https://crystalpalacevn.com/wp-content/uploads/2020/06/diamond.jpg',
     },
     {
       MaSanh: 5,
@@ -174,7 +178,8 @@ export async function seed(knex) {
       MaLoaiSanh: 2, // VIP
       SoLuongBanToiDa: 70,
       GhiChu: 'Sảnh tinh tế, phù hợp cho sự kiện doanh nghiệp',
-      AnhURL: 'https://example.com/images/sanh-hong-ngoc.jpg',
+      AnhURL:
+        'https://crystalpalacevn.com/wp-content/uploads/2022/07/4W9A6001-2.jpg',
     },
     {
       MaSanh: 6,
@@ -182,7 +187,8 @@ export async function seed(knex) {
       MaLoaiSanh: 3, // Cao cấp
       SoLuongBanToiDa: 100,
       GhiChu: 'Sảnh đẳng cấp, dành cho các sự kiện đặc biệt',
-      AnhURL: 'https://example.com/images/sanh-hoang-gia.jpg',
+      AnhURL:
+        'https://asiana-plaza.com/wp-content/uploads/2021/03/trang-tri-sanh-tiec-cuoi-dep-3.jpg',
     },
     {
       MaSanh: 7,
@@ -190,7 +196,8 @@ export async function seed(knex) {
       MaLoaiSanh: 3, // Cao cấp
       SoLuongBanToiDa: 90,
       GhiChu: 'Sảnh rộng rãi, trang trí lộng lẫy',
-      AnhURL: 'https://example.com/images/sanh-thien-thanh.jpg',
+      AnhURL:
+        'https://asiana-plaza.com/wp-content/uploads/2021/03/trang-tri-sanh-cuoi-dep-va-sang-trong-1.jpg',
     },
     {
       MaSanh: 8,
@@ -198,7 +205,8 @@ export async function seed(knex) {
       MaLoaiSanh: 3, // Cao cấp
       SoLuongBanToiDa: 120,
       GhiChu: 'Sảnh lớn nhất, phù hợp cho tiệc cưới hoàng tráng',
-      AnhURL: 'https://example.com/images/sanh-vang.jpg',
+      AnhURL:
+        'https://asiana-plaza.com/wp-content/uploads/2021/03/cach-trang-tri-tiec-cuoi-tai-nha-hang-1.jpg',
     },
     {
       MaSanh: 9,
@@ -206,7 +214,8 @@ export async function seed(knex) {
       MaLoaiSanh: 1, // Thường
       SoLuongBanToiDa: 45,
       GhiChu: 'Sảnh thân thiện, phù hợp cho tiệc họp mặt',
-      AnhURL: 'https://example.com/images/sanh-luc-bao.jpg',
+      AnhURL:
+        'https://asiana-plaza.com/wp-content/uploads/2021/03/trang-tri-sanh-cuoi-tai-nha-1.jpg',
     },
     {
       MaSanh: 10,
@@ -214,7 +223,8 @@ export async function seed(knex) {
       MaLoaiSanh: 2, // VIP
       SoLuongBanToiDa: 65,
       GhiChu: 'Sảnh thanh lịch, lý tưởng cho tiệc cưới trung bình',
-      AnhURL: 'https://example.com/images/sanh-sapphire.jpg',
+      AnhURL:
+        'https://asiana-plaza.com/wp-content/uploads/2021/03/sanh-cuoi-dep-nhat-1.jpg',
     },
   ]);
 
@@ -239,7 +249,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 1,
       DonGia: 5000000,
       GhiChu: 'Hoa tươi nhập khẩu, thiết kế theo yêu cầu',
-      AnhURL: null,
+      AnhURL:
+        'https://www.blissvn.com/Data/Sites/1/News/1723/thumbs/img_0304.jpg',
     },
     {
       MaDichVu: 2,
@@ -247,7 +258,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 1,
       DonGia: 10000000,
       GhiChu: 'Bao gồm backdrop và đèn LED',
-      AnhURL: null,
+      AnhURL:
+        'https://omni.vn/wp-content/uploads/2024/08/449298337_897539409069240_5065201684509641361_n.jpg',
     },
     {
       MaDichVu: 3,
@@ -255,7 +267,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 1,
       DonGia: 3000000,
       GhiChu: 'Hoa tươi kết hợp với khung sắt',
-      AnhURL: null,
+      AnhURL:
+        'https://file.hstatic.net/200000427529/article/329697641_3156064171352310_3517658923531420979_n_a24c6054266d40ee8f93dd8851e6c3d3_1024x1024.jpeg',
     },
     {
       MaDichVu: 4,
@@ -263,7 +276,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 1,
       DonGia: 4000000,
       GhiChu: 'Dùng hoa hồng và hoa baby',
-      AnhURL: null,
+      AnhURL:
+        'https://www.yamewedding.vn/resource/images/2021/03/d9bef89e3920db0806d12b1a3778d118.JPG',
     },
     {
       MaDichVu: 5,
@@ -271,7 +285,7 @@ export async function seed(knex) {
       MaLoaiDichVu: 1,
       DonGia: 2000000,
       GhiChu: 'Trang trí ảnh cưới và phụ kiện',
-      AnhURL: null,
+      AnhURL: 'https://luxurypalace.vn/wp-content/uploads/2023/10/fd.jpg',
     },
     // Loại 2: Âm thanh và ánh sáng (4 dịch vụ)
     {
@@ -280,7 +294,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 2,
       DonGia: 15000000,
       GhiChu: 'Biểu diễn 2 giờ, 5 nhạc công',
-      AnhURL: null,
+      AnhURL:
+        'https://donduongband.com/wp-content/uploads/2024/05/Ban-nhac-dam-cuoi-HCM-1024x684.jpg',
     },
     {
       MaDichVu: 7,
@@ -288,7 +303,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 2,
       DonGia: 8000000,
       GhiChu: 'Bao gồm thiết bị âm thanh',
-      AnhURL: null,
+      AnhURL:
+        'https://phamgiamedia.vn/wp-content/uploads/2024/05/thue-dj-cho-dam-cuoi-1-1024x683.jpg',
     },
     {
       MaDichVu: 8,
@@ -296,7 +312,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 2,
       DonGia: 5000000,
       GhiChu: 'Đèn LED đổi màu',
-      AnhURL: null,
+      AnhURL:
+        'https://7799wedding.vn/data/media/2458/images/mau-phong-cuoi-dep-hoi-truong%20(2).jpg',
     },
     {
       MaDichVu: 9,
@@ -304,7 +321,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 2,
       DonGia: 6000000,
       GhiChu: 'Loa JBL, âm thanh vòm',
-      AnhURL: null,
+      AnhURL:
+        'https://khangphudataudio.com/wp-content/uploads/2015/12/dan-am-thanh-dam-cuoi-gia-re.jpg',
     },
     // Loại 3: Chụp ảnh và quay phim (4 dịch vụ)
     {
@@ -313,7 +331,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 3,
       DonGia: 7000000,
       GhiChu: 'Chụp 300 ảnh, chỉnh sửa cơ bản',
-      AnhURL: null,
+      AnhURL:
+        'https://thanhdanhwedding.com/thumb/1366x620/1/upload/hinhanh/2-1695627704.jpg',
     },
     {
       MaDichVu: 11,
@@ -321,7 +340,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 3,
       DonGia: 10000000,
       GhiChu: 'Video 5 phút highlight',
-      AnhURL: null,
+      AnhURL:
+        'https://producer.vn/wp-content/uploads/2017/04/huong-dan-quay-video-dam-cuoi-chi-tiet-nhat-1.jpg',
     },
     {
       MaDichVu: 12,
@@ -329,7 +349,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 3,
       DonGia: 3000000,
       GhiChu: 'Chụp tất cả bàn tiệc',
-      AnhURL: null,
+      AnhURL:
+        'https://images.squarespace-cdn.com/content/v1/5bf7bf0b506fbeeca9e55208/9474acba-5d45-4cab-a8a6-52ce31bed6fb/Annie+Vy-chup+anh+cuoi+phong+su-phong+su+cuoi-chup+anh+cuoi+quan+10-dich+vu+cuoi+tron+goi-dam+cuoi-tiec+cuoi-chup+hinh+ngay+cuoi-tron+goi+ngay+cuoi-chup+le+gia+tien-chup+le+ruoc+dau-chup+le+nha+tho1TQB+%28249%29.jpg',
     },
     {
       MaDichVu: 13,
@@ -337,7 +358,7 @@ export async function seed(knex) {
       MaLoaiDichVu: 3,
       DonGia: 12000000,
       GhiChu: 'Video 2 giờ, đầy đủ nghi lễ',
-      AnhURL: null,
+      AnhURL: 'https://addevent.vn/wp-content/uploads/2024/10/a-chau-4.jpg',
     },
     // Loại 4: Dịch vụ nhân sự (4 dịch vụ)
     {
@@ -346,7 +367,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 4,
       DonGia: 5000000,
       GhiChu: 'MC chuyên nghiệp, nói 2 ngôn ngữ',
-      AnhURL: null,
+      AnhURL:
+        'https://anhvienmimosa.com.vn/wp-content/uploads/2023/02/kich-ban-mc-dam-cuoi-nha-trai-8.jpg',
     },
     {
       MaDichVu: 15,
@@ -354,7 +376,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 4,
       DonGia: 2000000,
       GhiChu: 'Tính giá cho 10 nhân viên',
-      AnhURL: null,
+      AnhURL:
+        'https://www.hoteljob.vn/files/Anh-HTJ-Hong/kinh-nghiem-lam-phuc-vu-tiec-cuoi-5.jpg',
     },
     {
       MaDichVu: 16,
@@ -362,7 +385,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 4,
       DonGia: 3000000,
       GhiChu: 'Điều phối toàn bộ tiệc',
-      AnhURL: null,
+      AnhURL:
+        'https://7799wedding.vn/mediacenter/media/images/2458/products/2458/2825/s1000_1000/kyahz-wedding---psc-vannavi-1386-1563347118.jpg',
     },
     {
       MaDichVu: 17,
@@ -370,7 +394,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 4,
       DonGia: 2500000,
       GhiChu: '5 người, đồng phục truyền thống',
-      AnhURL: null,
+      AnhURL:
+        'https://cuoihoihungthinh.com/wp-content/uploads/2022/04/IMG_1035.jpg',
     },
     // Loại 5: Dịch vụ bổ sung (3 dịch vụ)
     {
@@ -379,7 +404,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 5,
       DonGia: 5000000,
       GhiChu: 'Xe 16 chỗ, trang trí hoa tươi',
-      AnhURL: null,
+      AnhURL:
+        'https://dichvutieccuoihcm.com/uploads/source/trang-tri-xe-hoa/xe-hoa-cuoi-dep.jpg',
     },
     {
       MaDichVu: 19,
@@ -387,7 +413,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 5,
       DonGia: 4000000,
       GhiChu: 'Pháo hoa lạnh, an toàn',
-      AnhURL: null,
+      AnhURL:
+        'https://cuoihoihoangvu.com.vn/wp-content/uploads/2014/03/phao-dien-dam-cuoi.jpg',
     },
     {
       MaDichVu: 20,
@@ -395,7 +422,8 @@ export async function seed(knex) {
       MaLoaiDichVu: 5,
       DonGia: 3000000,
       GhiChu: 'Thiết kế theo yêu cầu',
-      AnhURL: null,
+      AnhURL:
+        'https://cuoihoiphuonganh.com/sites/default/files/2018-11/banh-cuoi-dep-4.jpg',
     },
   ]);
 

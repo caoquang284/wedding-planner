@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = 'http://localhost:3000/api/dat-tiec';
 
@@ -7,7 +7,7 @@ const axiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor để gắn token vào header
+// Interceptor request: Gắn token vào header
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token') || '';
   if (token) {
@@ -16,22 +16,49 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// Tạo đặt tiệc
-export const createDatTiec = async (data: {
+// Interceptor response: Xử lý lỗi chung
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      // Token hết hạn hoặc không hợp lệ
+      localStorage.removeItem('token');
+      window.location.href = '/login'; // Redirect về login
+      return Promise.reject(new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.'));
+    }
+    const message = (error.response?.data as { error?: string })?.error || 'Đã xảy ra lỗi';
+    return Promise.reject(new Error(message));
+  }
+);
+
+interface DichVu {
+  maDichVu: number;
+  soLuong: number;
+  donGiaThoiDiemDat: number;
+}
+
+interface DatTiecData {
   tenChuRe: string;
   tenCoDau: string;
-  dienThoai: string;
-  ngayDaiTiec: string;
+  dienThoai: string; // 10 chữ số
+  ngayDaiTiec: string; // YYYY-MM-DD
   maCa: number;
   maSanh: number;
   maThucDon: number;
   soLuongBan: number;
   soBanDuTru: number;
-  tienDatCoc?: number;
-  dichVus?: { maDichVu: number; soLuong: number; donGiaThoiDiemDat: number }[];
-}) => {
-  const response = await axiosInstance.post('/tao', data);
-  return response.data;
+  tienDatCoc: number;
+  dichVus?: DichVu[];
+}
+
+// Tạo đặt tiệc
+export const createDatTiec = async (data: DatTiecData) => {
+  try {
+    const response = await axiosInstance.post('/dat-tiec', data);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
 };
 
 // Lấy danh sách đặt tiệc
@@ -43,65 +70,61 @@ export const getAllDatTiec = async (filters: {
   tenCoDau?: string;
   dienThoai?: string;
 } = {}) => {
-  const response = await axiosInstance.get('/danh-sach', { params: filters });
-  return response.data;
+  try {
+    const response = await axiosInstance.get('/danh-sach', { params: filters });
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
 };
 
 // Lấy chi tiết đặt tiệc
 export const getDatTiecById = async (id: number) => {
-  const response = await axiosInstance.get(`/chi-tiet/${id}`);
-  return response.data;
+  try {
+    const response = await axiosInstance.get(`/chi-tiet/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
 };
 
 // Cập nhật đặt tiệc
-export const updateDatTiec = async (
-  id: number,
-  data: {
-    tenChuRe: string;
-    tenCoDau: string;
-    dienThoai: string;
-    ngayDaiTiec: string;
-    maCa: number;
-    maSanh: number;
-    maThucDon: number;
-    soLuongBan: number;
-    soBanDuTru: number;
-    dichVus?: { maDichVu: number; soLuong: number; donGiaThoiDiemDat: number }[];
+export const updateDatTiec = async (id: number, data: DatTiecData) => {
+  try {
+    const response = await axiosInstance.put(`/cap-nhat/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
   }
-) => {
-  const response = await axiosInstance.put(`/cap-nhat/${id}`, data);
-  return response.data;
 };
 
 // Xóa đặt tiệc
 export const deleteDatTiec = async (id: number) => {
-  const response = await axiosInstance.delete(`/xoa/${id}`);
-  return response.data;
+  try {
+    const response = await axiosInstance.delete(`/xoa/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
 };
 
-// Thêm món ăn vào thực đơn của đặt tiệc
-export const themMonAn = async (id: number, maMonAn: number) => {
-  const response = await axiosInstance.post(`/them-mon-an/${id}`, { maMonAn });
-  return response.data;
+
+// Thêm dịch vụ
+export const themDichVu = async (id: number, data: DichVu) => {
+  try {
+    const response = await axiosInstance.post(`/them-dich-vu/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
 };
 
-// Xóa món ăn khỏi thực đơn của đặt tiệc
-export const xoaMonAn = async (id: number, maMonAn: number) => {
-  const response = await axiosInstance.delete(`/xoa-mon-an/${id}/${maMonAn}`);
-  return response.data;
-};
-
-// Thêm dịch vụ vào đặt tiệc
-export const themDichVu = async (
-  id: number,
-  data: { maDichVu: number; soLuong: number; donGiaThoiDiemDat: number }
-) => {
-  const response = await axiosInstance.post(`/them-dich-vu/${id}`, data);
-  return response.data;
-};
-
-// Xóa dịch vụ khỏi đặt tiệc
+// Xóa dịch vụ
 export const xoaDichVu = async (id: number, maDichVu: number) => {
-  const response = await axiosInstance.delete(`/xoa-dich-vu/${id}/${maDichVu}`);
-  return response.data;
+  try {
+    const response = await axiosInstance.delete(`/xoa-dich-vu/${id}/${maDichVu}`);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
 };

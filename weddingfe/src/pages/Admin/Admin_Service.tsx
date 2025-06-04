@@ -323,25 +323,28 @@ function Services() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p>Đang tải dữ liệu...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#001F3F] mx-auto mb-4"></div>
+          <p className="text-[#001F3F]">Đang tải dữ liệu...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-500">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
+        <p className="text-[#D4B2B2]">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
             Quản lý dịch vụ
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -351,12 +354,12 @@ function Services() {
                 placeholder="Tìm kiếm dịch vụ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-64 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
               />
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full sm:w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-48 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
               >
                 <option value="">Tất cả loại dịch vụ</option>
                 {categories.map((category) => (
@@ -372,13 +375,13 @@ function Services() {
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={openAddModal}
-                className="w-full sm:w-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
               >
                 Thêm dịch vụ
               </button>
               <button
                 onClick={openAddCategoryModal}
-                className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                className="w-full sm:w-auto bg-[#D4B2B2] text-white py-2 px-4 rounded hover:bg-[#C49898] transition-colors duration-300"
               >
                 Thêm loại dịch vụ
               </button>
@@ -387,37 +390,40 @@ function Services() {
         </div>
 
         <div className="mb-6">
-          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-[#001F3F]/10">
                 <tr>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Tên dịch vụ
                   </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Mô tả
                   </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Giá (VNĐ)
                   </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Loại dịch vụ
                   </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-#001F3F] uppercase tracking-wider align-middle">
                     Ảnh
                   </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Ghi chú
                   </th>
-                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right align-middle">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider text-right align-middle">
                     Hành động
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {filteredServices.map((service) => (
-                  <tr key={service.MaDichVu}>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 align-middle">
+                  <tr
+                    key={service.MaDichVu}
+                    className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4 text-sm font-medium text-[#001F3F] align-middle">
                       {service.TenDichVu}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 align-middle">
@@ -446,13 +452,13 @@ function Services() {
                     <td className="px-6 py-4 text-sm font-medium text-right align-middle">
                       <button
                         onClick={() => openEditModal(service)}
-                        className="text-blue-600 hover:text-blue-800 mr-4"
+                        className="text-[#B8860B] hover:text-[#8B6914] mr-4 transition-colors duration-300"
                       >
                         Sửa
                       </button>
                       <button
                         onClick={() => handleDelete(service.MaDichVu)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-[#D4B2B2] hover:text-[#C49898] transition-colors duration-300"
                       >
                         Xóa
                       </button>
@@ -467,16 +473,16 @@ function Services() {
             {filteredServices.map((service) => (
               <div
                 key={service.MaDichVu}
-                className="bg-white shadow-md rounded-lg p-4"
+                className="bg-white shadow-md rounded-lg p-4 border border-gray-100"
               >
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-[#001F3F]">
                     {service.TenDichVu}
                   </h3>
-                  <p className="text-sm text-gray-500 line-clamp-2">
+                  <p className="text-sm text-gray-600 line-clamp-2">
                     {service.GhiChu || "Không có mô tả"}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[#B8860B]">
                     Giá: {service.DonGia.toLocaleString("vi-VN")} VNĐ
                   </p>
                   <p className="text-sm text-gray-500">
@@ -495,13 +501,13 @@ function Services() {
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={() => openEditModal(service)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="text-[#B8860B] hover:text-[#8B6914] text-sm transition-colors duration-300"
                     >
                       Sửa
                     </button>
                     <button
                       onClick={() => handleDelete(service.MaDichVu)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="text-[#D4B2B2] hover:text-[#C49898] text-sm transition-colors duration-300"
                     >
                       Xóa
                     </button>
@@ -513,8 +519,8 @@ function Services() {
         </div>
 
         {isModalOpen && (
-          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-xl rounded-lg w-full max-w-md p-6 border border-gray-300">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-xl rounded-lg w-full max-w-md p-6 border border-gray-100">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               {isEditMode ? "Sửa dịch vụ" : "Thêm dịch vụ"}
             </h3>
             <form onSubmit={handleSubmit}>
@@ -595,13 +601,13 @@ function Services() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  className="px-4 py-2 bg-gray-100 text-[#001F3F] rounded hover:bg-gray-200 transition-colors duration-300"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366] transition-colors duration-300"
                 >
                   {isEditMode ? "Cập nhật" : "Thêm"}
                 </button>
@@ -611,8 +617,8 @@ function Services() {
         )}
 
         {isCategoryModalOpen && (
-          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 rounded-lg p-6 w-full max-w-sm shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-xl rounded-lg w-full max-w-md p-6 border border-gray-100">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               {isCategoryEditMode ? "Sửa loại dịch vụ" : "Thêm loại dịch vụ"}
             </h3>
             <form onSubmit={handleCategorySubmit}>
@@ -629,17 +635,17 @@ function Services() {
                   required
                 />
               </div>
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-2">
                 <button
                   type="button"
                   onClick={closeCategoryModal}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                  className="px-4 py-2 bg-gray-100 text-[#001F3F] rounded hover:bg-gray-200 transition-colors duration-300"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                  className="px-4 py-2 bg-[#D4B2B2] text-white rounded hover:bg-[#C49898] transition-colors duration-300"
                 >
                   {isCategoryEditMode ? "Cập nhật" : "Thêm"}
                 </button>
@@ -649,28 +655,23 @@ function Services() {
         )}
 
         {confirmationModal.isOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-xl rounded-lg w-full max-w-sm p-6 border border-gray-100">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
               Xác nhận
             </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              {confirmationModal.message}
-            </p>
+            <p className="text-gray-600 mb-6">{confirmationModal.message}</p>
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={closeConfirmationModal}
-                className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-100 text-[#001F3F] rounded hover:bg-gray-200 transition-colors duration-300"
               >
                 Hủy
               </button>
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                className="px-4 py-2 bg-[#D4B2B2] text-white rounded hover:bg-[#C49898] transition-colors duration-300"
               >
                 Xác nhận
               </button>

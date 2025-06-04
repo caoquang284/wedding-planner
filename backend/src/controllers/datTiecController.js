@@ -1,7 +1,8 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable */
 import DatTiec from '../models/DatTiec.js';
+import DichVu from '../models/DichVu.js';
 import DatTiecDichVu from '../models/DatTiecDichVu.js';
-// Kiểm tra sự tồn tại của ca, sảnh, thực đơn, món ăn và dịch vụ
+import { knex } from '../config/database.js';
 
 // Tạo đặt tiệc
 const createDatTiec = async (req, res) => {
@@ -17,10 +18,10 @@ const createDatTiec = async (req, res) => {
       soLuongBan,
       soBanDuTru,
       tienDatCoc,
-      dichVus, // Mảng: [{ maDichVu, soLuong, donGiaThoiDiemDat }]
+      dichVus, // Mảng: [{maDichVu, soLuong, donGiaThoiDiemDat}]
     } = req.body;
 
-    // Kiểm tra dữ liệu đầu vào
+    // Kiểm tra đầy đủ thông tin
     if (
       !tenChuRe ||
       !tenCoDau ||
@@ -29,30 +30,77 @@ const createDatTiec = async (req, res) => {
       !maCa ||
       !maSanh ||
       !maThucDon ||
-      !soLuongBan ||
-      !tienDatCoc ||
-      soBanDuTru === undefined
+      soLuongBan === undefined ||
+      soBanDuTru === undefined ||
+      tienDatCoc === undefined
     ) {
       return res
         .status(400)
         .json({ error: 'Vui lòng cung cấp đầy đủ thông tin' });
     }
 
-    // Kiểm tra định dạng số điện thoại
-    if (!/^\d{10,15}$/.test(dienThoai)) {
-      return res.status(400).json({ error: 'Số điện thoại không hợp lệ' });
+    // Kiểm tra định dạng số điện thoại (10 chữ số)
+    if (!/^\d{10}$/.test(dienThoai)) {
+      return res.status(400).json({ error: 'Số điện thoại phải có 10 chữ số' });
     }
 
-    // Kiểm tra ngày tiệc
+    // Kiểm tra ngày đại tiệc
     if (isNaN(new Date(ngayDaiTiec).getTime())) {
       return res.status(400).json({ error: 'Ngày đại tiệc không hợp lệ' });
     }
 
     // Kiểm tra số lượng bàn
-    if (soLuongBan < 0 || soBanDuTru < 0) {
+    if (
+      !Number.isInteger(soLuongBan) ||
+      !Number.isInteger(soBanDuTru) ||
+      soLuongBan < 0 ||
+      soBanDuTru < 0
+    ) {
+      return res.status(400).json({
+        error: 'Số lượng bàn và bàn dự trữ phải là số nguyên không âm',
+      });
+    }
+
+    // Kiểm tra tổng số bàn
+    if (soLuongBan + soBanDuTru > 50) {
       return res
         .status(400)
-        .json({ error: 'Số lượng bàn và bàn dự trữ phải lớn hơn hoặc bằng 0' });
+        .json({ error: 'Tổng số bàn không được vượt quá 50' });
+    }
+
+    // Kiểm tra tiền đặt cọc
+    if (tienDatCoc < 0) {
+      return res.status(400).json({ error: 'Tiền đặt cọc không được âm' });
+    }
+
+    // Kiểm tra trùng lịch
+    const existing = await knex('DATTIEC')
+      .where({ MaSanh: maSanh, MaCa: maCa, NgayDaiTiec: ngayDaiTiec })
+      .first();
+    if (existing) {
+      return res
+        .status(400)
+        .json({ error: 'Sảnh và ca đã được đặt vào ngày này' });
+    }
+
+    // Kiểm tra dịch vụ
+    if (dichVus && !Array.isArray(dichVus)) {
+      return res.status(400).json({ error: 'Danh sách dịch vụ phải là mảng' });
+    }
+    if (dichVus && dichVus.length > 0) {
+      for (const dichVu of dichVus) {
+        if (
+          !dichVu.maDichVu ||
+          !Number.isInteger(dichVu.soLuong) ||
+          dichVu.soLuong < 0 ||
+          isNaN(dichVu.donGiaThoiDiemDat) ||
+          dichVu.donGiaThoiDiemDat < 0
+        ) {
+          return res
+            .status(400)
+            .json({ error: 'Thông tin dịch vụ không hợp lệ' });
+        }
+      }
     }
 
     // Tạo bản ghi đặt tiệc
@@ -60,18 +108,18 @@ const createDatTiec = async (req, res) => {
       TenChuRe: tenChuRe,
       TenCoDau: tenCoDau,
       DienThoai: dienThoai,
-      NgayDaiTiec: ngayDaiTiec,
+      NgayDaiTiec: new Date(ngayDaiTiec),
       MaCa: maCa,
       MaSanh: maSanh,
       MaThucDon: maThucDon,
       SoLuongBan: Number(soLuongBan),
       SoBanDuTru: Number(soBanDuTru),
-      TienDatCoc: tienDatCoc,
+      TienDatCoc: Number(tienDatCoc),
     };
 
     const datTiec = await DatTiec.create(datTiecData);
 
-    // Lưu dịch vụ vào DATTIEC_DICHVU
+    // Lưu dịch vụ
     if (dichVus && dichVus.length > 0) {
       const datTiecDichVuData = dichVus.map((dichVu) => ({
         MaDatTiec: datTiec.MaDatTiec,
@@ -105,7 +153,7 @@ const findDatTiecById = async (id) => {
     .where({ MaDatTiec: id })
     .select('MaDichVu', 'SoLuong', 'DonGiaThoiDiemDat', 'ThanhTien');
 
-  const monAns = await knex('MONAN_THUCDON')
+  const monAns = await knex('THUCDON_MONAN')
     .where({ MaThucDon: datTiec.MaThucDon })
     .select('MaMonAn');
 
@@ -139,8 +187,8 @@ const getAllDatTiec = async (req, res) => {
       req.query;
     const filters = {
       ngayDaiTiec,
-      maCa,
-      maSanh,
+      maCa: maCa ? Number(maCa) : undefined,
+      maSanh: maSanh ? Number(maSanh) : undefined,
       tenChuRe,
       tenCoDau,
       dienThoai,
@@ -174,6 +222,7 @@ const updateDatTiec = async (req, res) => {
       maThucDon,
       soLuongBan,
       soBanDuTru,
+      tienDatCoc,
       dichVus,
     } = req.body;
 
@@ -183,7 +232,7 @@ const updateDatTiec = async (req, res) => {
       return res.status(404).json({ error: 'Đặt tiệc không tồn tại' });
     }
 
-    // Kiểm tra dữ liệu đầu vào
+    // Kiểm tra đầy đủ thông tin
     if (
       !tenChuRe ||
       !tenCoDau ||
@@ -192,9 +241,9 @@ const updateDatTiec = async (req, res) => {
       !maCa ||
       !maSanh ||
       !maThucDon ||
-      !so ||
-      LuongBan ||
-      soBanDuTru === undefined
+      soLuongBan === undefined ||
+      soBanDuTru === undefined ||
+      tienDatCoc === undefined
     ) {
       return res
         .status(400)
@@ -202,34 +251,40 @@ const updateDatTiec = async (req, res) => {
     }
 
     // Kiểm tra định dạng số điện thoại
-    if (!/^\d{10,15}$/.test(dienThoai)) {
-      return res.status(400).json({ error: 'Số điện thoại không hợp lệ' });
+    if (!/^\d{10}$/.test(dienThoai)) {
+      return res.status(400).json({ error: 'Số điện thoại phải có 10 chữ số' });
     }
 
-    // Kiểm tra ngày tiệc
+    // Kiểm tra ngày đại tiệc
     if (isNaN(new Date(ngayDaiTiec).getTime())) {
       return res.status(400).json({ error: 'Ngày đại tiệc không hợp lệ' });
     }
 
     // Kiểm tra số lượng bàn
-    if (soLuongBan < 0 || soBanDuTru < 0) {
+    if (
+      !Number.isInteger(soLuongBan) ||
+      !Number.isInteger(soBanDuTru) ||
+      soLuongBan < 0 ||
+      soBanDuTru < 0
+    ) {
+      return res.status(400).json({
+        error: 'Số lượng bàn và bàn dự trữ phải là số nguyên không âm',
+      });
+    }
+
+    // Kiểm tra tổng số bàn
+    if (soLuongBan + soBanDuTru > 50) {
       return res
         .status(400)
-        .json({ error: 'Số lượng bàn và bàn dự trữ phải lớn hơn hoặc bằng 0' });
+        .json({ error: 'Tổng số bàn không được vượt quá 50' });
     }
 
-    // Kiểm tra ca, sảnh, thực đơn
-    if (!(await isCaExists(maCa))) {
-      return res.status(400).json({ error: 'Ca không tồn tại' });
-    }
-    if (!(await isSanhExists(maSanh))) {
-      return res.status(400).json({ error: 'Sảnh không tồn tại' });
-    }
-    if (!(await isThucDonExists(maThucDon))) {
-      return res.status(400).json({ error: 'Thực đơn không tồn tại' });
+    // Kiểm tra tiền đặt cọc
+    if (tienDatCoc < 0) {
+      return res.status(400).json({ error: 'Tiền đặt cọc không được âm' });
     }
 
-    // Kiểm tra trùng lịch (ngoại trừ đặt tiệc hiện tại)
+    // Kiểm tra trùng lịch
     const existing = await knex('DATTIEC')
       .where({ MaSanh: maSanh, MaCa: maCa, NgayDaiTiec: ngayDaiTiec })
       .whereNot({ MaDatTiec: id })
@@ -246,49 +301,39 @@ const updateDatTiec = async (req, res) => {
     }
     if (dichVus && dichVus.length > 0) {
       for (const dichVu of dichVus) {
-        if (!(await isDichVuExists(dichVu.maDichVu))) {
-          return res
-            .status(400)
-            .json({ error: `Dịch vụ ${dichVu.maDichVu} không tồn tại` });
-        }
         if (
+          !dichVu.maDichVu ||
+          !Number.isInteger(dichVu.soLuong) ||
           dichVu.soLuong < 0 ||
           isNaN(dichVu.donGiaThoiDiemDat) ||
           dichVu.donGiaThoiDiemDat < 0
         ) {
           return res
             .status(400)
-            .json({ error: 'Số lượng hoặc đơn giá dịch vụ không hợp lệ' });
+            .json({ error: 'Thông tin dịch vụ không hợp lệ' });
         }
       }
     }
-
-    // Tính tổng chi phí và tiền đặt cọc
-    const { tongChiPhi, tienDatCoc } = await calculateTongChiPhiAndTienDatCoc(
-      id,
-      maThucDon,
-      soLuongBan
-    );
 
     // Cập nhật đặt tiệc
     const datTiecData = {
       TenChuRe: tenChuRe,
       TenCoDau: tenCoDau,
       DienThoai: dienThoai,
-      NgayDaiTiec: ngayDaiTiec,
+      NgayDaiTiec: new Date(ngayDaiTiec),
       MaCa: maCa,
       MaSanh: maSanh,
       MaThucDon: maThucDon,
       SoLuongBan: Number(soLuongBan),
       SoBanDuTru: Number(soBanDuTru),
-      TienDatCoc: tienDatCoc,
+      TienDatCoc: Number(tienDatCoc),
     };
 
     const updatedDatTiec = await DatTiec.update(id, datTiecData);
 
     // Xóa và thêm lại dịch vụ
     if (dichVus && dichVus.length > 0) {
-      await getknex('DATTIEC_DICHVU').where({ MaDatTiec: id }).delete();
+      await knex('DATTIEC_DICHVU').where({ MaDatTiec: id }).delete();
       const datTiecDichVuData = dichVus.map((dichVu) => ({
         MaDatTiec: id,
         MaDichVu: dichVu.maDichVu,
@@ -335,7 +380,7 @@ const deleteDatTiec = async (req, res) => {
   }
 };
 
-// Thêm món ăn vào thực đơn của đặt tiệc
+// Thêm món ăn vào thực đơn
 const themMonAn = async (req, res) => {
   try {
     const { id } = req.params;
@@ -347,11 +392,6 @@ const themMonAn = async (req, res) => {
       return res.status(404).json({ error: 'Đặt tiệc không tồn tại' });
     }
 
-    // Kiểm tra món ăn tồn tại
-    if (!(await isMonAnExists(maMonAn))) {
-      return res.status(400).json({ error: 'Món ăn không tồn tại' });
-    }
-
     // Kiểm tra món ăn đã có trong thực đơn
     const existing = await knex('MONAN_THUCDON')
       .where({ MaThucDon: datTiec.MaThucDon, MaMonAn: maMonAn })
@@ -360,19 +400,11 @@ const themMonAn = async (req, res) => {
       return res.status(400).json({ error: 'Món ăn đã có trong thực đơn' });
     }
 
-    // Thêm món ăn vào thực đơn
+    // Thêm món ăn
     await knex('MONAN_THUCDON').insert({
       MaThucDon: datTiec.MaThucDon,
       MaMonAn: maMonAn,
     });
-
-    // Cập nhật tiền đặt cọc
-    const { tienDatCoc } = await calculateTongChiPhiAndTienDatCoc(
-      id,
-      datTiec.MaThucDon,
-      datTiec.SoLuongBan
-    );
-    await DatTiec.update(id, { TienDatCoc: tienDatCoc });
 
     // Trả về thông tin chi tiết
     const datTiecWithDetails = await findDatTiecById(id);
@@ -385,7 +417,7 @@ const themMonAn = async (req, res) => {
   }
 };
 
-// Xóa món ăn khỏi thực đơn của đặt tiệc
+// Xóa món ăn khỏi thực đơn
 const xoaMonAn = async (req, res) => {
   try {
     const { id, maMonAn } = req.params;
@@ -396,7 +428,7 @@ const xoaMonAn = async (req, res) => {
       return res.status(404).json({ error: 'Đặt tiệc không tồn tại' });
     }
 
-    // Kiểm tra món ăn tồn tại trong thực đơn
+    // Kiểm tra món ăn trong thực đơn
     const existing = await knex('MONAN_THUCDON')
       .where({ MaThucDon: datTiec.MaThucDon, MaMonAn: maMonAn })
       .first();
@@ -408,14 +440,6 @@ const xoaMonAn = async (req, res) => {
     await knex('MONAN_THUCDON')
       .where({ MaThucDon: datTiec.MaThucDon, MaMonAn: maMonAn })
       .delete();
-
-    // Cập nhật tiền đặt cọc
-    const { tienDatCoc } = await calculateTongChiPhiAndTienDatCoc(
-      id,
-      datTiec.MaThucDon,
-      datTiec.SoLuongBan
-    );
-    await DatTiec.update(id, { TienDatCoc: tienDatCoc });
 
     // Trả về thông tin chi tiết
     const datTiecWithDetails = await findDatTiecById(id);
@@ -440,19 +464,19 @@ const themDichVu = async (req, res) => {
       return res.status(404).json({ error: 'Đặt tiệc không tồn tại' });
     }
 
-    // Kiểm tra dịch vụ tồn tại
-    if (!(await isDichVuExists(maDichVu))) {
-      return res.status(400).json({ error: 'Dịch vụ không tồn tại' });
-    }
-
     // Kiểm tra số lượng và đơn giá
-    if (soLuong < 0 || isNaN(donGiaThoiDiemDat) || donGiaThoiDiemDat < 0) {
+    if (
+      !Number.isInteger(soLuong) ||
+      soLuong < 0 ||
+      isNaN(donGiaThoiDiemDat) ||
+      donGiaThoiDiemDat < 0
+    ) {
       return res
         .status(400)
         .json({ error: 'Số lượng hoặc đơn giá không hợp lệ' });
     }
 
-    // Kiểm tra dịch vụ đã có trong đặt tiệc
+    // Kiểm tra dịch vụ đã có
     const existing = await knex('DATTIEC_DICHVU')
       .where({ MaDatTiec: id, MaDichVu: maDichVu })
       .first();
@@ -469,14 +493,6 @@ const themDichVu = async (req, res) => {
       ThanhTien: Number(soLuong) * Number(donGiaThoiDiemDat),
     };
     await DatTiecDichVu.create(datTiecDichVuData);
-
-    // Cập nhật tiền đặt cọc
-    const { tienDatCoc } = await calculateTongChiPhiAndTienDatCoc(
-      id,
-      datTiec.MaThucDon,
-      datTiec.SoLuongBan
-    );
-    await DatTiec.update(id, { TienDatCoc: tienDatCoc });
 
     // Trả về thông tin chi tiết
     const datTiecWithDetails = await findDatTiecById(id);
@@ -500,7 +516,7 @@ const xoaDichVu = async (req, res) => {
       return res.status(404).json({ error: 'Đặt tiệc không tồn tại' });
     }
 
-    // Kiểm tra dịch vụ tồn tại trong đặt tiệc
+    // Kiểm tra dịch vụ trong đặt tiệc
     const existing = await knex('DATTIEC_DICHVU')
       .where({ MaDatTiec: id, MaDichVu: maDichVu })
       .first();
@@ -510,14 +526,6 @@ const xoaDichVu = async (req, res) => {
 
     // Xóa dịch vụ
     await DatTiecDichVu.delete(id, maDichVu);
-
-    // Cập nhật tiền đặt cọc
-    const { tienDatCoc } = await calculateTongChiPhiAndTienDatCoc(
-      id,
-      datTiec.MaThucDon,
-      datTiec.SoLuongBan
-    );
-    await DatTiec.update(id, { TienDatCoc: tienDatCoc });
 
     // Trả về thông tin chi tiết
     const datTiecWithDetails = await findDatTiecById(id);

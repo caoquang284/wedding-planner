@@ -44,7 +44,7 @@ interface IDatTiec {
   TenChuRe: string;
   TenCoDau: string;
   DienThoai: string;
-  NgayDaiTiec: string;
+  NgayDaiTiec: Date;
   TienDatCoc: number;
   SoLuongBan: number;
   SoBanDuTru: number;
@@ -76,7 +76,6 @@ interface ISanh {
 interface ILoaiDichVu {
   MaLoaiDichVu: number;
   TenLoaiDichVu: string;
-  HinhAnh?: string;
 }
 
 // Interface cho dịch vụ
@@ -86,6 +85,7 @@ interface IDichVu {
   MaLoaiDichVu: number;
   DonGia: number;
   GhiChu?: string;
+  AnhURL?: string;
 }
 
 // Interface cho form dữ liệu
@@ -283,7 +283,6 @@ function Admin_Wedding() {
   const serviceTypes = apiServiceTypes.map((type) => ({
     MaLoaiDichVu: type.MaLoaiDichVu,
     TenLoaiDichVu: type.TenLoaiDichVu,
-    HinhAnh: type.HinhAnh || "https://via.placeholder.com/300x200",
   }));
 
   const services = apiServices.map((service) => ({
@@ -292,6 +291,7 @@ function Admin_Wedding() {
     MaLoaiDichVu: service.MaLoaiDichVu,
     DonGia: service.DonGia,
     GhiChu: service.GhiChu || "",
+    AnhURL: service.AnhURL,
   }));
 
   // Handlers
@@ -318,18 +318,21 @@ function Admin_Wedding() {
   };
 
   const openEditModal = (booking: IDatTiec) => {
+    // Tìm sảnh được chọn và loại sảnh tương ứng
+    const hall = halls.find((h) => h.MaSanh === booking.MaSanh);
+
     setFormData({
       MaDatTiec: booking.MaDatTiec,
       TenChuRe: booking.TenChuRe,
       TenCoDau: booking.TenCoDau,
       DienThoai: booking.DienThoai,
-      NgayDaiTiec: booking.NgayDaiTiec,
+      NgayDaiTiec: new Date(booking.NgayDaiTiec).toISOString().split("T")[0],
       SoLuongBan: booking.SoLuongBan.toString(),
       SoBanDuTru: booking.SoBanDuTru.toString(),
       TienDatCoc: booking.TienDatCoc.toString(),
     });
     setIsEditMode(true);
-    setSelectedHallType(null);
+    setSelectedHallType(hall ? hall.MaLoaiSanh : null);
     setSelectedHall(booking.MaSanh);
     setSelectedCa(booking.MaCa);
     setSelectedDishes(booking.MonAns || []);
@@ -453,6 +456,13 @@ function Admin_Wedding() {
     const soLuongBan = Number(formData.SoLuongBan);
     const soBanDuTru = Number(formData.SoBanDuTru);
     const tienDatCoc = Number(formData.TienDatCoc);
+
+    // Additional date validation
+    if (!formData.NgayDaiTiec) {
+      alert("Vui lòng chọn ngày đặt tiệc");
+      return;
+    }
+
     if (isNaN(tienDatCocNumber) || tienDatCocNumber < 0) {
       alert("Tiền đặt cọc phải là số không âm");
       return;
@@ -495,17 +505,18 @@ function Admin_Wedding() {
       return;
     }
 
-    // Chuẩn bị dữ liệu gửi API, đổi tên thuộc tính để khớp với datTiecApi.ts
+    // Chuẩn bị dữ liệu gửi API
     const datTiecData = {
       tenChuRe: formData.TenChuRe,
       tenCoDau: formData.TenCoDau,
       dienThoai: formData.DienThoai,
-      ngayDaiTiec: formData.NgayDaiTiec,
+      ngayDaiTiec: new Date(formData.NgayDaiTiec).toISOString(),
       maCa: selectedCa || 1,
       maSanh: selectedHall,
-      maThucDon: selectedMenu || 1, // Nếu không chọn thực đơn, dùng mặc định
-      soLuongBan: soLuongBan,
-      soBanDuTru: soBanDuTru,
+      maThucDon: selectedMenu || 1,
+      soLuongBan: Number(formData.SoLuongBan),
+      soBanDuTru: Number(formData.SoBanDuTru),
+      tienDatCoc: Number(formData.TienDatCoc),
       dichVus: selectedServices.map((service) => ({
         maDichVu: service.MaDichVu,
         soLuong: service.SoLuong,
@@ -530,9 +541,9 @@ function Admin_Wedding() {
                 booking.MaDatTiec === formData.MaDatTiec
                   ? {
                       ...booking,
-                      ...updatedBooking, // Sử dụng dữ liệu trả về từ API
-                      MonAns: selectedDishes, // Giữ selectedDishes
-                      DichVus: selectedServices, // Cập nhật dịch vụ
+                      ...updatedBooking,
+                      MonAns: selectedDishes,
+                      DichVus: selectedServices,
                     }
                   : booking
               )
@@ -542,9 +553,9 @@ function Admin_Wedding() {
             setBookings((prev) => [
               ...prev,
               {
-                ...newBooking, // Sử dụng dữ liệu trả về từ API
-                MonAns: selectedDishes, // Thêm selectedDishes
-                DichVus: selectedServices, // Thêm dịch vụ
+                ...newBooking,
+                MonAns: selectedDishes,
+                DichVus: selectedServices,
               },
             ]);
           }
@@ -590,10 +601,10 @@ function Admin_Wedding() {
     isLoadingCa
   ) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#001F3F] mx-auto mb-4"></div>
+          <p className="text-[#001F3F]">Đang tải...</p>
         </div>
       </div>
     );
@@ -601,12 +612,12 @@ function Admin_Wedding() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center text-red-600">
-          <p>Lỗi: {error}</p>
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#D4B2B2]">Lỗi: {error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="mt-4 px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366] transition-colors duration-300"
           >
             Thử lại
           </button>
@@ -616,12 +627,12 @@ function Admin_Wedding() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!showWizard ? (
           <>
             <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
                 Quản Lý Đặt Tiệc Cưới
               </h2>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -630,11 +641,11 @@ function Admin_Wedding() {
                   placeholder="Tìm kiếm theo tên chú rể, cô dâu hoặc số điện thoại..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full sm:w-64 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
                 />
                 <button
                   onClick={openAddModal}
-                  className="w-full sm:w-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                  className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
                 >
                   Thêm Đặt Tiệc
                 </button>
@@ -642,72 +653,75 @@ function Admin_Wedding() {
             </div>
 
             <div>
-              <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
+              <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-[#F8F9FA]">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tên Chú Rể
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tên Cô Dâu
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Điện Thoại
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Ngày Đặt Tiệc
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tiền Đặt Cọc (VNĐ)
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Số Lượng Bàn
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Bàn Dự Trữ
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Hành Động
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-100">
                     {filteredBookings.map((booking) => (
-                      <tr key={booking.MaDatTiec}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr
+                        key={booking.MaDatTiec}
+                        className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#001F3F]">
                           {booking.TenChuRe}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {booking.TenCoDau}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {booking.DienThoai}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {new Date(booking.NgayDaiTiec).toLocaleDateString(
                             "vi-VN"
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {booking.TienDatCoc.toLocaleString("vi-VN")}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {booking.SoLuongBan}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {booking.SoBanDuTru}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => openEditModal(booking)}
-                            className="text-blue-600 hover:text-blue-800 mr-4"
+                            className="text-[#B8860B] hover:text-[#8B6914] mr-4"
                           >
                             Sửa
                           </button>
                           <button
                             onClick={() => handleDelete(booking.MaDatTiec)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-[#D4B2B2] hover:text-[#C49898]"
                           >
                             Xóa
                           </button>
@@ -722,42 +736,42 @@ function Admin_Wedding() {
                 {filteredBookings.map((booking) => (
                   <div
                     key={booking.MaDatTiec}
-                    className="bg-white shadow-md rounded-lg p-4"
+                    className="bg-white shadow-md rounded-lg p-4 border border-gray-100"
                   >
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium text-[#001F3F]">
                           {booking.TenChuRe} & {booking.TenCoDau}
                         </h3>
                         <div className="flex gap-2">
                           <button
                             onClick={() => openEditModal(booking)}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
+                            className="text-[#B8860B] hover:text-[#8B6914] text-sm"
                           >
                             Sửa
                           </button>
                           <button
                             onClick={() => handleDelete(booking.MaDatTiec)}
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            className="text-[#D4B2B2] hover:text-[#C49898] text-sm"
                           >
                             Xóa
                           </button>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#001F3F]">
                         Điện thoại: {booking.DienThoai}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#001F3F]">
                         Ngày đặt tiệc:{" "}
                         {new Date(booking.NgayDaiTiec).toLocaleDateString(
                           "vi-VN"
                         )}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#001F3F]">
                         Tiền đặt cọc:{" "}
                         {booking.TienDatCoc.toLocaleString("vi-VN")} VNĐ
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#001F3F]">
                         Số lượng bàn: {booking.SoLuongBan} (Dự trữ:{" "}
                         {booking.SoBanDuTru})
                       </p>
@@ -768,19 +782,19 @@ function Admin_Wedding() {
             </div>
           </>
         ) : (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+            <h2 className="text-2xl font-bold text-[#001F3F] mb-6">
               {isEditMode ? "Sửa Đặt Tiệc" : "Thêm Đặt Tiệc"}
             </h2>
 
             {/* Thông tin cơ bản */}
             <div className="mb-8">
-              <h4 className="text-lg font-semibold text-gray-700 mb-4">
+              <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Thông Tin Cơ Bản
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Tên Chú Rể
                   </label>
                   <input
@@ -788,12 +802,12 @@ function Admin_Wedding() {
                     name="TenChuRe"
                     value={formData.TenChuRe}
                     onChange={handleInputChange}
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    className="py-2 px-3 mt-1 w-full rounded border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Tên Cô Dâu
                   </label>
                   <input
@@ -801,12 +815,12 @@ function Admin_Wedding() {
                     name="TenCoDau"
                     value={formData.TenCoDau}
                     onChange={handleInputChange}
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    className="py-2 px-3 mt-1 w-full rounded border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Điện Thoại
                   </label>
                   <input
@@ -814,12 +828,12 @@ function Admin_Wedding() {
                     name="DienThoai"
                     value={formData.DienThoai}
                     onChange={handleInputChange}
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    className="py-2 px-3 mt-1 w-full rounded border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Ngày Đặt Tiệc
                   </label>
                   <input
@@ -827,7 +841,7 @@ function Admin_Wedding() {
                     name="NgayDaiTiec"
                     value={formData.NgayDaiTiec}
                     onChange={handleInputChange}
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                    className="py-2 px-3 mt-1 w-full rounded border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
                     required
                   />
                 </div>
@@ -836,13 +850,13 @@ function Admin_Wedding() {
 
             {/* Chọn sảnh */}
             <div className="mb-8">
-              <h4 className="text-lg font-semibold text-gray-700 mb-4">
+              <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Chọn Sảnh
               </h4>
 
               {/* Chọn loại sảnh */}
               <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-600 mb-3">
+                <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                   Chọn Loại Sảnh
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -855,15 +869,21 @@ function Admin_Wedding() {
                       }}
                       className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
                         selectedHallType === hallType.MaLoaiSanh
-                          ? "bg-blue-50 border-blue-500 shadow-lg"
-                          : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                          ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                          : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
                       }`}
                     >
                       <div className="p-4">
-                        <h5 className="text-lg font-medium text-gray-800 mb-2">
+                        <h5
+                          className={`text-lg font-medium text-center ${
+                            selectedHallType === hallType.MaLoaiSanh
+                              ? "text-[#001F3F]"
+                              : "text-[#2C3E50]"
+                          }`}
+                        >
                           {hallType.TenLoaiSanh}
                         </h5>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-[#001F3F]">
                           Đơn giá tối thiểu:{" "}
                           {hallType.DonGiaBanToiThieu.toLocaleString("vi-VN")}{" "}
                           VNĐ/bàn
@@ -877,7 +897,7 @@ function Admin_Wedding() {
               {/* Hiển thị sảnh theo loại sảnh đã chọn */}
               {selectedHallType && (
                 <div className="mt-6">
-                  <h5 className="text-sm font-medium text-gray-600 mb-3">
+                  <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                     Chọn Sảnh thuộc{" "}
                     {
                       hallTypes.find(
@@ -894,8 +914,8 @@ function Admin_Wedding() {
                           onClick={() => setSelectedHall(hall.MaSanh)}
                           className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
                             selectedHall === hall.MaSanh
-                              ? "bg-blue-50 border-blue-500 shadow-lg"
-                              : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                              ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                              : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
                           }`}
                         >
                           <div className="h-48 overflow-hidden rounded-t-lg">
@@ -909,13 +929,13 @@ function Admin_Wedding() {
                             />
                           </div>
                           <div className="p-4">
-                            <h5 className="text-lg font-medium text-gray-800 mb-2">
+                            <h5 className="text-lg font-medium text-[#001F3F] mb-2">
                               {hall.TenSanh}
                             </h5>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p className="text-sm text-[#001F3F] mb-2">
                               Sức chứa: {hall.SoLuongBanToiDa} bàn
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-[#001F3F]">
                               {hall.GhiChu}
                             </p>
                           </div>
@@ -929,7 +949,7 @@ function Admin_Wedding() {
             {/* Sau phần chọn sảnh, thêm phần chọn ca */}
             {selectedHall && (
               <div className="mb-8">
-                <h4 className="text-lg font-semibold text-gray-700 mb-4">
+                <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                   Chọn Ca
                 </h4>
 
@@ -939,36 +959,83 @@ function Admin_Wedding() {
                       // Kiểm tra xem ca này đã được đặt chưa
                       const isBooked = bookings.some(
                         (booking) =>
-                          booking.NgayDaiTiec === formData.NgayDaiTiec &&
+                          new Date(booking.NgayDaiTiec)
+                            .toISOString()
+                            .split("T")[0] === formData.NgayDaiTiec &&
                           booking.MaCa === ca.MaCa &&
                           booking.MaSanh === selectedHall &&
                           (!isEditMode ||
                             booking.MaDatTiec !== formData.MaDatTiec)
                       );
 
+                      // Xác định màu sắc và icon dựa vào MaCa
+                      let bgColor, icon, textColor;
+                      switch (ca.MaCa) {
+                        case 1: // Trưa
+                          bgColor = "bg-amber-50";
+                          icon = "🌞";
+                          textColor = "text-amber-700";
+                          break;
+                        case 2: // Tối
+                          bgColor = "bg-indigo-50";
+                          icon = "🌆";
+                          textColor = "text-indigo-700";
+                          break;
+                        case 3: // Sáng
+                          bgColor = "bg-yellow-50";
+                          icon = "☀️";
+                          textColor = "text-yellow-700";
+                          break;
+                        case 4: // Chiều
+                          bgColor = "bg-orange-50";
+                          icon = "🌤️";
+                          textColor = "text-orange-700";
+                          break;
+                        case 5: // Đêm
+                          bgColor = "bg-blue-50";
+                          icon = "🌙";
+                          textColor = "text-blue-700";
+                          break;
+                        default:
+                          bgColor = "bg-gray-50";
+                          icon = "📅";
+                          textColor = "text-gray-700";
+                      }
+
                       return (
                         <div
                           key={ca.MaCa}
                           onClick={() => !isBooked && setSelectedCa(ca.MaCa)}
                           className={`
-                            p-4 rounded-lg border transition-all duration-300 cursor-pointer
+                            p-6 rounded-lg border transition-all duration-300 cursor-pointer relative
                             ${
                               isBooked
                                 ? "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed"
                                 : selectedCa === ca.MaCa
-                                ? "bg-blue-50 border-blue-500 shadow-lg"
-                                : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                                ? `${bgColor} border-2 border-[#B8860B] shadow-lg`
+                                : `${bgColor} border-transparent hover:shadow-lg hover:scale-105`
                             }
                           `}
                         >
-                          <h5 className="text-lg font-medium text-center text-gray-800">
-                            {ca.TenCa}
-                          </h5>
-                          {isBooked && (
-                            <p className="text-sm text-red-500 text-center mt-2">
-                              Đã đặt
-                            </p>
-                          )}
+                          <div className="flex flex-col items-center space-y-3">
+                            <span
+                              className="text-3xl"
+                              role="img"
+                              aria-label={ca.TenCa}
+                            >
+                              {icon}
+                            </span>
+                            <h5
+                              className={`text-lg font-medium text-center ${textColor}`}
+                            >
+                              {ca.TenCa}
+                            </h5>
+                            {isBooked && (
+                              <p className="text-sm text-red-500 text-center mt-2 absolute bottom-2 left-0 right-0">
+                                Đã đặt
+                              </p>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -983,11 +1050,11 @@ function Admin_Wedding() {
 
             {/* Chọn thực đơn */}
             <div className="mb-8">
-              <h4 className="text-lg font-semibold text-gray-700 mb-4">
+              <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Chọn Thực Đơn
               </h4>
               <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-600 mb-3">
+                <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                   Thực Đơn Có Sẵn
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1005,8 +1072,8 @@ function Admin_Wedding() {
                         onClick={() => handleMenuSelect(menu)}
                         className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
                           selectedMenu === menu.MaThucDon
-                            ? "bg-blue-50 border-blue-500 shadow-lg"
-                            : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-300"
+                            ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                            : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
                         }`}
                       >
                         <div className="h-48 overflow-hidden rounded-t-lg">
@@ -1029,10 +1096,10 @@ function Admin_Wedding() {
                           )}
                         </div>
                         <div className="p-4">
-                          <h5 className="text-lg font-medium text-gray-800 mb-2">
+                          <h5 className="text-lg font-medium text-[#001F3F] mb-2">
                             {menu.TenThucDon}
                           </h5>
-                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                          <p className="text-sm text-[#001F3F] mb-2 line-clamp-2">
                             Món ăn:{" "}
                             {menuDishes.length > 0
                               ? menuDishes
@@ -1040,12 +1107,12 @@ function Admin_Wedding() {
                                   .join(", ")
                               : "Chưa có món ăn"}
                           </p>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-[#001F3F] mb-2">
                             Tổng đơn giá: {totalPrice.toLocaleString("vi-VN")}{" "}
                             VNĐ
                           </p>
                           {menu.GhiChu && (
-                            <p className="text-sm text-gray-500 italic">
+                            <p className="text-sm text-[#001F3F] italic">
                               Ghi chú: {menu.GhiChu}
                             </p>
                           )}
@@ -1057,13 +1124,13 @@ function Admin_Wedding() {
               </div>
 
               <div className="mb-6">
-                <h5 className="text-sm font-medium text-gray-600 mb-3">
+                <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                   Tùy Chỉnh Thực Đơn
                 </h5>
                 <div className="border rounded-lg p-4 bg-white shadow-sm">
                   {apiDishTypes.map((category) => (
                     <div key={category.MaLoaiMonAn} className="mb-4">
-                      <h6 className="text-sm font-semibold text-gray-700 mb-2">
+                      <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
                         {category.TenLoaiMonAn}
                       </h6>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1088,16 +1155,16 @@ function Admin_Wedding() {
                                   setSelectedDishes(newSelectedDishes);
                                   setSelectedMenu(null);
                                 }}
-                                className="h-4 w-4 mt-1 text-blue-600 rounded"
+                                className="h-4 w-4 mt-1 text-[#B8860B] rounded"
                               />
                               <div className="flex-1">
-                                <span className="text-sm font-medium text-gray-700">
+                                <span className="text-sm font-medium text-[#001F3F]">
                                   {dish.TenMonAn}
                                 </span>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-[#001F3F] mt-1">
                                   {dish.GhiChu || "Không có ghi chú"}
                                 </p>
-                                <p className="text-xs text-green-600 mt-1">
+                                <p className="text-xs text-[#B8860B] mt-1">
                                   {dish.DonGia.toLocaleString("vi-VN")} VNĐ
                                 </p>
                               </div>
@@ -1111,7 +1178,7 @@ function Admin_Wedding() {
             </div>
 
             <div className="mb-8">
-              <h4 className="text-lg font-semibold text-gray-700 mb-4">
+              <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Chọn Dịch Vụ
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -1121,19 +1188,18 @@ function Admin_Wedding() {
                     onClick={() => setSelectedServiceType(type.MaLoaiDichVu)}
                     className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
                       selectedServiceType === type.MaLoaiDichVu
-                        ? "bg-blue-50 border-blue-600 shadow-lg"
-                        : "bg-white border-gray-200 hover:shadow-lg hover:border-blue-200"
+                        ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                        : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
                     }`}
                   >
-                    <div className="h-48 overflow-hidden rounded-t-lg">
-                      <img
-                        src={type.HinhAnh}
-                        alt={type.TenLoaiDichVu}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h5 className="text-lg font-medium text-gray-800 mb-2">
+                    <div className="p-6">
+                      <h5
+                        className={`text-lg font-medium text-center ${
+                          selectedServiceType === type.MaLoaiDichVu
+                            ? "text-[#001F3F]"
+                            : "text-[#2C3E50]"
+                        }`}
+                      >
                         {type.TenLoaiDichVu}
                       </h5>
                     </div>
@@ -1143,13 +1209,15 @@ function Admin_Wedding() {
 
               {selectedServiceType && (
                 <div className="mb-6">
-                  <h5 className="text-sm font-medium text-gray-600 mb-3">
+                  <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                     Dịch Vụ thuộc{" "}
-                    {
-                      serviceTypes.find(
-                        (type) => type.MaLoaiDichVu === selectedServiceType
-                      )?.TenLoaiDichVu
-                    }
+                    <span className="text-[#B8860B]">
+                      {
+                        serviceTypes.find(
+                          (type) => type.MaLoaiDichVu === selectedServiceType
+                        )?.TenLoaiDichVu
+                      }
+                    </span>
                   </h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {services
@@ -1160,29 +1228,45 @@ function Admin_Wedding() {
                       .map((service) => (
                         <div
                           key={service.MaDichVu}
-                          className="bg-white rounded-lg shadow-sm p-4"
+                          className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
                         >
-                          <div className="flex items-center mb-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedServices.some(
-                                (s) => s.MaDichVu === service.MaDichVu
-                              )}
-                              onChange={(e) =>
-                                handleServiceSelect(service, e.target.checked)
+                          <div className="h-48 overflow-hidden">
+                            <img
+                              src={
+                                service.AnhURL ||
+                                "https://via.placeholder.com/300x200?text=Không+có+ảnh"
                               }
-                              className="h-4 w-4 text-blue-600 rounded"
+                              alt={service.TenDichVu}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "https://via.placeholder.com/300x200?text=Không+có+ảnh";
+                              }}
                             />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              {service.TenDichVu}
-                            </span>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            {service.GhiChu || "Không có ghi chú"}
-                          </p>
-                          <p className="text-xs text-green-600 mt-1">
-                            {service.DonGia.toLocaleString("vi-VN")} VNĐ
-                          </p>
+                          <div className="p-4 bg-[#FAFAFA]">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-[#001F3F]">
+                                {service.TenDichVu}
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={selectedServices.some(
+                                  (s) => s.MaDichVu === service.MaDichVu
+                                )}
+                                onChange={(e) =>
+                                  handleServiceSelect(service, e.target.checked)
+                                }
+                                className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-600">
+                              {service.GhiChu || "Không có ghi chú"}
+                            </p>
+                            <p className="text-xs text-[#B8860B] mt-1 font-medium">
+                              {service.DonGia.toLocaleString("vi-VN")} VNĐ
+                            </p>
+                          </div>
                         </div>
                       ))}
                   </div>
@@ -1191,7 +1275,7 @@ function Admin_Wedding() {
 
               {selectedServices.length > 0 && (
                 <div className="mb-6">
-                  <h5 className="text-sm font-medium text-gray-600 mb-3">
+                  <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                     Dịch Vụ Đã Chọn
                   </h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1205,22 +1289,22 @@ function Admin_Wedding() {
                           className="bg-white rounded-lg shadow-sm p-4"
                         >
                           <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-[#001F3F]">
                               {serviceInfo?.TenDichVu}
                             </span>
                             <button
                               onClick={() =>
                                 handleServiceSelect(serviceInfo!, false)
                               }
-                              className="text-red-600 hover:text-red-800"
+                              className="text-[#B8860B] hover:text-[#8B6914]"
                             >
                               Xóa
                             </button>
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-[#001F3F]">
                             Số lượng: {service.SoLuong}
                           </p>
-                          <p className="text-xs text-green-600">
+                          <p className="text-xs text-[#B8860B]">
                             {service.DonGiaThoiDiemDat.toLocaleString("vi-VN")}{" "}
                             VNĐ
                           </p>
@@ -1233,11 +1317,11 @@ function Admin_Wedding() {
             </div>
 
             <div className="mb-8">
-              <h4 className="text-lg font-semibold text-gray-700 mb-4">
+              <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Tổng Kết
               </h4>
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <p className="text-sm text-gray-700 mb-2">
+                <p className="text-sm text-[#001F3F] mb-2">
                   Tổng tiền thực đơn:{" "}
                   {(
                     selectedDishes.reduce((total, dishId) => {
@@ -1249,7 +1333,7 @@ function Admin_Wedding() {
                   ).toLocaleString("vi-VN")}{" "}
                   VNĐ
                 </p>
-                <p className="text-sm text-gray-700 mb-2">
+                <p className="text-sm text-[#001F3F] mb-2">
                   Tổng tiền dịch vụ:{" "}
                   {selectedServices
                     .reduce(
@@ -1262,10 +1346,10 @@ function Admin_Wedding() {
                     .toLocaleString("vi-VN")}{" "}
                   VNĐ
                 </p>
-                <p className="text-lg font-semibold text-green-600">
+                <p className="text-lg font-semibold text-[#B8860B]">
                   Tổng cộng: {totalCost.toLocaleString("vi-VN")} VNĐ
                 </p>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-[#001F3F] mt-2">
                   Tiền đặt cọc tối thiểu (30%):{" "}
                   {minDeposit.toLocaleString("vi-VN")} VNĐ
                 </p>
@@ -1273,7 +1357,7 @@ function Admin_Wedding() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Số Lượng Bàn
                   </label>
                   <input
@@ -1282,13 +1366,13 @@ function Admin_Wedding() {
                     value={formData.SoLuongBan}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    className="py-2 px-3 mt-1 border border-gray-300 rounded-md w-full"
+                    className="py-2 px-3 mt-1 border border-gray-200 rounded-md w-full"
                     required
                     min="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Số Bàn Dự Trữ
                   </label>
                   <input
@@ -1297,13 +1381,13 @@ function Admin_Wedding() {
                     value={formData.SoBanDuTru}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    className="py-2 px-3 mt-1 border border-gray-300 rounded-md w-full"
+                    className="py-2 px-3 mt-1 border border-gray-200 rounded-md w-full"
                     required
                     min="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-[#001F3F]">
                     Tiền Đặt Cọc
                   </label>
                   <input
@@ -1312,7 +1396,7 @@ function Admin_Wedding() {
                     value={formData.TienDatCoc}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    className="py-2 px-3 mt-1 border border-gray-300 rounded-md w-full"
+                    className="py-2 px-3 mt-1 border border-gray-200 rounded-md w-full"
                     required
                     min={minDeposit}
                   />
@@ -1323,13 +1407,13 @@ function Admin_Wedding() {
             <div className="flex justify-between">
               <button
                 onClick={closeWizard}
-                className="bg-gray-300 text-gray-700 rounded-md py-2 px-4"
+                className="bg-gray-100 text-[#001F3F] rounded-md py-2 px-4 hover:bg-gray-200 transition-colors duration-300"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSubmit}
-                className="bg-blue-600 text-white rounded-md py-2 px-4"
+                className="bg-[#001F3F] text-white rounded-md py-2 px-4 hover:bg-[#003366] transition-colors duration-300"
                 disabled={!selectedHall || selectedDishes.length === 0}
               >
                 {isEditMode ? "Cập Nhật" : "Thêm"}
@@ -1339,19 +1423,21 @@ function Admin_Wedding() {
         )}
         {confirmationModal.isOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">Xác nhận</h3>
+            <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-100">
+              <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+                Xác nhận
+              </h3>
               <p className="text-gray-600 mb-6">{confirmationModal.message}</p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={closeConfirmationModal}
-                  className="bg-gray-300 text-gray-700 rounded-md py-2 px-4"
+                  className="bg-gray-100 text-[#001F3F] rounded-md py-2 px-4 hover:bg-gray-200"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="bg-red-600 text-white rounded-md py-2 px-4"
+                  className="bg-[#D4B2B2] text-white rounded-md py-2 px-4 hover:bg-[#C49898]"
                 >
                   Xác nhận
                 </button>
