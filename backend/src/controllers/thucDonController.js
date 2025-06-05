@@ -1,19 +1,58 @@
 /* eslint-disable no-unused-vars */
 import ThucDon from '../models/ThucDon.js';
-
+import { knex } from '../config/database.js';
 const createThucDon = async (req, res) => {
   try {
-    const { tenThucDon, donGiaThoiDiemDat, donGiaHienTai, ghiChu } = req.body;
+    const { tenThucDon, donGiaThoiDiemDat, donGiaHienTai, ghiChu, monAnIds } =
+      req.body;
 
-    const thucDon = await ThucDon.create({
+    // Kiểm tra dữ liệu đầu vào
+    if (!tenThucDon || !donGiaThoiDiemDat || !donGiaHienTai || !monAnIds) {
+      return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
+    }
+
+    if (!Array.isArray(monAnIds) || monAnIds.length === 0) {
+      return res.status(400).json({ error: 'Danh sách món ăn không hợp lệ' });
+    }
+
+    if (donGiaThoiDiemDat < 0 || donGiaHienTai < 0) {
+      return res.status(400).json({ error: 'Đơn giá không được âm' });
+    }
+
+    // Kiểm tra món ăn tồn tại
+    for (const maMonAn of monAnIds) {
+      const exists = await ThucDon.isMonAnExists(maMonAn);
+      if (!exists) {
+        return res
+          .status(400)
+          .json({ error: `Món ăn với ID ${maMonAn} không tồn tại` });
+      }
+    }
+
+    // Tạo thực đơn
+    const thucDonData = {
       TenThucDon: tenThucDon,
-      DonGiaThoiDiemDat: donGiaThoiDiemDat,
-      DonGiaHienTai: donGiaHienTai,
+      DonGiaThoiDiemDat: Number(donGiaThoiDiemDat),
+      DonGiaHienTai: Number(donGiaHienTai),
       GhiChu: ghiChu || null,
-    });
+    };
 
-    return res.status(201).json(thucDon);
+    const thucDon = await ThucDon.create(thucDonData);
+
+    // Thêm món ăn vào THUCDON_MONAN
+    for (const maMonAn of monAnIds) {
+      // Lấy DonGia từ MONAN làm DonGiaThoiDiemDat
+      const monAn = await knex('MONAN').where({ MaMonAn: maMonAn }).first();
+      await ThucDon.addMonAn(thucDon.MaThucDon, maMonAn, monAn.DonGia);
+    }
+
+    // Trả về thực đơn với danh sách món ăn
+    const thucDonWithDetails = await ThucDon.findByIdWithMonAn(
+      thucDon.MaThucDon
+    );
+    return res.status(201).json(thucDonWithDetails);
   } catch (error) {
+    console.error('Error creating thuc don:', error.stack);
     return res
       .status(500)
       .json({ error: 'Lỗi khi tạo thực đơn: ' + error.message });

@@ -15,31 +15,22 @@ const Navbar = () => {
     items?: { path: string; label: string }[]; // Items cho dropdown
   }
 
-  const navItems: NavItem[] = isAdmin
-    ? [
-        { type: "link", path: "/admin", label: "Tổng quan" },
-        {
-          type: "dropdown",
-          label: "Quản lý",
-          items: [
-            { path: "/admin/halls", label: "Quản lý sảnh" },
-            { path: "/admin/menus", label: "Quản lý thực đơn" },
-            { path: "/admin/services", label: "Quản lý dịch vụ" },
-          ],
-        },
-        { type: "link", path: "/admin/invoices", label: "Quản lý hóa đơn" },
-        { type: "link", path: "/admin/wedding", label: "Đặt tiệc cưới" },
-        { type: "link", path: "/admin/reports", label: "Báo cáo doanh thu" },
-        { type: "link", path: "/admin/permissions", label: "Phân quyền" },
-      ]
-    : [
-        { type: "link", path: "/", label: "Tổng quan" },
-        { type: "link", path: "/user/halls", label: "Danh sách sảnh" },
-        { type: "link", path: "/user/menus", label: "Danh sách thực đơn" },
-        { type: "link", path: "/user/services", label: "Danh sách dịch vụ" },
-        { type: "link", path: "/user/booking", label: "Đặt tiệc cưới" },
-        { type: "link", path: "/user/invoices", label: "Hóa đơn" },
-      ];
+  const navItems: NavItem[] = [
+    { type: "link", path: "/admin", label: "Tổng quan" },
+    {
+      type: "dropdown",
+      label: "Quản lý",
+      items: [
+        { path: "/admin/halls", label: "Quản lý sảnh" },
+        { path: "/admin/menus", label: "Quản lý thực đơn" },
+        { path: "/admin/services", label: "Quản lý dịch vụ" },
+      ],
+    },
+    { type: "link", path: "/admin/invoices", label: "Quản lý hóa đơn" },
+    { type: "link", path: "/admin/wedding", label: "Đặt tiệc cưới" },
+    { type: "link", path: "/admin/reports", label: "Báo cáo doanh thu" },
+    { type: "link", path: "/admin/permissions", label: "Phân quyền" },
+  ];
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);

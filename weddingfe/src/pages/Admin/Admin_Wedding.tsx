@@ -1,5 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { getAllThucDon, getThucDonById } from "../../../Api/thucDonApi";
+import {
+  getAllThucDon,
+  getThucDonById,
+  createThucDon,
+} from "../../../Api/thucDonApi";
 import { getAllDichVu, getAllLoaiDichVu } from "../../../Api/dichVuApi";
 import { getAllMonAn, getAllLoaiMonAn } from "../../../Api/monAnApi";
 import { getAllSanh, getAllLoaiSanh } from "../../../Api/sanhApi";
@@ -160,6 +164,22 @@ function Admin_Wedding() {
     message: "",
     onConfirm: () => {},
   });
+  const [isCustomMenu, setIsCustomMenu] = useState<boolean>(false);
+  const [customMenuName, setCustomMenuName] = useState<string>("");
+  const [showCustomMenuModal, setShowCustomMenuModal] =
+    useState<boolean>(false);
+  const [tempMenu, setTempMenu] = useState<{
+    MaThucDon: number;
+    TenThucDon: string;
+    DonGiaHienTai: number;
+    MonAnList: IMonAn[];
+  } | null>(null);
+
+  // Add new state for detail modal
+  const [selectedBookingDetail, setSelectedBookingDetail] =
+    useState<IDatTiec | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
+  const [menuDetails, setMenuDetails] = useState<IThucDon | null>(null);
 
   useEffect(() => {
     const calculateCosts = () => {
@@ -317,9 +337,32 @@ function Admin_Wedding() {
     setShowWizard(true);
   };
 
-  const openEditModal = (booking: IDatTiec) => {
+  const openEditModal = async (booking: IDatTiec) => {
     // Tìm sảnh được chọn và loại sảnh tương ứng
     const hall = halls.find((h) => h.MaSanh === booking.MaSanh);
+
+    // Kiểm tra xem thực đơn có phải là thực đơn tự chọn không
+    const existingMenu = apiMenus.find(
+      (m) => m.MaThucDon === booking.MaThucDon
+    );
+
+    // Nếu không tìm thấy trong apiMenus, có thể đây là thực đơn tự chọn
+    if (booking.MaThucDon && !existingMenu) {
+      // Lấy thông tin chi tiết thực đơn
+      try {
+        const menuDetail = await getThucDonById(booking.MaThucDon);
+        // Tạo tempMenu từ thực đơn tự chọn
+        setTempMenu({
+          MaThucDon: menuDetail.MaThucDon,
+          TenThucDon: menuDetail.TenThucDon,
+          DonGiaHienTai: menuDetail.DonGiaHienTai,
+          MonAnList: menuDetail.MonAnList || [],
+        });
+        setIsCustomMenu(true);
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin thực đơn:", error);
+      }
+    }
 
     setFormData({
       MaDatTiec: booking.MaDatTiec,
@@ -447,7 +490,63 @@ function Admin_Wedding() {
     });
   };
 
-  // Trong hàm handleSubmit
+  // Add this function to check if selected dishes match any existing menu
+  const checkIfCustomMenu = (selectedDishIds: number[]) => {
+    const matchingMenu = apiMenus.find((menu) => {
+      const menuDishIds = (menu.MonAnList || []).map((dish) => dish.MaMonAn);
+      return (
+        menuDishIds.length === selectedDishIds.length &&
+        menuDishIds.every((id) => selectedDishIds.includes(id)) &&
+        selectedDishIds.every((id) => menuDishIds.includes(id))
+      );
+    });
+    setIsCustomMenu(!matchingMenu);
+    if (matchingMenu) {
+      setSelectedMenu(matchingMenu.MaThucDon);
+    } else {
+      setSelectedMenu(null);
+    }
+  };
+
+  // Modify handleCreateCustomMenu
+  const handleCreateCustomMenu = async () => {
+    if (!customMenuName || selectedDishes.length === 0) {
+      alert("Vui lòng nhập tên thực đơn và chọn ít nhất một món ăn");
+      return;
+    }
+
+    // Calculate total price of selected dishes
+    const totalPrice = selectedDishes.reduce((total, dishId) => {
+      const dish = apiDishes.find((d) => d.MaMonAn === dishId);
+      return total + (dish ? Number(dish.DonGia) : 0);
+    }, 0);
+
+    // Create temporary menu
+    const newTempMenu = {
+      MaThucDon: Date.now(), // Temporary ID
+      TenThucDon: customMenuName,
+      DonGiaHienTai: totalPrice,
+      MonAnList: selectedDishes.map((id) => {
+        const dish = apiDishes.find((d) => d.MaMonAn === id);
+        return {
+          MaMonAn: id,
+          TenMonAn: dish?.TenMonAn || "",
+          MaLoaiMonAn: dish?.MaLoaiMonAn || 0,
+          TenLoaiMonAn: dish?.TenLoaiMonAn || "",
+          DonGia: dish?.DonGia || 0,
+          GhiChu: dish?.GhiChu,
+          AnhURL: dish?.AnhURL,
+        };
+      }),
+    };
+
+    setTempMenu(newTempMenu);
+    setShowCustomMenuModal(false);
+    setCustomMenuName("");
+    setIsCustomMenu(false);
+  };
+
+  // Modify handleSubmit to create the actual menu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -505,66 +604,85 @@ function Admin_Wedding() {
       return;
     }
 
-    // Chuẩn bị dữ liệu gửi API
-    const datTiecData = {
-      tenChuRe: formData.TenChuRe,
-      tenCoDau: formData.TenCoDau,
-      dienThoai: formData.DienThoai,
-      ngayDaiTiec: new Date(formData.NgayDaiTiec).toISOString(),
-      maCa: selectedCa || 1,
-      maSanh: selectedHall,
-      maThucDon: selectedMenu || 1,
-      soLuongBan: Number(formData.SoLuongBan),
-      soBanDuTru: Number(formData.SoBanDuTru),
-      tienDatCoc: Number(formData.TienDatCoc),
-      dichVus: selectedServices.map((service) => ({
-        maDichVu: service.MaDichVu,
-        soLuong: service.SoLuong,
-        donGiaThoiDiemDat: service.DonGiaThoiDiemDat,
-      })),
-    };
+    try {
+      let menuId = selectedMenu;
 
-    setConfirmationModal({
-      isOpen: true,
-      message: isEditMode
-        ? "Bạn có chắc chắn muốn cập nhật đặt tiệc này?"
-        : "Bạn có chắc chắn muốn thêm đặt tiệc này?",
-      onConfirm: async () => {
-        try {
-          if (isEditMode && formData.MaDatTiec) {
-            const updatedBooking = await updateDatTiec(
-              formData.MaDatTiec,
-              datTiecData
-            );
-            setBookings((prev) =>
-              prev.map((booking) =>
-                booking.MaDatTiec === formData.MaDatTiec
-                  ? {
-                      ...booking,
-                      ...updatedBooking,
-                      MonAns: selectedDishes,
-                      DichVus: selectedServices,
-                    }
-                  : booking
-              )
-            );
-          } else {
-            const newBooking = await createDatTiec(datTiecData);
-            setBookings((prev) => [
-              ...prev,
-              {
-                ...newBooking,
-                MonAns: selectedDishes,
-                DichVus: selectedServices,
-              },
-            ]);
+      // If we have a temporary menu and it's selected, create the actual menu
+      if (tempMenu && selectedMenu === tempMenu.MaThucDon) {
+        const newMenu = await createThucDon({
+          tenThucDon: tempMenu.TenThucDon,
+          donGiaThoiDiemDat: tempMenu.DonGiaHienTai,
+          donGiaHienTai: tempMenu.DonGiaHienTai,
+          ghiChu: "Thực đơn tự chọn",
+          monAnIds: tempMenu.MonAnList.map((dish) => dish.MaMonAn),
+        });
+        menuId = newMenu.MaThucDon;
+        setTempMenu(null);
+      }
+
+      // Prepare booking data
+      const datTiecData = {
+        tenChuRe: formData.TenChuRe,
+        tenCoDau: formData.TenCoDau,
+        dienThoai: formData.DienThoai,
+        ngayDaiTiec: new Date(formData.NgayDaiTiec).toISOString(),
+        maCa: selectedCa || 1,
+        maSanh: selectedHall,
+        maThucDon: menuId || 1,
+        soLuongBan: Number(formData.SoLuongBan),
+        soBanDuTru: Number(formData.SoBanDuTru),
+        tienDatCoc: Number(formData.TienDatCoc),
+        dichVus: selectedServices.map((service) => ({
+          maDichVu: service.MaDichVu,
+          soLuong: service.SoLuong,
+          donGiaThoiDiemDat: service.DonGiaThoiDiemDat,
+        })),
+      };
+
+      setConfirmationModal({
+        isOpen: true,
+        message: isEditMode
+          ? "Bạn có chắc chắn muốn cập nhật đặt tiệc này?"
+          : "Bạn có chắc chắn muốn thêm đặt tiệc này?",
+        onConfirm: async () => {
+          try {
+            if (isEditMode && formData.MaDatTiec) {
+              const updatedBooking = await updateDatTiec(
+                formData.MaDatTiec,
+                datTiecData
+              );
+              setBookings((prev) =>
+                prev.map((booking) =>
+                  booking.MaDatTiec === formData.MaDatTiec
+                    ? {
+                        ...booking,
+                        ...updatedBooking,
+                        MonAns: selectedDishes,
+                        DichVus: selectedServices,
+                      }
+                    : booking
+                )
+              );
+            } else {
+              const newBooking = await createDatTiec(datTiecData);
+              setBookings((prev) => [
+                ...prev,
+                {
+                  ...newBooking,
+                  MonAns: selectedDishes,
+                  DichVus: selectedServices,
+                },
+              ]);
+            }
+            closeWizard();
+          } catch (error: any) {
+            alert("Lỗi: " + (error.message || "Không thể lưu đặt tiệc"));
           }
-          closeWizard();
-        } catch (error: any) {
-          alert("Lỗi: " + (error.message || "Không thể lưu đặt tiệc"));
-        }
-      },
-    });
+        },
+      });
+    } catch (error) {
+      alert("Lỗi: " + (error as Error).message);
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -590,6 +708,71 @@ function Admin_Wedding() {
       booking.TenCoDau.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.DienThoai.includes(searchTerm)
   );
+
+  // Add function to get hall name
+  const getHallName = (maSanh: number) => {
+    const hall = halls.find((h) => h.MaSanh === maSanh);
+    return hall?.TenSanh || "Không xác định";
+  };
+
+  // Add function to get ca name
+  const getCaName = (maCa: number) => {
+    const ca = caList.find((c) => c.MaCa === maCa);
+    return ca?.TenCa || "Không xác định";
+  };
+
+  // Sửa lại hàm getMenuDetails
+  const getMenuDetails = async (maThucDon: number) => {
+    // Đầu tiên tìm trong danh sách thực đơn mẫu
+    const menuFromList = apiMenus.find((m) => m.MaThucDon === maThucDon);
+    if (menuFromList) {
+      return menuFromList;
+    }
+
+    // Nếu không tìm thấy trong danh sách mẫu, gọi API để lấy thông tin
+    try {
+      const menuDetail = await getThucDonById(maThucDon);
+      // Đảm bảo MonAnList được trả về
+      if (menuDetail && !menuDetail.MonAnList) {
+        // Nếu không có MonAnList, thử lấy lại thông tin chi tiết
+        const fullMenuDetail = await getThucDonById(maThucDon);
+        return fullMenuDetail;
+      }
+      return menuDetail;
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin thực đơn:", error);
+      return null;
+    }
+  };
+
+  // Add function to handle print
+  const handlePrint = () => {
+    const printContent = document.getElementById("printSection");
+    const originalContents = document.body.innerHTML;
+
+    if (printContent) {
+      document.body.innerHTML = printContent.innerHTML;
+      window.print();
+      document.body.innerHTML = originalContents;
+      // Re-render the component after printing
+      setShowDetailModal(true);
+    }
+  };
+
+  // Thêm useEffect để lấy thông tin thực đơn khi mở modal chi tiết
+  useEffect(() => {
+    const loadMenuDetails = async () => {
+      if (selectedBookingDetail?.MaThucDon) {
+        const details = await getMenuDetails(selectedBookingDetail.MaThucDon);
+        console.log("Menu Details:", details); // Thêm log để debug
+        setMenuDetails(details);
+      }
+    };
+
+    if (showDetailModal) {
+      loadMenuDetails();
+    }
+  }, [showDetailModal, selectedBookingDetail]);
 
   // Loading UI
   if (
@@ -721,9 +904,18 @@ function Admin_Wedding() {
                           </button>
                           <button
                             onClick={() => handleDelete(booking.MaDatTiec)}
-                            className="text-[#D4B2B2] hover:text-[#C49898]"
+                            className="text-[#D4B2B2] hover:text-[#C49898] mr-4"
                           >
                             Xóa
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedBookingDetail(booking);
+                              setShowDetailModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Chi tiết
                           </button>
                         </td>
                       </tr>
@@ -1120,6 +1312,69 @@ function Admin_Wedding() {
                       </div>
                     );
                   })}
+
+                  {/* Add button to create custom menu */}
+                  {isCustomMenu && !tempMenu && (
+                    <div className="rounded-lg shadow-md cursor-pointer border border-yellow-200 bg-yellow-50 flex items-center justify-center p-6">
+                      <button
+                        onClick={() => setShowCustomMenuModal(true)}
+                        className="text-center"
+                      >
+                        <div className="text-4xl text-yellow-500 mb-2">+</div>
+                        <p className="text-sm font-medium text-yellow-700">
+                          Tạo thực đơn tự chọn
+                        </p>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Show temporary menu if exists */}
+                  {tempMenu && (
+                    <div
+                      onClick={() => setSelectedMenu(tempMenu.MaThucDon)}
+                      className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
+                        selectedMenu === tempMenu.MaThucDon
+                          ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                          : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
+                      }`}
+                    >
+                      <div className="h-48 overflow-hidden rounded-t-lg">
+                        {tempMenu.MonAnList[0]?.AnhURL ? (
+                          <img
+                            src={tempMenu.MonAnList[0].AnhURL}
+                            alt={tempMenu.TenThucDon}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "https://via.placeholder.com/300x200?text=Không+có+ảnh";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-500">Không có ảnh</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h5 className="text-lg font-medium text-[#001F3F] mb-2">
+                          {tempMenu.TenThucDon}
+                        </h5>
+                        <p className="text-sm text-[#001F3F] mb-2 line-clamp-2">
+                          Món ăn:{" "}
+                          {tempMenu.MonAnList.map((dish) => dish.TenMonAn).join(
+                            ", "
+                          )}
+                        </p>
+                        <p className="text-sm text-[#001F3F] mb-2">
+                          Tổng đơn giá:{" "}
+                          {tempMenu.DonGiaHienTai.toLocaleString("vi-VN")} VNĐ
+                        </p>
+                        <p className="text-sm text-[#001F3F] italic">
+                          Ghi chú: Thực đơn tự chọn
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1153,7 +1408,43 @@ function Admin_Wedding() {
                                         (id) => id !== dish.MaMonAn
                                       );
                                   setSelectedDishes(newSelectedDishes);
-                                  setSelectedMenu(null);
+                                  checkIfCustomMenu(newSelectedDishes);
+
+                                  // Update temp menu if exists
+                                  if (tempMenu) {
+                                    const totalPrice = newSelectedDishes.reduce(
+                                      (total, dishId) => {
+                                        const dish = apiDishes.find(
+                                          (d) => d.MaMonAn === dishId
+                                        );
+                                        return (
+                                          total +
+                                          (dish ? Number(dish.DonGia) : 0)
+                                        );
+                                      },
+                                      0
+                                    );
+
+                                    setTempMenu({
+                                      ...tempMenu,
+                                      DonGiaHienTai: totalPrice,
+                                      MonAnList: newSelectedDishes.map((id) => {
+                                        const dish = apiDishes.find(
+                                          (d) => d.MaMonAn === id
+                                        );
+                                        return {
+                                          MaMonAn: id,
+                                          TenMonAn: dish?.TenMonAn || "",
+                                          MaLoaiMonAn: dish?.MaLoaiMonAn || 0,
+                                          TenLoaiMonAn:
+                                            dish?.TenLoaiMonAn || "",
+                                          DonGia: dish?.DonGia || 0,
+                                          GhiChu: dish?.GhiChu,
+                                          AnhURL: dish?.AnhURL,
+                                        };
+                                      }),
+                                    });
+                                  }
                                 }}
                                 className="h-4 w-4 mt-1 text-[#B8860B] rounded"
                               />
@@ -1422,8 +1713,8 @@ function Admin_Wedding() {
           </div>
         )}
         {confirmationModal.isOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-100">
+          <div className="fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-200 shadow-lg">
               <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Xác nhận
               </h3>
@@ -1440,6 +1731,215 @@ function Admin_Wedding() {
                   className="bg-[#D4B2B2] text-white rounded-md py-2 px-4 hover:bg-[#C49898]"
                 >
                   Xác nhận
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showCustomMenuModal && (
+          <div className="fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-200 shadow-lg">
+              <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+                Tạo thực đơn tự chọn
+              </h3>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[#001F3F] mb-2">
+                  Tên thực đơn
+                </label>
+                <input
+                  type="text"
+                  value={customMenuName}
+                  onChange={(e) => setCustomMenuName(e.target.value)}
+                  className="w-full p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+                  placeholder="Nhập tên thực đơn..."
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowCustomMenuModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleCreateCustomMenu}
+                  className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366]"
+                >
+                  Tạo thực đơn
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showDetailModal && selectedBookingDetail && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-6 overflow-auto">
+            <div className="bg-white mx-auto my-6 w-[210mm] min-h-[297mm] shadow-lg relative print:shadow-none print:my-0">
+              <div className="p-8" id="printSection">
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-[#001F3F] mb-2">
+                    CHI TIẾT TIỆC CƯỚI
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Mã đặt tiệc: {selectedBookingDetail.MaDatTiec}
+                  </p>
+                </div>
+
+                {/* Main content */}
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+                      Thông tin cơ bản
+                    </h3>
+                    <div className="space-y-2">
+                      <p>
+                        <span className="font-medium">Chú rể:</span>{" "}
+                        {selectedBookingDetail.TenChuRe}
+                      </p>
+                      <p>
+                        <span className="font-medium">Cô dâu:</span>{" "}
+                        {selectedBookingDetail.TenCoDau}
+                      </p>
+                      <p>
+                        <span className="font-medium">Điện thoại:</span>{" "}
+                        {selectedBookingDetail.DienThoai}
+                      </p>
+                      <p>
+                        <span className="font-medium">Ngày đặt tiệc:</span>{" "}
+                        {new Date(
+                          selectedBookingDetail.NgayDaiTiec
+                        ).toLocaleDateString("vi-VN")}
+                      </p>
+                      <p>
+                        <span className="font-medium">Ca:</span>{" "}
+                        {getCaName(selectedBookingDetail.MaCa)}
+                      </p>
+                      <p>
+                        <span className="font-medium">Sảnh:</span>{" "}
+                        {getHallName(selectedBookingDetail.MaSanh)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+                      Thông tin bàn tiệc
+                    </h3>
+                    <div className="space-y-2">
+                      <p>
+                        <span className="font-medium">Số lượng bàn:</span>{" "}
+                        {selectedBookingDetail.SoLuongBan}
+                      </p>
+                      <p>
+                        <span className="font-medium">Số bàn dự trữ:</span>{" "}
+                        {selectedBookingDetail.SoBanDuTru}
+                      </p>
+                      <p>
+                        <span className="font-medium">Tiền đặt cọc:</span>{" "}
+                        {selectedBookingDetail.TienDatCoc.toLocaleString(
+                          "vi-VN"
+                        )}{" "}
+                        VNĐ
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu section */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+                    Thực đơn
+                  </h3>
+                  {menuDetails ? (
+                    <div className="border rounded-lg p-4">
+                      <p className="font-medium mb-2">
+                        {menuDetails.TenThucDon}
+                      </p>
+                      {menuDetails.MonAnList &&
+                      menuDetails.MonAnList.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          {menuDetails.MonAnList.map((monAn) => (
+                            <div
+                              key={monAn.MaMonAn}
+                              className="flex items-center space-x-2"
+                            >
+                              <span>• {monAn.TenMonAn}</span>
+                              <span className="text-sm text-gray-500">
+                                ({monAn.DonGia.toLocaleString("vi-VN")} VNĐ)
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">
+                          Không có món ăn trong thực đơn
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">Không có thông tin thực đơn</p>
+                  )}
+                </div>
+
+                {/* Services section */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+                    Dịch vụ đi kèm
+                  </h3>
+                  {selectedBookingDetail.DichVus &&
+                  selectedBookingDetail.DichVus.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedBookingDetail.DichVus.map((dichVu) => {
+                        const service = services.find(
+                          (s) => s.MaDichVu === dichVu.MaDichVu
+                        );
+                        return (
+                          <div
+                            key={dichVu.MaDichVu}
+                            className="flex items-center justify-between border rounded p-3"
+                          >
+                            <div>
+                              <p className="font-medium">
+                                {service?.TenDichVu}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Số lượng: {dichVu.SoLuong}
+                              </p>
+                            </div>
+                            <p className="text-[#B8860B]">
+                              {dichVu.DonGiaThoiDiemDat.toLocaleString("vi-VN")}{" "}
+                              VNĐ
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">Không có dịch vụ đi kèm</p>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="text-center mt-8">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Nhà hàng tiệc cưới
+                  </p>
+                </div>
+              </div>
+
+              {/* Action buttons - Fixed at bottom */}
+              <div className="sticky bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end gap-4 print:hidden">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366]"
+                >
+                  In
                 </button>
               </div>
             </div>

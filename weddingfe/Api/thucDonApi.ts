@@ -34,17 +34,17 @@ export const getThucDonById = async (id: number) => {
   return response.data;
 };
 
-export const createThucDon = async (data: {
-  tenThucDon: string;
-  donGiaThoiDiemDat: number;
-  donGiaHienTai: number;
-  ghiChu?: string;
-  coverImg?: string;
-  monAnIds: number[];
-}) => {
-  const response = await axiosInstance.post("/tao", data);
-  return response.data;
-};
+  export const createThucDon = async (data: {
+    tenThucDon: string;
+    donGiaThoiDiemDat: number;
+    donGiaHienTai: number;
+    ghiChu?: string;
+    coverImg?: string;
+    monAnIds: number[];
+  }) => {
+    const response = await axiosInstance.post("/tao", data);
+    return response.data;
+  };
 
 export const updateThucDon = async (id: number, data: {
   tenThucDon: string;
