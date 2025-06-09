@@ -9,7 +9,7 @@ import {
   createLoaiDichVu,
   updateLoaiDichVu,
   deleteLoaiDichVu,
-} from "../../../Api/dichVuApi";
+} from "../../Api/dichVuApi";
 
 interface Service {
   MaDichVu: number;

@@ -21,68 +21,35 @@ export async function seed(knex) {
 
   // Seed bảng CHUCNANG
   await knex('CHUCNANG').insert([
-    {
-      MaChucNang: 1,
-      TenChucNang: 'Quản lý người dùng',
-      TenManHinh: 'nguoi-dung',
-    },
-    {
-      MaChucNang: 2,
-      TenChucNang: 'Quản lý nhóm người dùng',
-      TenManHinh: 'nhom-nguoi-dung',
-    },
-    {
-      MaChucNang: 3,
-      TenChucNang: 'Quản lý phân quyền',
-      TenManHinh: 'phan-quyen',
-    },
-    {
-      MaChucNang: 4,
-      TenChucNang: 'Quản lý loại sảnh',
-      TenManHinh: 'loai-sanh',
-    },
-    {
-      MaChucNang: 5,
-      TenChucNang: 'Quản lý sảnh',
-      TenManHinh: 'sanh',
-    },
-    {
-      MaChucNang: 6,
-      TenChucNang: 'Quản lý loại món ăn',
-      TenManHinh: 'loai-mon-an',
-    },
-    {
-      MaChucNang: 7,
-      TenChucNang: 'Quản lý món ăn',
-      TenManHinh: 'mon-an',
-    },
-    {
-      MaChucNang: 8,
-      TenChucNang: 'Quản lý loại dịch vụ',
-      TenManHinh: 'loai-dich-vu',
-    },
-    {
-      MaChucNang: 9,
-      TenChucNang: 'Quản lý dịch vụ',
-      TenManHinh: 'dich-vu',
-    },
-    {
-      MaChucNang: 10,
-      TenChucNang: 'Quản lý ca',
-      TenManHinh: 'ca',
-    },
-    {
-      MaChucNang: 11,
-      TenChucNang: 'Quản lý tham số',
-      TenManHinh: 'tham-so',
-    },
+    { MaChucNang: 1, TenChucNang: 'Quản lý người dùng', TenManHinh: 'nguoi-dung' },
+    { MaChucNang: 2, TenChucNang: 'Quản lý nhóm người dùng', TenManHinh: 'nhom-nguoi-dung' },
+    { MaChucNang: 3, TenChucNang: 'Quản lý phân quyền', TenManHinh: 'phan-quyen' },
+    { MaChucNang: 4, TenChucNang: 'Quản lý loại sảnh', TenManHinh: 'loai-sanh' },
+    { MaChucNang: 5, TenChucNang: 'Quản lý sảnh', TenManHinh: 'sanh' },
+    { MaChucNang: 6, TenChucNang: 'Quản lý loại món ăn', TenManHinh: 'loai-mon-an' },
+    { MaChucNang: 7, TenChucNang: 'Quản lý món ăn', TenManHinh: 'mon-an' },
+    { MaChucNang: 8, TenChucNang: 'Quản lý thực đơn', TenManHinh: 'thuc-don' },
+    { MaChucNang: 9, TenChucNang: 'Quản lý loại dịch vụ', TenManHinh: 'loai-dich-vu' },
+    { MaChucNang: 10, TenChucNang: 'Quản lý dịch vụ', TenManHinh: 'dich-vu' },
+    { MaChucNang: 11, TenChucNang: 'Quản lý ca', TenManHinh: 'ca' },
+    { MaChucNang: 12, TenChucNang: 'Quản lý đặt tiệc', TenManHinh: 'dat-tiec' },
+    { MaChucNang: 13, TenChucNang: 'Quản lý hóa đơn', TenManHinh: 'hoa-don' },
+    { MaChucNang: 14, TenChucNang: 'Quản lý báo cáo doanh thu', TenManHinh: 'bao-cao-doanh-so' },
+    { MaChucNang: 15, TenChucNang: 'Quản lý tham số', TenManHinh: 'tham-so' },
   ]);
 
   // Seed bảng NHOMNGUOIDUNG
-  await knex('NHOMNGUOIDUNG').insert([{ MaNhom: 1, TenNhom: 'Nhóm Admin' }]);
+  await knex('NHOMNGUOIDUNG').insert([
+    { MaNhom: 1, TenNhom: 'Super Admin' },
+    { MaNhom: 2, TenNhom: 'Admin' },
+    { MaNhom: 3, TenNhom: 'Nhân viên Kinh doanh' },
+    { MaNhom: 4, TenNhom: 'Nhân viên Kế toán' },
+    { MaNhom: 5, TenNhom: 'Người dùng thông thường' },
+  ]);
 
-  // Seed bảng PHANQUYEN (gán tất cả chức năng cho Nhóm Admin)
+  // Seed bảng PHANQUYEN
   await knex('PHANQUYEN').insert([
+    // Super Admin (MaNhom = 1): Toàn quyền
     { MaNhom: 1, MaChucNang: 1 },
     { MaNhom: 1, MaChucNang: 2 },
     { MaNhom: 1, MaChucNang: 3 },
@@ -94,19 +61,41 @@ export async function seed(knex) {
     { MaNhom: 1, MaChucNang: 9 },
     { MaNhom: 1, MaChucNang: 10 },
     { MaNhom: 1, MaChucNang: 11 },
+    { MaNhom: 1, MaChucNang: 12 },
+    { MaNhom: 1, MaChucNang: 13 },
+    { MaNhom: 1, MaChucNang: 14 },
+    { MaNhom: 1, MaChucNang: 15 },
+    // Admin (MaNhom = 2): Quản lý sảnh, thực đơn, dịch vụ, đặt tiệc, hóa đơn
+    { MaNhom: 2, MaChucNang: 4 },
+    { MaNhom: 2, MaChucNang: 5 },
+    { MaNhom: 2, MaChucNang: 6 },
+    { MaNhom: 2, MaChucNang: 7 },
+    { MaNhom: 2, MaChucNang: 8 },
+    { MaNhom: 2, MaChucNang: 9 },
+    { MaNhom: 2, MaChucNang: 10 },
+    { MaNhom: 2, MaChucNang: 12 },
+    { MaNhom: 2, MaChucNang: 13 },
+    // Nhân viên Kinh doanh (MaNhom = 3): Quản lý đặt tiệc
+    { MaNhom: 3, MaChucNang: 12 },
+    // Nhân viên Kế toán (MaNhom = 4): Quản lý hóa đơn và báo cáo doanh thu
+    { MaNhom: 4, MaChucNang: 13 },
+    { MaNhom: 4, MaChucNang: 14 },
+    // Người dùng thông thường (MaNhom = 5): Chỉ xem sảnh, thực đơn, dịch vụ
+    { MaNhom: 5, MaChucNang: 5 },
+    { MaNhom: 5, MaChucNang: 8 },
+    { MaNhom: 5, MaChucNang: 10 },
   ]);
 
-  // Seed bảng NGUOIDUNG (tạo tài khoản admin)
+  // Seed bảng NGUOIDUNG
   const hashedPassword = await hash('admin123', 10); // Mã hóa mật khẩu
   await knex('NGUOIDUNG').insert([
-    {
-      MaNguoiDung: 1,
-      TenDangNhap: 'admin',
-      MatKhau: hashedPassword,
-      TenNguoiDung: 'Administrator',
-      MaNhom: 1,
-    },
+    { MaNguoiDung: 1, TenDangNhap: 'superadmin', MatKhau: hashedPassword, TenNguoiDung: 'Super Administrator', MaNhom: 1 },
+    { MaNguoiDung: 2, TenDangNhap: 'admin1', MatKhau: hashedPassword, TenNguoiDung: 'Admin 1', MaNhom: 2 },
+    { MaNguoiDung: 3, TenDangNhap: 'kinhdoanh1', MatKhau: hashedPassword, TenNguoiDung: 'Kinh doanh 1', MaNhom: 3 },
+    { MaNguoiDung: 4, TenDangNhap: 'ketoan1', MatKhau: hashedPassword, TenNguoiDung: 'Kế toán 1', MaNhom: 4 },
+    { MaNguoiDung: 5, TenDangNhap: 'user1', MatKhau: hashedPassword, TenNguoiDung: 'Người dùng 1', MaNhom: 5 },
   ]);
+  
   // Seed bảng CA (2 ca: Trưa, Tối)
   await knex('CA').insert([
     { MaCa: 1, TenCa: 'Trưa' },

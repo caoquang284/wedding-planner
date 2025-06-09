@@ -9,7 +9,7 @@ import {
   createLoaiMonAn,
   updateLoaiMonAn,
   deleteLoaiMonAn,
-} from "../../../Api/monAnApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
+} from "../../Api/monAnApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
 
 import {
   getAllThucDon,
@@ -17,7 +17,7 @@ import {
   createThucDon,
   updateThucDon,
   deleteThucDon,
-} from "../../../Api/thucDonApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
+} from "../../Api/thucDonApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
 // Định nghĩa interface
 interface Dish {
   MaMonAn: number | null;
