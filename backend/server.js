@@ -13,6 +13,7 @@ import thucDonRoutes from './src/routes/thucDon.js';
 import sanhRoutes from './src/routes/sanh.js';
 import loaiSanhRoutes from './src/routes/loaiSanh.js';
 import caRoutes from './src/routes/ca.js';
+import HoaDonRoutes from './src/routes/hoaDon.js';
 
 config();
 
@@ -40,6 +41,7 @@ app.use('/api/thucdon', thucDonRoutes);
 app.use('/api/sanh', sanhRoutes);
 app.use('/api/loaisanh', loaiSanhRoutes);
 app.use('/api/ca', caRoutes);
+app.use('/api/hoadon', HoaDonRoutes);
 // Error handling
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {

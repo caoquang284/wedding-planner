@@ -27,9 +27,9 @@ router.get(
 // Lấy chi tiết đặt tiệc
 router.get(
   '/chi-tiet/:id',
-  auth,
-  checkPermission(18),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission(18),
+  // validation.validateIdParam,
   datTiecController.getDatTiecById
 );
 

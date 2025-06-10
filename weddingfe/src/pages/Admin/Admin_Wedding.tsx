@@ -14,6 +14,7 @@ import {
   updateDatTiec,
   deleteDatTiec,
 } from "../../../Api/datTiecApi";
+import { createHoaDon } from "../../../Api/hoaDonApi";
 
 // Interface cho món ăn
 interface IMonAn {
@@ -646,6 +647,7 @@ function Admin_Wedding() {
           : "Bạn có chắc chắn muốn thêm đặt tiệc này?",
         onConfirm: async () => {
           try {
+            let newBookingId;
             if (isEditMode && formData.MaDatTiec) {
               const updatedBooking = await updateDatTiec(
                 formData.MaDatTiec,
@@ -663,6 +665,7 @@ function Admin_Wedding() {
                     : booking
                 )
               );
+              newBookingId = formData.MaDatTiec;
             } else {
               const newBooking = await createDatTiec(datTiecData);
               setBookings((prev) => [
@@ -673,8 +676,46 @@ function Admin_Wedding() {
                   DichVus: selectedServices,
                 },
               ]);
+              newBookingId = newBooking.MaDatTiec;
             }
+
+            // Tạo hóa đơn mới
+            const hoaDonData = {
+              MaDatTiec: newBookingId,
+              NgayThanhToan: new Date().toISOString().split("T")[0], // Thay NgayLap
+              TongTienBan:
+                selectedDishes.reduce((total, dishId) => {
+                  const dish = dishes.find((d) => d.id === dishId);
+                  return (
+                    total + (dish && dish.dongia ? Number(dish.dongia) : 0)
+                  );
+                }, 0) *
+                ((Number(formData.SoLuongBan) || 0) +
+                  (Number(formData.SoBanDuTru) || 0)),
+              TongTienDichVu: selectedServices.reduce(
+                (total, service) =>
+                  total +
+                  (Number(service.SoLuong) || 1) *
+                    (Number(service.DonGiaThoiDiemDat) || 0),
+                0
+              ),
+              TongTienHoaDon: Number(totalCost) || 0,
+              ApDungQuyDinhPhat: false,
+              PhanTramPhatMotNgay: 0,
+              TongTienPhat: 0,
+              TongTienConLai:
+                (Number(totalCost) || 0) - (Number(formData.TienDatCoc) || 0),
+              TrangThai: 0,
+              GhiChu: `Hóa đơn tiệc cưới - ${formData.TenChuRe || ""} & ${
+                formData.TenCoDau || ""
+              }`,
+              // Bỏ ChiTietHoaDon nếu không cần
+            };
+
+            console.log("hoaDonData:", JSON.stringify(hoaDonData, null, 2));
+            await createHoaDon(hoaDonData);
             closeWizard();
+            alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
           } catch (error: any) {
             alert("Lỗi: " + (error.message || "Không thể lưu đặt tiệc"));
           }
