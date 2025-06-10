@@ -12,10 +12,7 @@ import thucDonRoutes from './src/routes/thucDon.js';
 import sanhRoutes from './src/routes/sanh.js';
 import loaiSanhRoutes from './src/routes/loaiSanh.js';
 import caRoutes from './src/routes/ca.js';
-<<<<<<< HEAD
 import HoaDonRoutes from './src/routes/hoaDon.js';
-
-=======
 import nguoiDungRoutes from './src/routes/nguoiDung.js';
 import nhomNguoiDungRoutes from './src/routes/nhomNguoiDung.js';
 import phanQuyenRoutes from './src/routes/phanQuyen.js';
@@ -23,7 +20,6 @@ import auth from './src/middleware/auth.js';
 import checkPermission from './src/middleware/checkPermission.js';
 import validation from './src/middleware/validation.js';
 import { authRoutes } from './src/routes/auth.js'; // Named import
->>>>>>> c2e9c95438c0d6b8f0b749b289e05fc88067acfb
 config();
 
 const app = express();
