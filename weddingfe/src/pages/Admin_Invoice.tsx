@@ -4,12 +4,12 @@ import {
   createHoaDon,
   updateHoaDon,
   deleteHoaDon,
-} from "../../../Api/hoaDonApi";
-import { getAllDatTiec, getDatTiecById } from "../../../Api/datTiecApi";
-import { getThucDonById } from "../../../Api/thucDonApi";
-import { getSanhById } from "../../../Api/sanhApi";
-import { getCaById } from "../../../Api/caApi";
-import { getDichVuById } from "../../../Api/dichVuApi";
+} from "../../Api/hoaDonApi";
+import { getAllDatTiec, getDatTiecById } from "../../Api/datTiecApi";
+import { getThucDonById } from "../../Api/thucDonApi";
+import { getSanhById } from "../../Api/sanhApi";
+import { getCaById } from "../../Api/caApi";
+import { getDichVuById } from "../../Api/dichVuApi";
 import { useNavigate } from "react-router-dom";
 
 interface HoaDon {
@@ -357,7 +357,7 @@ const AdminInvoice: React.FC = () => {
     try {
       // Lấy chi tiết đặt tiệc
       const datTiecResponse = await getDatTiecById(maDatTiec);
-      const datTiecData = datTiecResponse.data;
+      const datTiecData = datTiecResponse;
       setChiTietDatTiec(datTiecData);
 
       // Lấy thông tin thực đơn
@@ -368,14 +368,28 @@ const AdminInvoice: React.FC = () => {
 
       // Lấy thông tin sảnh
       if (datTiecData.MaSanh) {
-        const sanhResponse = await getSanhById(datTiecData.MaSanh);
-        setSanh(sanhResponse.data);
+        try {
+          const sanhResponse = await getSanhById(datTiecData.MaSanh);
+          setSanh(sanhResponse.data);
+        } catch (error) {
+          console.error("Lỗi khi lấy thông tin sảnh:", error);
+          setSanh(null);
+        }
+      } else {
+        setSanh(null);
       }
 
       // Lấy thông tin ca
       if (datTiecData.MaCa) {
-        const caResponse = await getCaById(datTiecData.MaCa);
-        setCa(caResponse.data);
+        try {
+          const caResponse = await getCaById(datTiecData.MaCa);
+          setCa(caResponse.data);
+        } catch (error) {
+          console.error("Lỗi khi lấy thông tin ca:", error);
+          setCa(null);
+        }
+      } else {
+        setCa(null);
       }
 
       // Lấy thông tin các dịch vụ
@@ -385,9 +399,16 @@ const AdminInvoice: React.FC = () => {
         );
         const dichVuResponses = await Promise.all(dichVuPromises);
         setDichVus(dichVuResponses.map((res) => res.data));
+      } else {
+        setDichVus([]);
       }
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết:", error);
+      setChiTietDatTiec(null);
+      setThucDon(null);
+      setSanh(null);
+      setCa(null);
+      setDichVus([]);
     }
   };
 
@@ -477,6 +498,9 @@ const AdminInvoice: React.FC = () => {
                     Đặt tiệc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
+                    Sảnh & Ca
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Ngày thanh toán
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
@@ -513,6 +537,16 @@ const AdminInvoice: React.FC = () => {
                         {datTiec
                           ? `${datTiec.TenChuRe} & ${datTiec.TenCoDau} (${invoice.MaDatTiec})`
                           : `Mã ${invoice.MaDatTiec}`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {sanh?.TenSanh || "Đang tải..."}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {ca?.TenCa || "Đang tải..."}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 align-middle">
                         {new Date(invoice.NgayThanhToan).toLocaleDateString(
@@ -900,191 +934,226 @@ const AdminInvoice: React.FC = () => {
                 </p>
               </div>
 
-              {/* Thông tin chi tiết đặt tiệc */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <h2 className="font-semibold mb-4 text-[#001F3F]">
-                    Thông tin đặt tiệc:
+              <div className="space-y-8 mt-6">
+                {/* Phần 1: Thông tin đặt tiệc */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                    1. Thông tin đặt tiệc
                   </h2>
                   {chiTietDatTiec && (
-                    <div className="space-y-2">
-                      <p>
-                        <span className="text-gray-600">Chú rể:</span>{" "}
-                        {chiTietDatTiec.TenChuRe}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Cô dâu:</span>{" "}
-                        {chiTietDatTiec.TenCoDau}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Điện thoại:</span>{" "}
-                        {chiTietDatTiec.DienThoai}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Ngày đãi tiệc:</span>{" "}
-                        {new Date(
-                          chiTietDatTiec.NgayDaiTiec
-                        ).toLocaleDateString("vi-VN")}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Số lượng bàn:</span>{" "}
-                        {chiTietDatTiec.SoLuongBan}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Số bàn dự trữ:</span>{" "}
-                        {chiTietDatTiec.SoBanDuTru}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Tiền đặt cọc:</span>{" "}
-                        {chiTietDatTiec.TienDatCoc.toLocaleString("vi-VN")} VNĐ
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <h2 className="font-semibold mb-4 text-[#001F3F]">
-                    Thông tin sảnh và ca:
-                  </h2>
-                  {sanh && (
-                    <div className="mb-4 space-y-2">
-                      <p>
-                        <span className="text-gray-600">Sảnh:</span>{" "}
-                        {sanh.TenSanh}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Loại sảnh:</span>{" "}
-                        {sanh.TenLoaiSanh}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Sức chứa:</span>{" "}
-                        {sanh.SucChua} bàn
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Đơn giá:</span>{" "}
-                        {sanh.DonGia.toLocaleString("vi-VN")} VNĐ
-                      </p>
-                    </div>
-                  )}
-                  {ca && (
-                    <div className="space-y-2">
-                      <p>
-                        <span className="text-gray-600">Ca:</span> {ca.TenCa}
-                      </p>
-                      <p>
-                        <span className="text-gray-600">Thời gian:</span>{" "}
-                        {ca.ThoiGianBatDau} - {ca.ThoiGianKetThuc}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Thông tin thực đơn */}
-              {thucDon && (
-                <div className="mt-6">
-                  <h2 className="font-semibold mb-4 text-[#001F3F]">
-                    Thực đơn: {thucDon.TenThucDon}
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {thucDon.MonAns?.map((monAn) => (
-                      <div
-                        key={monAn.MaMonAn}
-                        className="flex justify-between items-center"
-                      >
-                        <span>{monAn.TenMonAn}</span>
-                        <span className="text-gray-600">
-                          {monAn.DonGia.toLocaleString("vi-VN")} VNĐ
-                        </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="mb-2">
+                          <span className="text-gray-600">Chú rể:</span>{" "}
+                          <span className="font-medium">
+                            {chiTietDatTiec.TenChuRe}
+                          </span>
+                        </p>
+                        <p className="mb-2">
+                          <span className="text-gray-600">Cô dâu:</span>{" "}
+                          <span className="font-medium">
+                            {chiTietDatTiec.TenCoDau}
+                          </span>
+                        </p>
                       </div>
-                    ))}
+                      <div>
+                        <p className="mb-2">
+                          <span className="text-gray-600">Ngày đãi tiệc:</span>{" "}
+                          <span className="font-medium">
+                            {new Date(
+                              chiTietDatTiec.NgayDaiTiec
+                            ).toLocaleDateString("vi-VN")}
+                          </span>
+                        </p>
+                        <p className="mb-2">
+                          <span className="text-gray-600">Điện thoại:</span>{" "}
+                          <span className="font-medium">
+                            {chiTietDatTiec.DienThoai}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Phần 2: Thông tin sảnh và ca */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                    2. Thông tin sảnh và ca
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {sanh && (
+                      <div>
+                        <h3 className="font-medium text-lg mb-3">
+                          Thông tin sảnh:
+                        </h3>
+                        <div className="space-y-2">
+                          <p>
+                            <span className="text-gray-600">Tên sảnh:</span>{" "}
+                            <span className="font-medium">{sanh.TenSanh}</span>
+                          </p>
+                          <p>
+                            <span className="text-gray-600">Loại sảnh:</span>{" "}
+                            <span className="font-medium">
+                              {sanh.TenLoaiSanh}
+                            </span>
+                          </p>
+                          <p>
+                            <span className="text-gray-600">Sức chứa:</span>{" "}
+                            <span className="font-medium">
+                              {sanh.SucChua} bàn
+                            </span>
+                          </p>
+                          <p>
+                            <span className="text-gray-600">Đơn giá:</span>{" "}
+                            <span className="font-medium">
+                              {sanh.DonGia.toLocaleString("vi-VN")} VNĐ
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {ca && (
+                      <div>
+                        <h3 className="font-medium text-lg mb-3">
+                          Thông tin ca:
+                        </h3>
+                        <div className="space-y-2">
+                          <p>
+                            <span className="text-gray-600">Tên ca:</span>{" "}
+                            <span className="font-medium">{ca.TenCa}</span>
+                          </p>
+                          <p>
+                            <span className="text-gray-600">Thời gian:</span>{" "}
+                            <span className="font-medium">
+                              {ca.ThoiGianBatDau} - {ca.ThoiGianKetThuc}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
 
-              {/* Thông tin dịch vụ */}
-              {dichVus.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="font-semibold mb-4 text-[#001F3F]">
-                    Dịch vụ đi kèm:
-                  </h2>
-                  <div className="space-y-2">
-                    {dichVus.map((dichVu) => {
-                      const dichVuDatTiec = chiTietDatTiec?.DichVus?.find(
-                        (dv) => dv.MaDichVu === dichVu.MaDichVu
-                      );
-                      return (
+                {/* Phần 3: Thực đơn */}
+                {thucDon && (
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                      3. Thực đơn: {thucDon.TenThucDon}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {thucDon.MonAns?.map((monAn) => (
                         <div
-                          key={dichVu.MaDichVu}
-                          className="flex justify-between items-center"
+                          key={monAn.MaMonAn}
+                          className="flex justify-between items-center p-2 border-b border-gray-200"
                         >
-                          <span>
-                            {dichVu.TenDichVu} ({dichVuDatTiec?.SoLuong} x{" "}
-                            {dichVuDatTiec?.DonGiaThoiDiemDat.toLocaleString(
-                              "vi-VN"
-                            )}{" "}
-                            VNĐ)
-                          </span>
+                          <span className="font-medium">{monAn.TenMonAn}</span>
                           <span className="text-gray-600">
-                            {(
-                              (dichVuDatTiec?.SoLuong || 0) *
-                              (dichVuDatTiec?.DonGiaThoiDiemDat || 0)
-                            ).toLocaleString("vi-VN")}{" "}
-                            VNĐ
+                            {monAn.DonGia.toLocaleString("vi-VN")} VNĐ
                           </span>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Chi tiết thanh toán */}
-              <div className="border-t pt-6">
-                <h2 className="font-semibold mb-4 text-[#001F3F]">
-                  Chi tiết thanh toán:
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Tổng tiền bàn:</span>
-                    <span>
-                      {selectedInvoice.TongTienBan.toLocaleString("vi-VN")} VNĐ
-                    </span>
+                {/* Phần 4: Dịch vụ đi kèm */}
+                {dichVus.length > 0 && (
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                      4. Dịch vụ đi kèm
+                    </h2>
+                    <div className="space-y-3">
+                      {dichVus.map((dichVu) => {
+                        const dichVuDatTiec = chiTietDatTiec?.DichVus?.find(
+                          (dv) => dv.MaDichVu === dichVu.MaDichVu
+                        );
+                        return (
+                          <div
+                            key={dichVu.MaDichVu}
+                            className="flex justify-between items-center p-2 border-b border-gray-200"
+                          >
+                            <div>
+                              <span className="font-medium">
+                                {dichVu.TenDichVu}
+                              </span>
+                              <span className="text-gray-500 text-sm ml-2">
+                                ({dichVuDatTiec?.SoLuong} x{" "}
+                                {dichVuDatTiec?.DonGiaThoiDiemDat.toLocaleString(
+                                  "vi-VN"
+                                )}{" "}
+                                VNĐ)
+                              </span>
+                            </div>
+                            <span className="font-medium">
+                              {(
+                                (dichVuDatTiec?.SoLuong || 0) *
+                                (dichVuDatTiec?.DonGiaThoiDiemDat || 0)
+                              ).toLocaleString("vi-VN")}{" "}
+                              VNĐ
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Tổng tiền dịch vụ:</span>
-                    <span>
-                      {selectedInvoice.TongTienDichVu.toLocaleString("vi-VN")}{" "}
-                      VNĐ
-                    </span>
-                  </div>
-                  {selectedInvoice.ApDungQuyDinhPhat && (
-                    <div className="flex justify-between items-center py-1 text-red-500">
-                      <span>
-                        Tiền phạt ({selectedInvoice.PhanTramPhatMotNgay}
-                        %/ngày):
-                      </span>
-                      <span>
-                        {selectedInvoice.TongTienPhat.toLocaleString("vi-VN")}{" "}
+                )}
+
+                {/* Chi tiết thanh toán */}
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                    5. Chi tiết thanh toán
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Tổng tiền bàn:</span>
+                      <span className="font-medium">
+                        {selectedInvoice.TongTienBan.toLocaleString("vi-VN")}{" "}
                         VNĐ
                       </span>
                     </div>
-                  )}
-                  <div className="flex justify-between items-center py-2 border-t border-dashed">
-                    <span className="font-semibold text-[#001F3F]">
-                      Tổng tiền hóa đơn:
-                    </span>
-                    <span className="font-semibold text-[#001F3F]">
-                      {selectedInvoice.TongTienHoaDon.toLocaleString("vi-VN")}{" "}
-                      VNĐ
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-gray-600">Số tiền còn lại:</span>
-                    <span className="text-[#001F3F]">
-                      {selectedInvoice.TongTienConLai.toLocaleString("vi-VN")}{" "}
-                      VNĐ
-                    </span>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Tổng tiền dịch vụ:</span>
+                      <span className="font-medium">
+                        {selectedInvoice.TongTienDichVu.toLocaleString("vi-VN")}{" "}
+                        VNĐ
+                      </span>
+                    </div>
+                    {selectedInvoice.ApDungQuyDinhPhat && (
+                      <div className="flex justify-between items-center py-2 text-red-500">
+                        <span>
+                          Tiền phạt ({selectedInvoice.PhanTramPhatMotNgay}
+                          %/ngày):
+                        </span>
+                        <span className="font-medium">
+                          {selectedInvoice.TongTienPhat.toLocaleString("vi-VN")}{" "}
+                          VNĐ
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Tiền đặt cọc:</span>
+                      <span className="font-medium text-green-600">
+                        -{chiTietDatTiec?.TienDatCoc.toLocaleString("vi-VN")}{" "}
+                        VNĐ
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-t border-dashed mt-2">
+                      <span className="font-semibold text-[#001F3F]">
+                        Tổng tiền hóa đơn:
+                      </span>
+                      <span className="font-semibold text-[#001F3F]">
+                        {selectedInvoice.TongTienHoaDon.toLocaleString("vi-VN")}{" "}
+                        VNĐ
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Số tiền còn lại:</span>
+                      <span className="font-semibold text-[#001F3F]">
+                        {selectedInvoice.TongTienConLai.toLocaleString("vi-VN")}{" "}
+                        VNĐ
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1100,8 +1169,21 @@ const AdminInvoice: React.FC = () => {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={() => window.print()}
-                  className="bg-[#001F3F] text-white px-4 py-2 rounded hover:bg-[#003366] transition-colors duration-300"
+                  className="bg-[#001F3F] text-white px-6 py-2 rounded-lg hover:bg-[#003366] transition-colors duration-300 flex items-center"
                 >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
+                  </svg>
                   In hóa đơn
                 </button>
               </div>

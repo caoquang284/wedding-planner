@@ -1,6 +1,7 @@
 import { hash } from 'bcrypt';
 
 export async function seed(knex) {
+  await knex('HOADON').del();
   await knex('DATTIEC_DICHVU').del();
   await knex('DATTIEC').del();
   await knex('THUCDON_MONAN').del();
@@ -18,7 +19,6 @@ export async function seed(knex) {
   await knex('THAMSO').del();
   await knex('DICHVU').del();
   await knex('LOAIDICHVU').del();
-  await knex('HOADON').del();
 
   // Seed bảng CHUCNANG
   await knex('CHUCNANG').insert([
