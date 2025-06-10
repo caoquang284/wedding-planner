@@ -3,18 +3,18 @@ import {
   getAllThucDon,
   getThucDonById,
   createThucDon,
-} from "../../../Api/thucDonApi";
-import { getAllDichVu, getAllLoaiDichVu } from "../../../Api/dichVuApi";
-import { getAllMonAn, getAllLoaiMonAn } from "../../../Api/monAnApi";
-import { getAllSanh, getAllLoaiSanh } from "../../../Api/sanhApi";
-import { getAllCa } from "../../../Api/caApi";
+} from "../../Api/thucDonApi";
+import { getAllDichVu, getAllLoaiDichVu } from "../../Api/dichVuApi";
+import { getAllMonAn, getAllLoaiMonAn } from "../../Api/monAnApi";
+import { getAllSanh, getAllLoaiSanh } from "../../Api/sanhApi";
+import { getAllCa } from "../../Api/caApi";
 import {
   createDatTiec,
   getAllDatTiec,
   updateDatTiec,
   deleteDatTiec,
-} from "../../../Api/datTiecApi";
-import { createHoaDon } from "../../../Api/hoaDonApi";
+} from "../../Api/datTiecApi";
+import { createHoaDon } from "../../Api/hoaDonApi";
 
 // Interface cho món ăn
 interface IMonAn {

@@ -1,19 +1,33 @@
 import { useState } from "react";
-import { login } from "../../../Api/authApi"; // Giả sử bạn đã tạo authApi.ts để xử lý đăng nhập
+import { login } from "../../Api/authApi";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../src/contexts/AuthContext"; // Import AuthContext
 
 function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [tenDangNhap, setTenDangNhap] = useState("");
+  const [matKhau, setMatKhau] = useState("");
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // Sử dụng setUser từ AuthContext
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(username, password);
-      navigate("/admin/services"); // Chuyển hướng đến trang quản lý dịch vụ
-    } catch (error) {
-      alert("Đăng nhập thất bại: " + (error as any).message);
+      const { accessToken, refreshToken, user } = await login(tenDangNhap, matKhau);
+      // Lưu token
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      // Lưu thông tin người dùng và quyền vào Context
+      setUser({
+        id: user.MaNguoiDung,
+        maNhom: user.MaNhom,
+        tenNguoiDung: user.TenNguoiDung,
+        permissions: user.permissions || [], // Giả sử backend trả về permissions
+      });
+      navigate("/admin/services");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || "Đăng nhập thất bại!";
+      alert(errorMessage);
+      console.error("Lỗi đăng nhập:", error);
     }
   };
 
@@ -26,8 +40,8 @@ function Login() {
             <label className="block text-sm font-medium">Tên đăng nhập</label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={tenDangNhap}
+              onChange={(e) => setTenDangNhap(e.target.value)}
               className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
               required
             />
@@ -36,8 +50,8 @@ function Login() {
             <label className="block text-sm font-medium">Mật khẩu</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={matKhau}
+              onChange={(e) => setMatKhau(e.target.value)}
               className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
               required
             />

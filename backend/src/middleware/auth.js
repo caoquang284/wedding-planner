@@ -10,8 +10,8 @@ const auth = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await NguoiDung.findById(decoded.id);
-    if (!user) {
+    const nguoiDung = await NguoiDung.findById(decoded.id);
+    if (!nguoiDung) {
       return res.status(401).json({ error: 'Người dùng không tồn tại' });
     }
     req.user = { id: decoded.id, maNhom: decoded.maNhom };
