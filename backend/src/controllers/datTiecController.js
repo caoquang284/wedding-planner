@@ -155,12 +155,12 @@ const findDatTiecById = async (id) => {
 
   const monAns = await knex('THUCDON_MONAN')
     .where({ MaThucDon: datTiec.MaThucDon })
-    .select('MaMonAn');
+    .select('MaMonAn', 'DonGiaThoiDiemDat');
 
   return {
     ...datTiec,
     DichVus: dichVus,
-    MonAns: monAns.map((m) => m.MaMonAn),
+    MonAns: monAns,
   };
 };
 

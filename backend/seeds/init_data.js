@@ -1111,6 +1111,7 @@ export async function seed(knex) {
   ]);
   await knex('HOADON').insert([
     {
+      MaHoaDon: 1,
       MaDatTiec: 1,
       NgayThanhToan: '2025-06-17',
       TongTienBan: 30000000.0, // 30 bàn * 1,000,000
@@ -1123,6 +1124,7 @@ export async function seed(knex) {
       TrangThai: 0,
     },
     {
+      MaHoaDon: 2,
       MaDatTiec: 2,
       NgayThanhToan: '2025-07-22',
       TongTienBan: 40000000.0, // 40 bàn * 1,000,000
@@ -1135,6 +1137,7 @@ export async function seed(knex) {
       TrangThai: 1,
     },
     {
+      MaHoaDon: 3,
       MaDatTiec: 3,
       NgayThanhToan: '2025-08-12',
       TongTienBan: 25000000.0, // 25 bàn * 1,000,000
@@ -1147,6 +1150,7 @@ export async function seed(knex) {
       TrangThai: 0,
     },
     {
+      MaHoaDon: 4,
       MaDatTiec: 4,
       NgayThanhToan: '2025-09-07',
       TongTienBan: 35000000.0, // 35 bàn * 1,000,000
@@ -1159,6 +1163,7 @@ export async function seed(knex) {
       TrangThai: 1,
     },
     {
+      MaHoaDon: 5,
       MaDatTiec: 5,
       NgayThanhToan: '2025-10-14',
       TongTienBan: 28000000.0, // 28 bàn * 1,000,000
@@ -1171,6 +1176,7 @@ export async function seed(knex) {
       TrangThai: 0,
     },
     {
+      MaHoaDon: 6,
       MaDatTiec: 6,
       NgayThanhToan: '2025-11-20',
       TongTienBan: 38000000.0, // 38 bàn * 1,000,000
@@ -1183,6 +1189,7 @@ export async function seed(knex) {
       TrangThai: 1,
     },
     {
+      MaHoaDon: 7,
       MaDatTiec: 7,
       NgayThanhToan: '2025-12-03',
       TongTienBan: 20000000.0, // 20 bàn * 1,000,000
@@ -1195,6 +1202,7 @@ export async function seed(knex) {
       TrangThai: 2,
     },
     {
+      MaHoaDon: 8,
       MaDatTiec: 8,
       NgayThanhToan: '2025-06-27',
       TongTienBan: 45000000.0, // 45 bàn * 1,000,000
@@ -1207,6 +1215,7 @@ export async function seed(knex) {
       TrangThai: 1,
     },
     {
+      MaHoaDon: 9,
       MaDatTiec: 9,
       NgayThanhToan: '2025-08-01',
       TongTienBan: 27000000.0, // 27 bàn * 1,000,000
@@ -1219,6 +1228,7 @@ export async function seed(knex) {
       TrangThai: 0,
     },
     {
+      MaHoaDon: 10,
       MaDatTiec: 10,
       NgayThanhToan: '2025-08-17',
       TongTienBan: 32000000.0, // 32 bàn * 1,000,000

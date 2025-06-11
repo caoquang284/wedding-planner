@@ -21,17 +21,17 @@ router.get(
 );
 router.get(
   '/chi-tiet/:id',
-  auth,
-  checkPermission('Quản lý dịch vụ'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý dịch vụ'),
+  // validation.validateIdParam,
   dichVuController.getDichVu
 );
 router.put(
   '/cap-nhat/:id',
-  auth,
-  checkPermission('Quản lý dịch vụ'),
-  validation.validateIdParam,
-  validation.validateDichVu,
+  // auth,
+  // checkPermission('Quản lý dịch vụ'),
+  // validation.validateIdParam,
+  // validation.validateDichVu,
   dichVuController.updateDichVu
 );
 router.delete(

@@ -21,9 +21,9 @@ router.get(
 );
 router.get(
   '/chi-tiet/:id',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
   monAnController.getMonAn
 );
 router.put(

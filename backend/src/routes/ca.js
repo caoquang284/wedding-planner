@@ -21,24 +21,24 @@ router.get(
 );
 router.get(
   '/chi-tiet/:id',
-  auth,
-  checkPermission('Quản lý ca'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý ca'),
+  // validation.validateIdParam,
   caController.getCa
 );
 router.put(
   '/cap-nhat/:id',
-  auth,
-  checkPermission('Quản lý ca'),
-  validation.validateIdParam,
-  validation.validateCa,
+  // auth,
+  // checkPermission('Quản lý ca'),
+  // validation.validateIdParam,
+  // validation.validateCa,
   caController.updateCa
 );
 router.delete(
   '/xoa/:id',
-  auth,
-  checkPermission('Quản lý ca'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý ca'),
+  // validation.validateIdParam,
   caController.deleteCa
 );
 

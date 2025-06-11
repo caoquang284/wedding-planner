@@ -10,6 +10,7 @@ import { getThucDonById } from "../../Api/thucDonApi";
 import { getSanhById } from "../../Api/sanhApi";
 import { getCaById } from "../../Api/caApi";
 import { getDichVuById } from "../../Api/dichVuApi";
+import { getMonAnById } from "../../Api/monAnApi";
 import { useNavigate } from "react-router-dom";
 
 interface HoaDon {
@@ -104,6 +105,23 @@ interface DichVu {
   TenLoaiDichVu: string;
 }
 
+interface MonAnDatTiec {
+  MaMonAn: number;
+  DonGiaThoiDiemDat: string;
+}
+
+interface DichVuDatTiec {
+  MaDichVu: number;
+  SoLuong: number;
+  DonGiaThoiDiemDat: string;
+  ThanhTien: string;
+}
+
+const formatVND = (value: number) => {
+  if (typeof value !== "number") return "";
+  return value.toLocaleString("vi-VN") + " VNĐ";
+};
+
 const AdminInvoice: React.FC = () => {
   const [invoices, setInvoices] = useState<HoaDon[]>([]);
   const [datTiecs, setDatTiecs] = useState<DatTiec[]>([]);
@@ -142,6 +160,11 @@ const AdminInvoice: React.FC = () => {
   const [sanh, setSanh] = useState<Sanh | null>(null);
   const [ca, setCa] = useState<Ca | null>(null);
   const [dichVus, setDichVus] = useState<DichVu[]>([]);
+  const [monAns, setMonAns] = useState<
+    { MaMonAn: number; TenMonAn: string; DonGia: number }[]
+  >([]);
+  const [monAnChiTiet, setMonAnChiTiet] = useState<any[]>([]);
+  const [dichVuChiTiet, setDichVuChiTiet] = useState<any[]>([]);
   const navigate = useNavigate();
 
   // Đóng thông báo thành công sau 3 giây
@@ -359,20 +382,14 @@ const AdminInvoice: React.FC = () => {
       const datTiecResponse = await getDatTiecById(maDatTiec);
       const datTiecData = datTiecResponse;
       setChiTietDatTiec(datTiecData);
-
-      // Lấy thông tin thực đơn
-      if (datTiecData.MaThucDon) {
-        const thucDonResponse = await getThucDonById(datTiecData.MaThucDon);
-        setThucDon(thucDonResponse.data);
-      }
+      console.log("Chi tiết đặt tiệc:", datTiecData);
 
       // Lấy thông tin sảnh
       if (datTiecData.MaSanh) {
         try {
           const sanhResponse = await getSanhById(datTiecData.MaSanh);
-          setSanh(sanhResponse.data);
+          setSanh(sanhResponse);
         } catch (error) {
-          console.error("Lỗi khi lấy thông tin sảnh:", error);
           setSanh(null);
         }
       } else {
@@ -383,24 +400,48 @@ const AdminInvoice: React.FC = () => {
       if (datTiecData.MaCa) {
         try {
           const caResponse = await getCaById(datTiecData.MaCa);
-          setCa(caResponse.data);
+          setCa(caResponse);
         } catch (error) {
-          console.error("Lỗi khi lấy thông tin ca:", error);
           setCa(null);
         }
       } else {
         setCa(null);
       }
 
-      // Lấy thông tin các dịch vụ
-      if (datTiecData.DichVus && datTiecData.DichVus.length > 0) {
-        const dichVuPromises = datTiecData.DichVus.map((dv: any) =>
-          getDichVuById(dv.MaDichVu)
+      // Lấy chi tiết món ăn
+      if (datTiecData.MonAns && datTiecData.MonAns.length > 0) {
+        const monAnPromises = datTiecData.MonAns.map(
+          async (ma: MonAnDatTiec) => {
+            const monAnResponse = await getMonAnById(ma.MaMonAn);
+            return {
+              ...monAnResponse,
+              DonGiaThoiDiemDat: parseFloat(ma.DonGiaThoiDiemDat),
+            };
+          }
         );
-        const dichVuResponses = await Promise.all(dichVuPromises);
-        setDichVus(dichVuResponses.map((res) => res.data));
+        const monAnResults = await Promise.all(monAnPromises);
+        setMonAnChiTiet(monAnResults);
       } else {
-        setDichVus([]);
+        setMonAnChiTiet([]);
+      }
+
+      // Lấy chi tiết dịch vụ
+      if (datTiecData.DichVus && datTiecData.DichVus.length > 0) {
+        const dichVuPromises = datTiecData.DichVus.map(
+          async (dv: DichVuDatTiec) => {
+            const dichVuResponse = await getDichVuById(dv.MaDichVu);
+            return {
+              ...dichVuResponse,
+              SoLuong: dv.SoLuong,
+              DonGiaThoiDiemDat: parseFloat(dv.DonGiaThoiDiemDat),
+              ThanhTien: parseFloat(dv.ThanhTien),
+            };
+          }
+        );
+        const dichVuResults = await Promise.all(dichVuPromises);
+        setDichVuChiTiet(dichVuResults);
+      } else {
+        setDichVuChiTiet([]);
       }
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết:", error);
@@ -408,7 +449,8 @@ const AdminInvoice: React.FC = () => {
       setThucDon(null);
       setSanh(null);
       setCa(null);
-      setDichVus([]);
+      setMonAnChiTiet([]);
+      setDichVuChiTiet([]);
     }
   };
 
@@ -498,9 +540,6 @@ const AdminInvoice: React.FC = () => {
                     Đặt tiệc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
-                    Sảnh & Ca
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Ngày thanh toán
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
@@ -539,22 +578,12 @@ const AdminInvoice: React.FC = () => {
                           : `Mã ${invoice.MaDatTiec}`}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                        <div className="flex flex-col">
-                          <span className="font-medium">
-                            {sanh?.TenSanh || "Đang tải..."}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {ca?.TenCa || "Đang tải..."}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
                         {new Date(invoice.NgayThanhToan).toLocaleDateString(
                           "vi-VN"
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                        {invoice.TongTienHoaDon.toLocaleString("vi-VN")}
+                        {formatVND(Number(invoice.TongTienHoaDon))}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 align-middle">
                         {invoice.TrangThai === 0
@@ -940,6 +969,7 @@ const AdminInvoice: React.FC = () => {
                   <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
                     1. Thông tin đặt tiệc
                   </h2>
+
                   {chiTietDatTiec && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -999,17 +1029,21 @@ const AdminInvoice: React.FC = () => {
                             </span>
                           </p>
                           <p>
-                            <span className="text-gray-600">Sức chứa:</span>{" "}
+                            <span className="text-gray-600">
+                              Số lượng bàn:{" "}
+                            </span>{" "}
                             <span className="font-medium">
-                              {sanh.SucChua} bàn
+                              {Number(chiTietDatTiec?.SoBanDuTru || 0) +
+                                Number(chiTietDatTiec?.SoLuongBan || 0)}{" "}
+                              bàn
                             </span>
                           </p>
-                          <p>
+                          {/* <p>
                             <span className="text-gray-600">Đơn giá:</span>{" "}
                             <span className="font-medium">
-                              {sanh.DonGia.toLocaleString("vi-VN")} VNĐ
+                              {formatVND(sanh.DonGia)}
                             </span>
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     )}
@@ -1036,20 +1070,20 @@ const AdminInvoice: React.FC = () => {
                 </div>
 
                 {/* Phần 3: Thực đơn */}
-                {thucDon && (
+                {monAnChiTiet.length > 0 && (
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
-                      3. Thực đơn: {thucDon.TenThucDon}
+                      3. Thực đơn
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {thucDon.MonAns?.map((monAn) => (
+                      {monAnChiTiet.map((monAn) => (
                         <div
                           key={monAn.MaMonAn}
                           className="flex justify-between items-center p-2 border-b border-gray-200"
                         >
                           <span className="font-medium">{monAn.TenMonAn}</span>
-                          <span className="text-gray-600">
-                            {monAn.DonGia.toLocaleString("vi-VN")} VNĐ
+                          <span className="font-medium">
+                            {formatVND(monAn.DonGiaThoiDiemDat)}
                           </span>
                         </div>
                       ))}
@@ -1058,43 +1092,31 @@ const AdminInvoice: React.FC = () => {
                 )}
 
                 {/* Phần 4: Dịch vụ đi kèm */}
-                {dichVus.length > 0 && (
+                {dichVuChiTiet.length > 0 && (
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
                       4. Dịch vụ đi kèm
                     </h2>
                     <div className="space-y-3">
-                      {dichVus.map((dichVu) => {
-                        const dichVuDatTiec = chiTietDatTiec?.DichVus?.find(
-                          (dv) => dv.MaDichVu === dichVu.MaDichVu
-                        );
-                        return (
-                          <div
-                            key={dichVu.MaDichVu}
-                            className="flex justify-between items-center p-2 border-b border-gray-200"
-                          >
-                            <div>
-                              <span className="font-medium">
-                                {dichVu.TenDichVu}
-                              </span>
-                              <span className="text-gray-500 text-sm ml-2">
-                                ({dichVuDatTiec?.SoLuong} x{" "}
-                                {dichVuDatTiec?.DonGiaThoiDiemDat.toLocaleString(
-                                  "vi-VN"
-                                )}{" "}
-                                VNĐ)
-                              </span>
-                            </div>
+                      {dichVuChiTiet.map((dichVu) => (
+                        <div
+                          key={dichVu.MaDichVu}
+                          className="flex justify-between items-center p-2 border-b border-gray-200"
+                        >
+                          <div>
                             <span className="font-medium">
-                              {(
-                                (dichVuDatTiec?.SoLuong || 0) *
-                                (dichVuDatTiec?.DonGiaThoiDiemDat || 0)
-                              ).toLocaleString("vi-VN")}{" "}
-                              VNĐ
+                              {dichVu.TenDichVu}
+                            </span>
+                            <span className="text-gray-500 text-sm ml-2">
+                              ({dichVu.SoLuong} x{" "}
+                              {formatVND(dichVu.DonGiaThoiDiemDat)})
                             </span>
                           </div>
-                        );
-                      })}
+                          <span className="font-medium">
+                            {formatVND(dichVu.ThanhTien)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -1104,57 +1126,55 @@ const AdminInvoice: React.FC = () => {
                   <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
                     5. Chi tiết thanh toán
                   </h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Tổng tiền bàn:</span>
-                      <span className="font-medium">
-                        {selectedInvoice.TongTienBan.toLocaleString("vi-VN")}{" "}
-                        VNĐ
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Tổng tiền dịch vụ:</span>
-                      <span className="font-medium">
-                        {selectedInvoice.TongTienDichVu.toLocaleString("vi-VN")}{" "}
-                        VNĐ
-                      </span>
-                    </div>
-                    {selectedInvoice.ApDungQuyDinhPhat && (
-                      <div className="flex justify-between items-center py-2 text-red-500">
-                        <span>
-                          Tiền phạt ({selectedInvoice.PhanTramPhatMotNgay}
-                          %/ngày):
-                        </span>
+                  {selectedInvoice && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Tổng tiền bàn:</span>
                         <span className="font-medium">
-                          {selectedInvoice.TongTienPhat.toLocaleString("vi-VN")}{" "}
-                          VNĐ
+                          {formatVND(Number(selectedInvoice.TongTienBan))}
                         </span>
                       </div>
-                    )}
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Tiền đặt cọc:</span>
-                      <span className="font-medium text-green-600">
-                        -{chiTietDatTiec?.TienDatCoc.toLocaleString("vi-VN")}{" "}
-                        VNĐ
-                      </span>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">
+                          Tổng tiền dịch vụ:
+                        </span>
+                        <span className="font-medium">
+                          {formatVND(Number(selectedInvoice.TongTienDichVu))}
+                        </span>
+                      </div>
+                      {selectedInvoice.ApDungQuyDinhPhat && (
+                        <div className="flex justify-between items-center py-2 text-red-500">
+                          <span>
+                            Tiền phạt ({selectedInvoice.PhanTramPhatMotNgay}
+                            %/ngày):
+                          </span>
+                          <span className="font-medium">
+                            {formatVND(Number(selectedInvoice.TongTienPhat))}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Tiền đặt cọc:</span>
+                        <span className="font-medium text-green-600">
+                          -{formatVND(Number(chiTietDatTiec?.TienDatCoc || 0))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-3 border-t border-dashed mt-2">
+                        <span className="font-semibold text-[#001F3F]">
+                          Tổng tiền hóa đơn:
+                        </span>
+                        <span className="font-semibold text-[#001F3F]">
+                          {formatVND(Number(selectedInvoice.TongTienHoaDon))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Số tiền còn lại:</span>
+                        <span className="font-semibold text-[#001F3F]">
+                          {formatVND(Number(selectedInvoice.TongTienConLai))}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center py-3 border-t border-dashed mt-2">
-                      <span className="font-semibold text-[#001F3F]">
-                        Tổng tiền hóa đơn:
-                      </span>
-                      <span className="font-semibold text-[#001F3F]">
-                        {selectedInvoice.TongTienHoaDon.toLocaleString("vi-VN")}{" "}
-                        VNĐ
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-600">Số tiền còn lại:</span>
-                      <span className="font-semibold text-[#001F3F]">
-                        {selectedInvoice.TongTienConLai.toLocaleString("vi-VN")}{" "}
-                        VNĐ
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
