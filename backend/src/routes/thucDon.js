@@ -8,64 +8,64 @@ const router = Router();
 
 router.post(
   '/tao',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateThucDon,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateThucDon,
   thucDonController.createThucDon
 );
 router.get(
   '/danh-sach',
-  auth,
-  checkPermission('Quản lý món ăn'),
+  // auth,
+  // checkPermission('Quản lý món ăn'),
   thucDonController.getAllThucDon
 );
 router.get(
   '/chi-tiet/:id',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
   thucDonController.getThucDon
 );
 router.put(
   '/cap-nhat/:id',
   auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
-  validation.validateThucDon,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
+  // validation.validateThucDon,
   thucDonController.updateThucDon
 );
 router.delete(
   '/xoa/:id',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
   thucDonController.deleteThucDon
 );
 
 // Routes cho quản lý món ăn trong thực đơn
 router.post(
   '/:id/them-mon-an',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
-  validation.validateThucDonMonAn,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
+  // validation.validateThucDonMonAn,
   thucDonController.addMonAnToThucDon
 );
 
 router.delete(
   '/:id/xoa-mon-an/:maMonAn',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
   thucDonController.removeMonAnFromThucDon
 );
 
 router.put(
   '/:id/cap-nhat-mon-an/:maMonAn',
-  auth,
-  checkPermission('Quản lý món ăn'),
-  validation.validateIdParam,
-  validation.validateThucDonMonAnUpdate,
+  // auth,
+  // checkPermission('Quản lý món ăn'),
+  // validation.validateIdParam,
+  // validation.validateThucDonMonAnUpdate,
   thucDonController.updateMonAnInThucDon
 );
 
