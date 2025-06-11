@@ -9,18 +9,18 @@ const router = Router();
 // Tạo đặt tiệc
 router.post(
   '/dat-tiec',
-  // auth,
-  // checkPermission(17),
-  // validation.validateDatTiec,
+  auth,
+  checkPermission('Quản lý đặt tiệc'),
+  validation.validateDatTiec,
   datTiecController.createDatTiec
 );
 
 // Lấy danh sách đặt tiệc
 router.get(
   '/danh-sach',
-  // auth,
-  // checkPermission(18),
-  // validation.validateDatTiecFilters,
+  auth,
+  checkPermission('Quản lý đặt tiệc'),
+  validation.validateDatTiecFilters,
   datTiecController.getAllDatTiec
 );
 
@@ -28,7 +28,7 @@ router.get(
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission(18),
+  checkPermission('Quản lý đặt tiệc'),
   validation.validateIdParam,
   datTiecController.getDatTiecById
 );
@@ -36,19 +36,19 @@ router.get(
 // Cập nhật đặt tiệc
 router.put(
   '/cap-nhat/:id',
-  // auth,
-  // checkPermission(17),
-  // validation.validateIdParam,
-  // validation.validateDatTiec,
+  auth,
+  checkPermission('Quản lý đặt tiệc'),
+  validation.validateIdParam,
+  validation.validateDatTiec,
   datTiecController.updateDatTiec
 );
 
 // Xóa đặt tiệc
 router.delete(
   '/xoa/:id',
-  // auth,
-  // checkPermission(17),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Quản lý đặt tiệc'),
+  validation.validateIdParam,
   datTiecController.deleteDatTiec
 );
 
@@ -56,7 +56,7 @@ router.delete(
 router.post(
   '/them-mon-an/:id',
   auth,
-  checkPermission(17),
+  checkPermission('Quản lý đặt tiệc'),
   validation.validateIdParam,
   validation.validateThemMonAn,
   datTiecController.themMonAn
@@ -66,7 +66,7 @@ router.post(
 router.delete(
   '/xoa-mon-an/:id/:maMonAn',
   auth,
-  checkPermission(17),
+  checkPermission('Quản lý đặt tiệc'),
   validation.validateIdParam,
   validation.validateMaMonAnParam,
   datTiecController.xoaMonAn
@@ -76,7 +76,7 @@ router.delete(
 router.post(
   '/them-dich-vu/:id',
   auth,
-  checkPermission(17),
+  checkPermission('Quản lý đặt tiệc'),
   validation.validateIdParam,
   validation.validateThemDichVu,
   datTiecController.themDichVu
@@ -86,7 +86,7 @@ router.post(
 router.delete(
   '/xoa-dich-vu/:id/:maDichVu',
   auth,
-  checkPermission(17),
+  checkPermission('Quản lý đặt tiệc'),
   validation.validateIdParam,
   validation.validateMaDichVuParam,
   datTiecController.xoaDichVu

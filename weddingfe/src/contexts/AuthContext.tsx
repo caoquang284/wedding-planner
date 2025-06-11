@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react"; // Thêm 'type' trước ReactNode
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 interface User {
   id: number;
@@ -16,6 +16,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>

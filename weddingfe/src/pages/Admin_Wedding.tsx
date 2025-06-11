@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+// src/pages/Admin_Wedding.tsx
+import React, { useEffect, useState, useMemo } from "react";
+import { useAuth } from "../../src/contexts/AuthContext"; // Điều chỉnh đường dẫn theo cấu trúc dự án
 import {
   getAllThucDon,
   getThucDonById,
@@ -15,7 +17,7 @@ import {
   deleteDatTiec,
 } from "../../Api/datTiecApi";
 
-// Interface cho món ăn
+// Interfaces
 interface IMonAn {
   MaMonAn: number;
   TenMonAn: string;
@@ -26,7 +28,6 @@ interface IMonAn {
   AnhURL?: string;
 }
 
-// Interface cho thực đơn
 interface IThucDon {
   MaThucDon: number;
   TenThucDon: string;
@@ -36,13 +37,11 @@ interface IThucDon {
   MonAnList?: IMonAn[];
 }
 
-// Interface cho ca
 interface ICa {
   MaCa: number;
   TenCa: string;
 }
 
-// Interface cho đặt tiệc
 interface IDatTiec {
   MaDatTiec: number;
   TenChuRe: string;
@@ -59,14 +58,12 @@ interface IDatTiec {
   MonAns?: number[];
 }
 
-// Interface cho loại sảnh
 interface ILoaiSanh {
   MaLoaiSanh: number;
   TenLoaiSanh: string;
   DonGiaBanToiThieu: number;
 }
 
-// Interface cho sảnh
 interface ISanh {
   MaSanh: number;
   TenSanh: string;
@@ -76,13 +73,11 @@ interface ISanh {
   AnhURL?: string;
 }
 
-// Interface cho loại dịch vụ
 interface ILoaiDichVu {
   MaLoaiDichVu: number;
   TenLoaiDichVu: string;
 }
 
-// Interface cho dịch vụ
 interface IDichVu {
   MaDichVu: number;
   TenDichVu: string;
@@ -92,7 +87,6 @@ interface IDichVu {
   AnhURL?: string;
 }
 
-// Interface cho form dữ liệu
 interface IFormData {
   MaDatTiec: number | null;
   TenChuRe: string;
@@ -104,7 +98,6 @@ interface IFormData {
   TienDatCoc: string;
 }
 
-// Interface cho modal xác nhận
 interface IModalXacNhan {
   isOpen: boolean;
   message: string;
@@ -112,7 +105,7 @@ interface IModalXacNhan {
 }
 
 function Admin_Wedding() {
-  // API loading states
+  const { user } = useAuth();
   const [isLoadingMenus, setIsLoadingMenus] = useState(true);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
   const [isLoadingDishes, setIsLoadingDishes] = useState(true);
@@ -121,7 +114,6 @@ function Admin_Wedding() {
   const [isLoadingCa, setIsLoadingCa] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Data states
   const [apiMenus, setApiMenus] = useState<IThucDon[]>([]);
   const [apiServices, setApiServices] = useState<IDichVu[]>([]);
   const [apiServiceTypes, setApiServiceTypes] = useState<ILoaiDichVu[]>([]);
@@ -132,7 +124,6 @@ function Admin_Wedding() {
   const [hallTypes, setHallTypes] = useState<ILoaiSanh[]>([]);
   const [caList, setCaList] = useState<ICa[]>([]);
 
-  // Wizard state
   const [showWizard, setShowWizard] = useState<boolean>(false);
   const [selectedHallType, setSelectedHallType] = useState<number | null>(null);
   const [selectedHall, setSelectedHall] = useState<number | null>(null);
@@ -166,8 +157,7 @@ function Admin_Wedding() {
   });
   const [isCustomMenu, setIsCustomMenu] = useState<boolean>(false);
   const [customMenuName, setCustomMenuName] = useState<string>("");
-  const [showCustomMenuModal, setShowCustomMenuModal] =
-    useState<boolean>(false);
+  const [showCustomMenuModal, setShowCustomMenuModal] = useState<boolean>(false);
   const [tempMenu, setTempMenu] = useState<{
     MaThucDon: number;
     TenThucDon: string;
@@ -175,7 +165,6 @@ function Admin_Wedding() {
     MonAnList: IMonAn[];
   } | null>(null);
 
-  // Add new state for detail modal
   const [selectedBookingDetail, setSelectedBookingDetail] =
     useState<IDatTiec | null>(null);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
@@ -184,8 +173,8 @@ function Admin_Wedding() {
   useEffect(() => {
     const calculateCosts = () => {
       const dishCost = selectedDishes.reduce((total, dishId) => {
-        const dish = dishes.find((d) => d.id === dishId);
-        return total + (dish ? Number(dish.dongia) || 0 : 0);
+        const dish = apiDishes.find((d) => d.MaMonAn === dishId);
+        return total + (dish ? Number(dish.DonGia) || 0 : 0);
       }, 0);
       const totalBan =
         (Number(formData.SoLuongBan) || 0) + (Number(formData.SoBanDuTru) || 0);
@@ -202,7 +191,7 @@ function Admin_Wedding() {
       setMinDeposit(minDeposit);
     };
 
-    if (dishes) {
+    if (apiDishes.length > 0) {
       calculateCosts();
     }
   }, [
@@ -210,16 +199,16 @@ function Admin_Wedding() {
     formData.SoLuongBan,
     formData.SoBanDuTru,
     selectedServices,
+    apiDishes,
   ]);
 
-  // Load data from APIs
   useEffect(() => {
     const loadData = async () => {
+      if (!user) return;
       try {
-        // Load menus
         setIsLoadingMenus(true);
         const menusData = await getAllThucDon();
-        const limitedMenusData = menusData.slice(0, 6); // Lấy 6 bản ghi đầu tiên
+        const limitedMenusData = menusData.slice(0, 6);
         const menusWithDetails = await Promise.all(
           limitedMenusData.map(async (menu: IThucDon) => {
             const menuDetail = await getThucDonById(menu.MaThucDon);
@@ -231,10 +220,7 @@ function Admin_Wedding() {
         );
         setApiMenus(menusWithDetails);
         setIsLoadingMenus(false);
-        setApiMenus(menusWithDetails);
-        setIsLoadingMenus(false);
 
-        // Load services and service types
         setIsLoadingServices(true);
         const [servicesData, serviceTypesData] = await Promise.all([
           getAllDichVu(),
@@ -244,7 +230,6 @@ function Admin_Wedding() {
         setApiServiceTypes(serviceTypesData);
         setIsLoadingServices(false);
 
-        // Load dishes and dish types
         setIsLoadingDishes(true);
         const [dishesData, dishTypesData] = await Promise.all([
           getAllMonAn(),
@@ -254,13 +239,11 @@ function Admin_Wedding() {
         setApiDishTypes(dishTypesData);
         setIsLoadingDishes(false);
 
-        // Load bookings
         setIsLoadingBookings(true);
         const bookingsData = await getAllDatTiec();
         setBookings(bookingsData);
         setIsLoadingBookings(false);
 
-        // Load halls and hall types
         setIsLoadingHalls(true);
         const [hallsData, hallTypesData] = await Promise.all([
           getAllSanh(),
@@ -270,7 +253,6 @@ function Admin_Wedding() {
         setHallTypes(hallTypesData);
         setIsLoadingHalls(false);
 
-        // Load ca list
         setIsLoadingCa(true);
         const caData = await getAllCa();
         setCaList(caData);
@@ -287,34 +269,43 @@ function Admin_Wedding() {
     };
 
     loadData();
-  }, []);
+  }, [user]);
 
-  // Convert API dishes data
-  const dishes = apiDishes.map((dish) => ({
-    id: dish.MaMonAn,
-    name: dish.TenMonAn,
-    categoryId: dish.MaLoaiMonAn,
-    note: dish.GhiChu || "",
-    dongia: dish.DonGia,
-    imageUrl: dish.AnhURL,
-  }));
+  const dishes = useMemo(
+    () =>
+      apiDishes.map((dish) => ({
+        id: dish.MaMonAn,
+        name: dish.TenMonAn,
+        categoryId: dish.MaLoaiMonAn,
+        note: dish.GhiChu || "",
+        dongia: dish.DonGia,
+        imageUrl: dish.AnhURL,
+      })),
+    [apiDishes]
+  );
 
-  // Convert API service types and services
-  const serviceTypes = apiServiceTypes.map((type) => ({
-    MaLoaiDichVu: type.MaLoaiDichVu,
-    TenLoaiDichVu: type.TenLoaiDichVu,
-  }));
+  const serviceTypes = useMemo(
+    () =>
+      apiServiceTypes.map((type) => ({
+        MaLoaiDichVu: type.MaLoaiDichVu,
+        TenLoaiDichVu: type.TenLoaiDichVu,
+      })),
+    [apiServiceTypes]
+  );
 
-  const services = apiServices.map((service) => ({
-    MaDichVu: service.MaDichVu,
-    TenDichVu: service.TenDichVu,
-    MaLoaiDichVu: service.MaLoaiDichVu,
-    DonGia: service.DonGia,
-    GhiChu: service.GhiChu || "",
-    AnhURL: service.AnhURL,
-  }));
+  const services = useMemo(
+    () =>
+      apiServices.map((service) => ({
+        MaDichVu: service.MaDichVu,
+        TenDichVu: service.TenDichVu,
+        MaLoaiDichVu: service.MaLoaiDichVu,
+        DonGia: service.DonGia,
+        GhiChu: service.GhiChu || "",
+        AnhURL: service.AnhURL,
+      })),
+    [apiServices]
+  );
 
-  // Handlers
   const openAddModal = () => {
     setFormData({
       MaDatTiec: null,
@@ -338,20 +329,12 @@ function Admin_Wedding() {
   };
 
   const openEditModal = async (booking: IDatTiec) => {
-    // Tìm sảnh được chọn và loại sảnh tương ứng
     const hall = halls.find((h) => h.MaSanh === booking.MaSanh);
 
-    // Kiểm tra xem thực đơn có phải là thực đơn tự chọn không
-    const existingMenu = apiMenus.find(
-      (m) => m.MaThucDon === booking.MaThucDon
-    );
-
-    // Nếu không tìm thấy trong apiMenus, có thể đây là thực đơn tự chọn
+    const existingMenu = apiMenus.find((m) => m.MaThucDon === booking.MaThucDon);
     if (booking.MaThucDon && !existingMenu) {
-      // Lấy thông tin chi tiết thực đơn
       try {
         const menuDetail = await getThucDonById(booking.MaThucDon);
-        // Tạo tempMenu từ thực đơn tự chọn
         setTempMenu({
           MaThucDon: menuDetail.MaThucDon,
           TenThucDon: menuDetail.TenThucDon,
@@ -408,12 +391,10 @@ function Admin_Wedding() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Reset selectedCa when changing NgayDaiTiec
     if (name === "NgayDaiTiec") {
       setSelectedCa(null);
     }
 
-    // Validate số lượng bàn và bàn dự trữ
     if (["SoLuongBan", "SoBanDuTru"].includes(name)) {
       if (value && isNaN(Number(value))) {
         alert("Vui lòng nhập số hợp lệ");
@@ -427,7 +408,6 @@ function Admin_Wedding() {
       return;
     }
 
-    // Cho phép nhập tự do cho Tiền Đặt Cọc, validate sau
     if (name === "TienDatCoc") {
       setFormData((prev) => ({ ...prev, [name]: value }));
       return;
@@ -436,7 +416,6 @@ function Admin_Wedding() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Xử lý khi rời khỏi ô input
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "TienDatCoc") {
@@ -484,13 +463,11 @@ function Admin_Wedding() {
             DonGiaThoiDiemDat: service.DonGia,
           },
         ];
-      } else {
-        return prev.filter((s) => s.MaDichVu !== service.MaDichVu);
       }
+      return prev.filter((s) => s.MaDichVu !== service.MaDichVu);
     });
   };
 
-  // Add this function to check if selected dishes match any existing menu
   const checkIfCustomMenu = (selectedDishIds: number[]) => {
     const matchingMenu = apiMenus.find((menu) => {
       const menuDishIds = (menu.MonAnList || []).map((dish) => dish.MaMonAn);
@@ -508,22 +485,19 @@ function Admin_Wedding() {
     }
   };
 
-  // Modify handleCreateCustomMenu
   const handleCreateCustomMenu = async () => {
     if (!customMenuName || selectedDishes.length === 0) {
       alert("Vui lòng nhập tên thực đơn và chọn ít nhất một món ăn");
       return;
     }
 
-    // Calculate total price of selected dishes
     const totalPrice = selectedDishes.reduce((total, dishId) => {
       const dish = apiDishes.find((d) => d.MaMonAn === dishId);
       return total + (dish ? Number(dish.DonGia) : 0);
     }, 0);
 
-    // Create temporary menu
     const newTempMenu = {
-      MaThucDon: Date.now(), // Temporary ID
+      MaThucDon: Date.now(),
       TenThucDon: customMenuName,
       DonGiaHienTai: totalPrice,
       MonAnList: selectedDishes.map((id) => {
@@ -546,17 +520,14 @@ function Admin_Wedding() {
     setIsCustomMenu(false);
   };
 
-  // Modify handleSubmit to create the actual menu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate dữ liệu
     const tienDatCocNumber = Number(formData.TienDatCoc);
     const soLuongBan = Number(formData.SoLuongBan);
     const soBanDuTru = Number(formData.SoBanDuTru);
     const tienDatCoc = Number(formData.TienDatCoc);
 
-    // Additional date validation
     if (!formData.NgayDaiTiec) {
       alert("Vui lòng chọn ngày đặt tiệc");
       return;
@@ -607,7 +578,6 @@ function Admin_Wedding() {
     try {
       let menuId = selectedMenu;
 
-      // If we have a temporary menu and it's selected, create the actual menu
       if (tempMenu && selectedMenu === tempMenu.MaThucDon) {
         const newMenu = await createThucDon({
           tenThucDon: tempMenu.TenThucDon,
@@ -620,7 +590,6 @@ function Admin_Wedding() {
         setTempMenu(null);
       }
 
-      // Prepare booking data
       const datTiecData = {
         tenChuRe: formData.TenChuRe,
         tenCoDau: formData.TenCoDau,
@@ -709,32 +678,24 @@ function Admin_Wedding() {
       booking.DienThoai.includes(searchTerm)
   );
 
-  // Add function to get hall name
   const getHallName = (maSanh: number) => {
     const hall = halls.find((h) => h.MaSanh === maSanh);
     return hall?.TenSanh || "Không xác định";
   };
 
-  // Add function to get ca name
   const getCaName = (maCa: number) => {
     const ca = caList.find((c) => c.MaCa === maCa);
     return ca?.TenCa || "Không xác định";
   };
 
-  // Sửa lại hàm getMenuDetails
   const getMenuDetails = async (maThucDon: number) => {
-    // Đầu tiên tìm trong danh sách thực đơn mẫu
     const menuFromList = apiMenus.find((m) => m.MaThucDon === maThucDon);
     if (menuFromList) {
       return menuFromList;
     }
-
-    // Nếu không tìm thấy trong danh sách mẫu, gọi API để lấy thông tin
     try {
       const menuDetail = await getThucDonById(maThucDon);
-      // Đảm bảo MonAnList được trả về
       if (menuDetail && !menuDetail.MonAnList) {
-        // Nếu không có MonAnList, thử lấy lại thông tin chi tiết
         const fullMenuDetail = await getThucDonById(maThucDon);
         return fullMenuDetail;
       }
@@ -745,7 +706,6 @@ function Admin_Wedding() {
     }
   };
 
-  // Add function to handle print
   const handlePrint = () => {
     const printContent = document.getElementById("printSection");
     const originalContents = document.body.innerHTML;
@@ -754,27 +714,22 @@ function Admin_Wedding() {
       document.body.innerHTML = printContent.innerHTML;
       window.print();
       document.body.innerHTML = originalContents;
-      // Re-render the component after printing
       setShowDetailModal(true);
     }
   };
 
-  // Thêm useEffect để lấy thông tin thực đơn khi mở modal chi tiết
   useEffect(() => {
     const loadMenuDetails = async () => {
       if (selectedBookingDetail?.MaThucDon) {
         const details = await getMenuDetails(selectedBookingDetail.MaThucDon);
-        console.log("Menu Details:", details); // Thêm log để debug
         setMenuDetails(details);
       }
     };
-
     if (showDetailModal) {
       loadMenuDetails();
     }
   }, [showDetailModal, selectedBookingDetail]);
 
-  // Loading UI
   if (
     isLoadingMenus ||
     isLoadingServices ||
@@ -979,7 +934,6 @@ function Admin_Wedding() {
               {isEditMode ? "Sửa Đặt Tiệc" : "Thêm Đặt Tiệc"}
             </h2>
 
-            {/* Thông tin cơ bản */}
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Thông Tin Cơ Bản
@@ -1040,13 +994,11 @@ function Admin_Wedding() {
               </div>
             </div>
 
-            {/* Chọn sảnh */}
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Chọn Sảnh
               </h4>
 
-              {/* Chọn loại sảnh */}
               <div className="mb-6">
                 <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                   Chọn Loại Sảnh
@@ -1057,7 +1009,7 @@ function Admin_Wedding() {
                       key={hallType.MaLoaiSanh}
                       onClick={() => {
                         setSelectedHallType(hallType.MaLoaiSanh);
-                        setSelectedHall(null); // Reset selected hall when changing hall type
+                        setSelectedHall(null);
                       }}
                       className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
                         selectedHallType === hallType.MaLoaiSanh
@@ -1086,7 +1038,6 @@ function Admin_Wedding() {
                 </div>
               </div>
 
-              {/* Hiển thị sảnh theo loại sảnh đã chọn */}
               {selectedHallType && (
                 <div className="mt-6">
                   <h5 className="text-sm font-medium text-[#001F3F] mb-3">
@@ -1138,7 +1089,6 @@ function Admin_Wedding() {
               )}
             </div>
 
-            {/* Sau phần chọn sảnh, thêm phần chọn ca */}
             {selectedHall && (
               <div className="mb-8">
                 <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
@@ -1148,7 +1098,6 @@ function Admin_Wedding() {
                 {formData.NgayDaiTiec ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                     {caList.map((ca) => {
-                      // Kiểm tra xem ca này đã được đặt chưa
                       const isBooked = bookings.some(
                         (booking) =>
                           new Date(booking.NgayDaiTiec)
@@ -1160,30 +1109,29 @@ function Admin_Wedding() {
                             booking.MaDatTiec !== formData.MaDatTiec)
                       );
 
-                      // Xác định màu sắc và icon dựa vào MaCa
                       let bgColor, icon, textColor;
                       switch (ca.MaCa) {
-                        case 1: // Trưa
+                        case 1:
                           bgColor = "bg-amber-50";
                           icon = "🌞";
                           textColor = "text-amber-700";
                           break;
-                        case 2: // Tối
+                        case 2:
                           bgColor = "bg-indigo-50";
                           icon = "🌆";
                           textColor = "text-indigo-700";
                           break;
-                        case 3: // Sáng
+                        case 3:
                           bgColor = "bg-yellow-50";
                           icon = "☀️";
                           textColor = "text-yellow-700";
                           break;
-                        case 4: // Chiều
+                        case 4:
                           bgColor = "bg-orange-50";
                           icon = "🌤️";
                           textColor = "text-orange-700";
                           break;
-                        case 5: // Đêm
+                        case 5:
                           bgColor = "bg-blue-50";
                           icon = "🌙";
                           textColor = "text-blue-700";
@@ -1240,7 +1188,6 @@ function Admin_Wedding() {
               </div>
             )}
 
-            {/* Chọn thực đơn */}
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
                 Chọn Thực Đơn
@@ -1253,7 +1200,7 @@ function Admin_Wedding() {
                   {apiMenus.map((menu) => {
                     const menuDishes = menu.MonAnList || [];
                     const totalPrice = menuDishes.reduce(
-                      (total, dish) => total + Number(dish.DonGia || 0), // Sửa lỗi tại đây
+                      (total, dish) => total + Number(dish.DonGia || 0),
                       0
                     );
                     const firstDish = menuDishes[0];
@@ -1313,7 +1260,6 @@ function Admin_Wedding() {
                     );
                   })}
 
-                  {/* Add button to create custom menu */}
                   {isCustomMenu && !tempMenu && (
                     <div className="rounded-lg shadow-md cursor-pointer border border-yellow-200 bg-yellow-50 flex items-center justify-center p-6">
                       <button
@@ -1328,7 +1274,6 @@ function Admin_Wedding() {
                     </div>
                   )}
 
-                  {/* Show temporary menu if exists */}
                   {tempMenu && (
                     <div
                       onClick={() => setSelectedMenu(tempMenu.MaThucDon)}
@@ -1410,7 +1355,6 @@ function Admin_Wedding() {
                                   setSelectedDishes(newSelectedDishes);
                                   checkIfCustomMenu(newSelectedDishes);
 
-                                  // Update temp menu if exists
                                   if (tempMenu) {
                                     const totalPrice = newSelectedDishes.reduce(
                                       (total, dishId) => {
@@ -1616,8 +1560,8 @@ function Admin_Wedding() {
                   Tổng tiền thực đơn:{" "}
                   {(
                     selectedDishes.reduce((total, dishId) => {
-                      const dish = dishes.find((d) => d.id === dishId);
-                      return total + (dish ? Number(dish.dongia) || 0 : 0);
+                      const dish = apiDishes.find((d) => d.MaMonAn === dishId);
+                      return total + (dish ? Number(dish.DonGia) || 0 : 0);
                     }, 0) *
                     ((Number(formData.SoLuongBan) || 0) +
                       (Number(formData.SoBanDuTru) || 0))
@@ -1775,7 +1719,6 @@ function Admin_Wedding() {
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-6 overflow-auto">
             <div className="bg-white mx-auto my-6 w-[210mm] min-h-[297mm] shadow-lg relative print:shadow-none print:my-0">
               <div className="p-8" id="printSection">
-                {/* Header */}
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold text-[#001F3F] mb-2">
                     CHI TIẾT TIỆC CƯỚI
@@ -1785,7 +1728,6 @@ function Admin_Wedding() {
                   </p>
                 </div>
 
-                {/* Main content */}
                 <div className="grid grid-cols-2 gap-8 mb-8">
                   <div>
                     <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
@@ -1845,7 +1787,6 @@ function Admin_Wedding() {
                   </div>
                 </div>
 
-                {/* Menu section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
                     Thực đơn
@@ -1881,7 +1822,6 @@ function Admin_Wedding() {
                   )}
                 </div>
 
-                {/* Services section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
                     Dịch vụ đi kèm
@@ -1919,7 +1859,6 @@ function Admin_Wedding() {
                   )}
                 </div>
 
-                {/* Footer */}
                 <div className="text-center mt-8">
                   <p className="text-sm text-gray-500 mb-4">
                     Nhà hàng tiệc cưới
@@ -1927,7 +1866,6 @@ function Admin_Wedding() {
                 </div>
               </div>
 
-              {/* Action buttons - Fixed at bottom */}
               <div className="sticky bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end gap-4 print:hidden">
                 <button
                   onClick={() => setShowDetailModal(false)}

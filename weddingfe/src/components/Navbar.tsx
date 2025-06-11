@@ -1,53 +1,110 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // Thêm useNavigate
-import { useAuth } from "../../src/contexts/AuthContext"; // Thêm useAuth
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../src/contexts/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { user, setUser } = useAuth(); // Lấy user và setUser từ AuthContext
-  const navigate = useNavigate(); // Sử dụng useNavigate
+  const { user, setUser } = useAuth();
+  const navigate = useNavigate();
 
   interface NavItem {
     type: "link" | "dropdown";
     path?: string;
     label: string;
-    items?: { path: string; label: string; permission?: string }[];
-    permission?: string;
+    items?: { path: string; label: string; permissions: string[] }[];
+    permissions?: string[];
   }
 
   const allNavItems: NavItem[] = [
-    { type: "link", path: "/admin", label: "Tổng quan", permission: "Xem tổng quan" },
+    {
+      type: "link",
+      path: "/admin",
+      label: "Tổng quan",
+      permissions: ["Quản lý tham số"],
+    },
     {
       type: "dropdown",
       label: "Quản lý",
-      permission: "Quản lý",
+      permissions: [
+        "Quản lý loại sảnh",
+        "Quản lý sảnh",
+        "Quản lý loại món ăn",
+        "Quản lý món ăn",
+        "Quản lý thực đơn",
+        "Quản lý loại dịch vụ",
+        "Quản lý dịch vụ",
+        "Quản lý ca",
+      ],
       items: [
-        { path: "/admin/halls", label: "Quản lý sảnh", permission: "Quản lý sảnh" },
-        { path: "/admin/menus", label: "Quản lý thực đơn", permission: "Quản lý thực đơn" },
-        { path: "/admin/services", label: "Quản lý dịch vụ", permission: "Quản lý dịch vụ" },
+        {
+          path: "/admin/halls",
+          label: "Quản lý sảnh",
+          permissions: ["Quản lý loại sảnh", "Quản lý sảnh"],
+        },
+        {
+          path: "/admin/menus",
+          label: "Quản lý thực đơn",
+          permissions: ["Quản lý loại món ăn", "Quản lý món ăn", "Quản lý thực đơn"],
+        },
+        {
+          path: "/admin/services",
+          label: "Quản lý dịch vụ",
+          permissions: ["Quản lý loại dịch vụ", "Quản lý dịch vụ", "Quản lý ca"],
+        },
       ],
     },
-    { type: "link", path: "/admin/invoices", label: "Quản lý hóa đơn", permission: "Quản lý hóa đơn" },
-    { type: "link", path: "/admin/wedding", label: "Đặt tiệc cưới", permission: "Quản lý đặt tiệc" },
-    { type: "link", path: "/admin/reports", label: "Báo cáo doanh thu", permission: "Quản lý báo cáo doanh thu" },
-    { type: "link", path: "/admin/permissions", label: "Phân quyền", permission: "Quản lý phân quyền" },
+    {
+      type: "link",
+      path: "/admin/invoices",
+      label: "Quản lý hóa đơn",
+      permissions: ["Quản lý hóa đơn"],
+    },
+    {
+      type: "link",
+      path: "/admin/wedding",
+      label: "Đặt tiệc cưới",
+      permissions: ["Quản lý đặt tiệc"],
+    },
+    {
+      type: "link",
+      path: "/admin/reports",
+      label: "Báo cáo doanh thu",
+      permissions: ["Quản lý báo cáo doanh thu"],
+    },
+    {
+      type: "link",
+      path: "/admin/permissions",
+      label: "Phân quyền",
+      permissions: ["Quản lý người dùng", "Quản lý nhóm người dùng", "Quản lý phân quyền"],
+    },
   ];
 
-  const navItems = allNavItems.filter((item) => {
-    if (item.permission && user) {
-      return user.permissions.includes(item.permission);
-    }
-    return true;
-  }).map((item) => {
-    if (item.type === "dropdown" && item.items) {
-      item.items = item.items.filter((subItem) =>
-        !subItem.permission || (user && user.permissions.includes(subItem.permission))
-      );
-    }
-    return item;
-  });
+  // Nếu user là Super Admin (MaNhom: 1), hiển thị tất cả navItems
+  // Nếu không, lọc theo permissions
+  const navItems = user?.maNhom === 1
+    ? allNavItems
+    : allNavItems
+        .filter((item) => {
+          if (!item.permissions || (user && item.permissions.some((perm) => user.permissions.includes(perm)))) {
+            return true;
+          }
+          if (item.type === "dropdown" && item.items) {
+            return item.items.some((subItem) =>
+              user && subItem.permissions.some((perm) => user.permissions.includes(perm))
+            );
+          }
+          return false;
+        })
+        .map((item) => {
+          if (item.type === "dropdown" && item.items) {
+            item.items = item.items.filter((subItem) =>
+              user && subItem.permissions.some((perm) => user.permissions.includes(perm))
+            );
+          }
+          return item;
+        });
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -71,12 +128,18 @@ const Navbar = () => {
                   {item.label}
                 </Link>
               );
-            } else if (item.type === "dropdown") {
+            } else if (item.type === "dropdown" && item.items && item.items.length > 0) {
               return (
                 <div key={index} className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-1 hover:text-gray-600 transition-colors"
+                    className={`flex items-center gap-1 hover:text-gray-600 transition-colors ${
+                      location.pathname.startsWith("/admin/halls") ||
+                      location.pathname.startsWith("/admin/menus") ||
+                      location.pathname.startsWith("/admin/services")
+                        ? "font-bold text-blue-600"
+                        : ""
+                    }`}
                   >
                     {item.label}
                     <svg
@@ -94,14 +157,14 @@ const Navbar = () => {
                       />
                     </svg>
                   </button>
-                  {isDropdownOpen && item.items && item.items.length > 0 && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-md rounded-lg z-10">
+                  {isDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-gray-100 shadow-md rounded-lg z-10">
                       {item.items.map((subItem) => (
                         <Link
                           key={subItem.path}
                           to={subItem.path}
                           onClick={() => setIsDropdownOpen(false)}
-                          className={`block px-4 py-2 text-sm font-medium hover:bg-gray-100 rounded-md transition-colors ${
+                          className={`block px-4 py-2 text-sm font-medium hover:bg-gray-200 rounded-md transition-colors ${
                             location.pathname === subItem.path ? "font-bold text-blue-600" : ""
                           }`}
                         >
@@ -122,8 +185,8 @@ const Navbar = () => {
               onClick={() => {
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
-                setUser(null); // Sử dụng setUser từ useAuth
-                navigate("/admin/login"); // Sử dụng navigate từ useNavigate
+                setUser(null);
+                navigate("/admin/login");
               }}
               className="bg-gradient-to-r from-black to-gray-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:scale-105 transition-transform"
             >
@@ -177,12 +240,18 @@ const Navbar = () => {
                     {item.label}
                   </Link>
                 );
-              } else if (item.type === "dropdown") {
+              } else if (item.type === "dropdown" && item.items && item.items.length > 0) {
                 return (
                   <div key={index} className="flex flex-col">
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="py-2 px-4 text-sm font-medium text-left flex items-center gap-1 hover:bg-gray-100 rounded-md transition-colors"
+                      className={`py-2 px-4 text-sm font-medium text-left flex items-center gap-1 hover:bg-gray-100 rounded-md transition-colors ${
+                        location.pathname.startsWith("/admin/halls") ||
+                        location.pathname.startsWith("/admin/menus") ||
+                        location.pathname.startsWith("/admin/services")
+                          ? "font-bold text-blue-600"
+                          : ""
+                      }`}
                     >
                       {item.label}
                       <svg
@@ -200,7 +269,7 @@ const Navbar = () => {
                         />
                       </svg>
                     </button>
-                    {isDropdownOpen && item.items && item.items.length > 0 && (
+                    {isDropdownOpen && (
                       <div className="pl-4 flex flex-col">
                         {item.items.map((subItem) => (
                           <Link
@@ -210,7 +279,7 @@ const Navbar = () => {
                               setIsMobileMenuOpen(false);
                               setIsDropdownOpen(false);
                             }}
-                            className={`py-2 px-4 text-sm font-medium hover:bg-gray-100 rounded-md transition-colors ${
+                            className={`py-2 px-4 text-sm font-medium hover:bg-gray-200 rounded-md transition-colors ${
                               location.pathname === subItem.path ? "font-bold text-blue-600" : ""
                             }`}
                           >
