@@ -11,7 +11,16 @@ const NguoiDung = {
     return await knex('NGUOIDUNG').where({ MaNguoiDung: id }).first();
   },
   findAll: async () => {
-    return await knex('NGUOIDUNG').orderBy('TenNguoiDung', 'asc');
+    return await knex('NGUOIDUNG')
+      .leftJoin('NHOMNGUOIDUNG', 'NGUOIDUNG.MaNhom', 'NHOMNGUOIDUNG.MaNhom')
+      .select(
+        'NGUOIDUNG.MaNguoiDung',
+        'NGUOIDUNG.TenDangNhap',
+        'NGUOIDUNG.TenNguoiDung',
+        'NGUOIDUNG.MaNhom',
+        'NHOMNGUOIDUNG.TenNhom'
+      )
+      .orderBy('NGUOIDUNG.TenNguoiDung', 'asc');
   },
   findByTenDangNhap: async (tenDangNhap) => {
     return await knex('NGUOIDUNG').where({ TenDangNhap: tenDangNhap }).first();
@@ -48,7 +57,7 @@ const NguoiDung = {
     try {
       await knex('REFRESH_TOKEN')
         .where({ MaNguoiDung: nguoiDung.MaNguoiDung })
-        .delete(); // Xóa token cũ
+        .delete();
       await knex('REFRESH_TOKEN').insert({
         MaNguoiDung: nguoiDung.MaNguoiDung,
         RefreshToken: refreshToken,

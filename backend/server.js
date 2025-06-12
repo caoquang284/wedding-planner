@@ -12,33 +12,29 @@ import thucDonRoutes from './src/routes/thucDon.js';
 import sanhRoutes from './src/routes/sanh.js';
 import loaiSanhRoutes from './src/routes/loaiSanh.js';
 import caRoutes from './src/routes/ca.js';
-import nguoiDungRoutes from './src/routes/nguoiDung.js';
+import nguoiDungRoutes from './src/routes/nguoiDung.js'; // Import tĩnh
 import nhomNguoiDungRoutes from './src/routes/nhomNguoiDung.js';
 import phanQuyenRoutes from './src/routes/phanQuyen.js';
 import auth from './src/middleware/auth.js';
 import checkPermission from './src/middleware/checkPermission.js';
 import validation from './src/middleware/validation.js';
-import { authRoutes } from './src/routes/auth.js'; // Named import
+import { authRoutes } from './src/routes/auth.js';
+
 config();
 
 const app = express();
 
-// Middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(json());
 
-// Routes
 app.use('/api', routes);
+app.use('/api/auth', authRoutes);
 
-// Authentication routes
-app.use('/api/auth', authRoutes); // Sử dụng authRoutes đã import
-
-// Protected routes with permissions
-app.use('/api/nguoiDung', auth, nguoiDungRoutes); // Chỉ Super Admin
-app.use('/api/nhomNguoiDung', auth, checkPermission('Quản lý nhóm người dùng'), nhomNguoiDungRoutes); // Chỉ Super Admin
-app.use('/api/phanQuyen', auth, checkPermission('Quản lý phân quyền'), phanQuyenRoutes); // Chỉ Super Admin
+app.use('/api/nguoiDung', auth, nguoiDungRoutes); // Sử dụng import tĩnh
+app.use('/api/nhomNguoiDung', auth, checkPermission('Quản lý nhóm người dùng'), nhomNguoiDungRoutes);
+app.use('/api/phanQuyen', auth, checkPermission('Quản lý phân quyền'), phanQuyenRoutes);
 app.use('/api/loaiSanh', auth, checkPermission('Quản lý loại sảnh'), loaiSanhRoutes);
 app.use('/api/sanh', auth, checkPermission('Quản lý sảnh'), sanhRoutes);
 app.use('/api/loaiMonAn', auth, checkPermission('Quản lý loại món ăn'), loaiMonAnRoutes);
@@ -47,16 +43,17 @@ app.use('/api/thucDon', auth, checkPermission('Quản lý thực đơn'), thucDo
 app.use('/api/loaiDichVu', auth, checkPermission('Quản lý loại dịch vụ'), loaiDichVuRoutes);
 app.use('/api/dichVu', auth, checkPermission('Quản lý dịch vụ'), dichVuRoutes);
 app.use('/api/ca', auth, checkPermission('Quản lý ca'), caRoutes);
-app.use('/api/datTiec', auth, checkPermission('Quản lý đặt tiệc'), (await import('./src/routes/datTiec.js')).default);
-app.use('/api/hoaDon', auth, checkPermission('Quản lý hóa đơn'), (await import('./src/routes/hoaDon.js')).default);
-app.use('/api/baoCaoDoanhSo', auth, checkPermission('Quản lý báo cáo doanh thu'), (await import('./src/routes/baoCaoDoanhSo.js')).default);
+import datTiecRoutes from './src/routes/datTiec.js';
+import hoaDonRoutes from './src/routes/hoaDon.js';
+import baoCaoDoanhSoRoutes from './src/routes/baoCaoDoanhSo.js';
+app.use('/api/datTiec', auth, checkPermission('Quản lý đặt tiệc'), datTiecRoutes);
+app.use('/api/hoaDon', auth, checkPermission('Quản lý hóa đơn'), hoaDonRoutes);
+app.use('/api/baoCaoDoanhSo', auth, checkPermission('Quản lý báo cáo doanh thu'), baoCaoDoanhSoRoutes);
 
-// Default route
 app.get('/', (_req, res) => {
   res.json({ message: 'QuanLyTiecCuoi Backend API' });
 });
 
-// Error handling
 app.use((err, _req, res, _next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Đã xảy ra lỗi!' });
