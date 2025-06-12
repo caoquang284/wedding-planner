@@ -147,23 +147,42 @@ const updateThucDon = async (req, res) => {
 
 const deleteThucDon = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id, 10);
+    console.log('deleteThucDonController - ID:', id, 'Type:', typeof id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'ID không hợp lệ, phải là số' });
+    }
+
+    console.log('Finding ThucDon with ID:', id);
     const thucDon = await ThucDon.findById(id);
+    console.log('ThucDon found:', thucDon);
 
     if (!thucDon) {
       return res.status(404).json({ error: 'Thực đơn không tồn tại' });
     }
 
+    console.log('Checking if ThucDon is used by DatTiec');
     const isUsed = await ThucDon.isUsedByDatTiec(id);
+    console.log('Is ThucDon used:', isUsed);
+
     if (isUsed) {
       return res.status(400).json({
         error: 'Không thể xóa thực đơn đang được sử dụng trong một đặt tiệc',
       });
     }
 
+    console.log('Deleting ThucDon with ID:', id);
     await ThucDon.delete(id);
+    console.log('ThucDon deleted successfully');
+
     return res.status(200).json({ message: 'Xóa thực đơn thành công' });
   } catch (error) {
+    console.error(
+      'Error in deleteThucDonController:',
+      error.message,
+      error.stack
+    );
     return res
       .status(500)
       .json({ error: 'Lỗi khi xóa thực đơn: ' + error.message });

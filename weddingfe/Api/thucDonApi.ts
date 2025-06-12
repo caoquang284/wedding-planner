@@ -59,6 +59,7 @@ export const updateThucDon = async (id: number, data: {
 };
 
 export const deleteThucDon = async (id: number) => {
+  console.log("deleteThucDon", id);
   const response = await axiosInstance.delete(`/xoa/${id}`);
   return response.data;
 };

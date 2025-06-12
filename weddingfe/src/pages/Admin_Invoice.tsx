@@ -165,6 +165,14 @@ const AdminInvoice: React.FC = () => {
   >([]);
   const [monAnChiTiet, setMonAnChiTiet] = useState<any[]>([]);
   const [dichVuChiTiet, setDichVuChiTiet] = useState<any[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "qr" | null>(
+    null
+  );
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+  const [canConfirmPayment, setCanConfirmPayment] = useState(false);
   const navigate = useNavigate();
 
   // Đóng thông báo thành công sau 3 giây
@@ -467,6 +475,122 @@ const AdminInvoice: React.FC = () => {
           .includes(searchTerm.toLowerCase())) &&
       (statusFilter === "" || invoice.TrangThai.toString() === statusFilter)
   );
+
+  const generateQRCode = async (amount: number, invoiceId: number) => {
+    try {
+      const accountNo = "5622889955"; // Xác nhận tài khoản thuộc MBBank
+      const accountName = "NHA HANG TIEC CUOI"; // Không dấu, in hoa, khớp với ngân hàng
+      const acqId = "970418"; // MBBank
+      const transferContent = `Thanh toan hoa don #${invoiceId}`.slice(0, 50); // Giới hạn 50 ký tự
+
+      // Kiểm tra amount hợp lệ
+      if (!Number.isInteger(amount) || amount <= 0) {
+        throw new Error("Số tiền phải là số nguyên lớn hơn 0");
+      }
+
+      // Tạo payload
+      const payload = {
+        accountNo: accountNo.trim(),
+        accountName: accountName.trim(),
+        acqId,
+        amount,
+        addInfo: transferContent,
+        format: "text", // Hoặc "qr_only" nếu cần
+        template: "compact2", // Thử template khác nếu compact không hoạt động
+      };
+
+      console.log("VietQR Payload:", payload);
+
+      const response = await fetch("https://api.vietqr.io/v2/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-client-id": "658ae10f-8dbf-44bf-b943-31745299dd84",
+          "x-api-key": "f1ac89af-9c63-48bb-9a09-9c635411954e",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`VietQR API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("VietQR Response:", data);
+
+      if (data.code === "00" && data.data?.qrDataURL) {
+        console.log("QR Code URL:", data.data.qrDataURL);
+        setQrCodeUrl(data.data.qrDataURL);
+      } else {
+        throw new Error(`VietQR API failed: ${data.desc || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("generateQRCode - Error:", {});
+      alert(`Lỗi khi tạo mã QR: ${error}`);
+      throw error;
+    }
+  };
+
+  const handlePayment = async (method: "cash" | "qr") => {
+    if (!selectedInvoice) return;
+
+    setPaymentMethod(method);
+    setIsProcessingPayment(true);
+    setCanConfirmPayment(false);
+
+    if (method === "qr") {
+      await generateQRCode(
+        Number(selectedInvoice.TongTienConLai),
+        selectedInvoice.MaHoaDon
+      );
+    }
+
+    setShowPaymentModal(true);
+    setIsLoadingPayment(true);
+
+    // Tự động xác nhận sau 3 giây
+    setTimeout(async () => {
+      setIsLoadingPayment(false);
+      await processPayment();
+    }, 5000);
+  };
+
+  const processPayment = async () => {
+    if (!selectedInvoice) return;
+
+    try {
+      setIsProcessingPayment(true);
+
+      const updatedInvoice = {
+        ...selectedInvoice,
+        TrangThai: 1,
+        NgayThanhToan: new Date().toISOString().split("T")[0],
+      };
+
+      await updateHoaDon(selectedInvoice.MaHoaDon, updatedInvoice);
+
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.MaHoaDon === selectedInvoice.MaHoaDon
+            ? { ...inv, ...updatedInvoice }
+            : inv
+        )
+      );
+
+      setSuccessMessage("Thanh toán thành công!");
+      setShowPaymentModal(false);
+      setIsDetailModalOpen(false);
+      setPaymentMethod(null);
+      setQrCodeUrl("");
+      setCanConfirmPayment(false);
+    } catch (error) {
+      console.error("Lỗi khi xử lý thanh toán:", error);
+      alert("Có lỗi xảy ra khi xử lý thanh toán. Vui lòng thử lại sau.");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -1213,6 +1337,199 @@ const AdminInvoice: React.FC = () => {
                   </svg>
                   In hóa đơn
                 </button>
+              </div>
+
+              {/* Trong modal chi tiết hóa đơn, thêm nút thanh toán */}
+              {selectedInvoice && selectedInvoice.TrangThai === 0 && (
+                <div className="flex justify-center mt-6 space-x-4">
+                  <button
+                    onClick={() => handlePayment("cash")}
+                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-300 flex items-center"
+                  >
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    Thanh toán tiền mặt
+                  </button>
+                  <button
+                    onClick={() => handlePayment("qr")}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300 flex items-center"
+                  >
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                      />
+                    </svg>
+                    Thanh toán QR
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal thanh toán */}
+        {showPaymentModal && selectedInvoice && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[60] p-4">
+            <div className="bg-white shadow-xl rounded-lg w-full max-w-md p-6 relative">
+              <button
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setPaymentMethod(null);
+                  setQrCodeUrl("");
+                  setCanConfirmPayment(false);
+                  setIsLoadingPayment(false);
+                  setIsProcessingPayment(false);
+                }}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <h3 className="text-xl font-semibold text-[#001F3F] mb-4">
+                {paymentMethod === "cash"
+                  ? "Thanh toán tiền mặt"
+                  : "Thanh toán QR"}
+              </h3>
+
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  Số tiền cần thanh toán:{" "}
+                  <span className="font-semibold text-[#001F3F]">
+                    {formatVND(Number(selectedInvoice.TongTienConLai))}
+                  </span>
+                </p>
+
+                {paymentMethod === "qr" && qrCodeUrl && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <img
+                      src={qrCodeUrl}
+                      alt="QR Code"
+                      className="w-64 h-64 object-contain"
+                    />
+                    <p className="text-sm text-gray-500 text-center">
+                      Quét mã QR để thanh toán
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      setPaymentMethod(null);
+                      setQrCodeUrl("");
+                      setCanConfirmPayment(false);
+                      setIsLoadingPayment(false);
+                      setIsProcessingPayment(false);
+                    }}
+                    disabled={isProcessingPayment}
+                    className="px-4 py-2 bg-gray-100 text-[#001F3F] rounded hover:bg-gray-200 transition-colors duration-300 disabled:opacity-50"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    disabled={true}
+                    className="px-4 py-2 text-white rounded transition-all duration-300 flex items-center bg-blue-500 disabled:opacity-100"
+                  >
+                    {isLoadingPayment ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Đang xử lý thanh toán...
+                      </div>
+                    ) : isProcessingPayment ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Đang hoàn tất thanh toán...
+                      </div>
+                    ) : (
+                      <span className="flex items-center">
+                        <svg
+                          className="w-5 h-5 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Xác nhận thanh toán
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

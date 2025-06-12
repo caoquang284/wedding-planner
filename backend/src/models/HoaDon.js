@@ -80,17 +80,39 @@ const HoaDon = {
     }
   },
 
-  // Xóa hóa đơn
   delete: async (id) => {
     try {
-      const hoaDonExists = await knex('HOADON').where('MaHoaDon', id).first();
+      console.log('HoaDon.delete - ID:', id);
+      const hoaDonExists = await knex('HOADON').where({ MaHoaDon: id }).first();
+      console.log('HoaDon.delete - HoaDon exists:', !!hoaDonExists);
       if (!hoaDonExists) {
         throw new Error('Hóa đơn không tồn tại');
       }
-
+      if (hoaDonExists.MaDatTiec) {
+        const datTiec = await knex('DATTIEC')
+          .where({ MaDatTiec: hoaDonExists.MaDatTiec })
+          .first();
+        console.log(
+          'HoaDon.delete - DatTiec exists for MaDatTiec:',
+          hoaDonExists.MaDatTiec,
+          'Result:',
+          !!datTiec
+        );
+        if (datTiec) {
+          throw new Error('Không thể xóa hóa đơn vì còn đặt tiệc liên quan');
+        }
+      } else {
+        console.log('HoaDon.delete - No MaDatTiec associated with this HoaDon');
+      }
       const deletedCount = await knex('HOADON').where({ MaHoaDon: id }).del();
+      console.log('HoaDon.delete - Deleted rows:', deletedCount);
       return deletedCount > 0;
     } catch (error) {
+      console.error('HoaDon.delete - Error:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      });
       throw new Error(`Lỗi khi xóa hóa đơn: ${error.message}`);
     }
   },

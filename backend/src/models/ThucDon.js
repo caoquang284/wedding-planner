@@ -7,6 +7,7 @@ const ThucDon = {
   },
 
   findById: async (id) => {
+    console.log('findById', id);
     return await knex('THUCDON').where({ MaThucDon: id }).first();
   },
 
@@ -86,7 +87,29 @@ const ThucDon = {
   },
 
   delete: async (id) => {
-    return await knex('THUCDON').where({ MaThucDon: id }).delete();
+    console.log('delete - ID:', id);
+    try {
+      // Xóa các bản ghi trong THUCDON_MONAN
+      const deletedMonAnCount = await knex('THUCDON_MONAN')
+        .where({ MaThucDon: id })
+        .delete();
+      console.log('delete - Deleted THUCDON_MONAN rows:', deletedMonAnCount);
+
+      // Xóa bản ghi trong THUCDON
+      const deletedThucDonCount = await knex('THUCDON')
+        .where({ MaThucDon: id })
+        .delete();
+      console.log('delete - Deleted THUCDON rows:', deletedThucDonCount);
+
+      return deletedThucDonCount;
+    } catch (error) {
+      console.error('delete - Error:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      });
+      throw error;
+    }
   },
 
   isUsedByDatTiec: async (id) => {

@@ -34,11 +34,23 @@ router.put(
   // validation.validateThucDon,
   thucDonController.updateThucDon
 );
+
 router.delete(
   '/xoa/:id',
   // auth,
   // checkPermission('Quản lý món ăn'),
   // validation.validateIdParam,
+  (req, res, next) => {
+    console.log(
+      'Route hit - Method:',
+      req.method,
+      'URL:',
+      req.url,
+      'ID:',
+      req.params.id
+    );
+    next();
+  },
   thucDonController.deleteThucDon
 );
 
