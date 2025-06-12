@@ -168,17 +168,17 @@ export async function seed(knex) {
     {
       MaLoaiSanh: 1,
       TenLoaiSanh: 'Thường',
-      DonGiaBanToiThieu: 500000.0,
+      DonGiaBanToiThieu: 1000000.0,
     },
     {
       MaLoaiSanh: 2,
       TenLoaiSanh: 'VIP',
-      DonGiaBanToiThieu: 800000.0,
+      DonGiaBanToiThieu: 2000000.0,
     },
     {
       MaLoaiSanh: 3,
       TenLoaiSanh: 'Cao cấp',
-      DonGiaBanToiThieu: 1200000.0,
+      DonGiaBanToiThieu: 4000000.0,
     },
   ]);
 
@@ -188,7 +188,7 @@ export async function seed(knex) {
       MaSanh: 1,
       TenSanh: 'Sảnh Ngọc',
       MaLoaiSanh: 1, // Thường
-      SoLuongBanToiDa: 50,
+      SoLuongBanToiDa: 250,
       GhiChu: 'Sảnh nhỏ gọn, phù hợp cho tiệc gia đình',
       AnhURL:
         'https://crystalpalacevn.com/wp-content/uploads/2020/06/classic.jpg',
@@ -197,7 +197,7 @@ export async function seed(knex) {
       MaSanh: 2,
       TenSanh: 'Sảnh Bích Thủy',
       MaLoaiSanh: 1, // Thường
-      SoLuongBanToiDa: 40,
+      SoLuongBanToiDa: 250,
       GhiChu: 'Sảnh ấm cúng, thích hợp cho tiệc sinh nhật',
       AnhURL:
         'https://crystalpalacevn.com/wp-content/uploads/2023/03/T4_07087-scaled.jpg',
@@ -206,7 +206,7 @@ export async function seed(knex) {
       MaSanh: 3,
       TenSanh: 'Sảnh Kim Cương',
       MaLoaiSanh: 2, // VIP
-      SoLuongBanToiDa: 80,
+      SoLuongBanToiDa: 350,
       GhiChu: 'Sảnh sang trọng, thích hợp cho tiệc cưới lớn',
       AnhURL:
         'https://crystalpalacevn.com/wp-content/uploads/2020/06/royal.png',
@@ -215,7 +215,7 @@ export async function seed(knex) {
       MaSanh: 4,
       TenSanh: 'Sảnh Pha Lê',
       MaLoaiSanh: 2, // VIP
-      SoLuongBanToiDa: 60,
+      SoLuongBanToiDa: 350,
       GhiChu: 'Sảnh hiện đại với hệ thống ánh sáng cao cấp',
       AnhURL:
         'https://crystalpalacevn.com/wp-content/uploads/2020/06/diamond.jpg',
@@ -224,7 +224,7 @@ export async function seed(knex) {
       MaSanh: 5,
       TenSanh: 'Sảnh Hồng Ngọc',
       MaLoaiSanh: 2, // VIP
-      SoLuongBanToiDa: 70,
+      SoLuongBanToiDa: 350,
       GhiChu: 'Sảnh tinh tế, phù hợp cho sự kiện doanh nghiệp',
       AnhURL:
         'https://crystalpalacevn.com/wp-content/uploads/2022/07/4W9A6001-2.jpg',
@@ -233,7 +233,7 @@ export async function seed(knex) {
       MaSanh: 6,
       TenSanh: 'Sảnh Hoàng Gia',
       MaLoaiSanh: 3, // Cao cấp
-      SoLuongBanToiDa: 100,
+      SoLuongBanToiDa: 400,
       GhiChu: 'Sảnh đẳng cấp, dành cho các sự kiện đặc biệt',
       AnhURL:
         'https://asiana-plaza.com/wp-content/uploads/2021/03/trang-tri-sanh-tiec-cuoi-dep-3.jpg',
@@ -242,7 +242,7 @@ export async function seed(knex) {
       MaSanh: 7,
       TenSanh: 'Sảnh Thiên Thanh',
       MaLoaiSanh: 3, // Cao cấp
-      SoLuongBanToiDa: 90,
+      SoLuongBanToiDa: 400,
       GhiChu: 'Sảnh rộng rãi, trang trí lộng lẫy',
       AnhURL:
         'https://asiana-plaza.com/wp-content/uploads/2021/03/trang-tri-sanh-cuoi-dep-va-sang-trong-1.jpg',
@@ -251,7 +251,7 @@ export async function seed(knex) {
       MaSanh: 8,
       TenSanh: 'Sảnh Vàng',
       MaLoaiSanh: 3, // Cao cấp
-      SoLuongBanToiDa: 120,
+      SoLuongBanToiDa: 400,
       GhiChu: 'Sảnh lớn nhất, phù hợp cho tiệc cưới hoàng tráng',
       AnhURL:
         'https://asiana-plaza.com/wp-content/uploads/2021/03/cach-trang-tri-tiec-cuoi-tai-nha-hang-1.jpg',
@@ -260,7 +260,7 @@ export async function seed(knex) {
       MaSanh: 9,
       TenSanh: 'Sảnh Lục Bảo',
       MaLoaiSanh: 1, // Thường
-      SoLuongBanToiDa: 45,
+      SoLuongBanToiDa: 250,
       GhiChu: 'Sảnh thân thiện, phù hợp cho tiệc họp mặt',
       AnhURL:
         'https://asiana-plaza.com/wp-content/uploads/2021/03/trang-tri-sanh-cuoi-tai-nha-1.jpg',
@@ -269,7 +269,7 @@ export async function seed(knex) {
       MaSanh: 10,
       TenSanh: 'Sảnh Sapphire',
       MaLoaiSanh: 2, // VIP
-      SoLuongBanToiDa: 65,
+      SoLuongBanToiDa: 350,
       GhiChu: 'Sảnh thanh lịch, lý tưởng cho tiệc cưới trung bình',
       AnhURL:
         'https://asiana-plaza.com/wp-content/uploads/2021/03/sanh-cuoi-dep-nhat-1.jpg',
@@ -703,21 +703,23 @@ export async function seed(knex) {
   }
   await knex('MONAN').insert(monAnData);
 
-  // Seed bảng THUCDON (9 thực đơn: 3 mức giá 1-2tr, 2-4tr, 4tr+)
+  // Seed bảng THUCDON (18 thực đơn: 6 mức giá 1-2tr, 6 mức giá 2-4tr, 6 mức giá 4tr+)
   const thucDonEntries = [];
   const thucDonMonAnEntries = [];
 
   const priceRanges = [
-    { min: 1000000, max: 2000000, count: 3 }, // 3 thực đơn 1-2 triệu
-    { min: 2000001, max: 4000000, count: 3 }, // 3 thực đơn 2-4 triệu
-    { min: 4000001, max: 6000000, count: 3 }, // 3 thực đơn 4 triệu trở lên
+    { min: 1000000, max: 2000000, count: 6 }, // 6 thực đơn 1-2 triệu
+    { min: 2000001, max: 4000000, count: 6 }, // 6 thực đơn 2-4 triệu
+    { min: 4000001, max: 6000000, count: 6 }, // 6 thực đơn 4 triệu trở lên
   ];
 
   let maThucDonCounter = 1;
+  const originalMenus = []; // Lưu trữ 9 thực đơn đầu tiên để sao chép
 
   for (const range of priceRanges) {
-    for (let i = 0; i < range.count; i++) {
-      const tenThucDon = `Thực đơn Đặc Biệt ${maThucDonCounter}`;
+    for (let i = 0; i < range.count / 2; i++) {
+      // Tạo 3 thực đơn đầu tiên cho mỗi mức giá
+      const tenThucDon = `Thực đơn mẫu ${maThucDonCounter}`;
       const soNguoi = Math.floor(Math.random() * 4 + 4); // 4-7 người
       const ghiChuThucDon = `Set menu bao gồm các món ăn chọn lọc, phù hợp cho ${soNguoi} người.`;
 
@@ -833,9 +835,37 @@ export async function seed(knex) {
         GhiChu: ghiChuThucDon,
       });
       thucDonMonAnEntries.push(...monAnTrongThucDon);
+      originalMenus.push({
+        TenThucDon: tenThucDon,
+        DonGiaThoiDiemDat: tongGiaThucDon,
+        DonGiaHienTai: tongGiaThucDon,
+        GhiChu: ghiChuThucDon,
+        MonAnList: [...monAnTrongThucDon],
+      });
       maThucDonCounter++;
     }
   }
+
+  // Sao chép 9 thực đơn đầu tiên để tạo 9 thực đơn tiếp theo
+  for (let i = 0; i < originalMenus.length; i++) {
+    const original = originalMenus[i];
+    const newMaThucDon = maThucDonCounter++;
+    const newTenThucDon = `Thực đơn cho tiệc cưới ${newMaThucDon}`;
+    thucDonEntries.push({
+      MaThucDon: newMaThucDon,
+      TenThucDon: newTenThucDon,
+      DonGiaThoiDiemDat: original.DonGiaThoiDiemDat,
+      DonGiaHienTai: original.DonGiaHienTai,
+      GhiChu: original.GhiChu,
+    });
+    const duplicatedMonAn = original.MonAnList.map((mon) => ({
+      MaThucDon: newMaThucDon,
+      MaMonAn: mon.MaMonAn,
+      DonGiaThoiDiemDat: mon.DonGiaThoiDiemDat,
+    }));
+    thucDonMonAnEntries.push(...duplicatedMonAn);
+  }
+
   await knex('THUCDON').insert(thucDonEntries);
 
   // Seed bảng THUCDON_MONAN
@@ -861,7 +891,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-06-15',
       MaCa: 1,
       MaSanh: 1,
-      MaThucDon: 1,
+      MaThucDon: 10,
       TienDatCoc: 12000000.0,
       SoLuongBan: 30,
       SoBanDuTru: 5,
@@ -874,7 +904,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-07-20',
       MaCa: 2,
       MaSanh: 2,
-      MaThucDon: 2,
+      MaThucDon: 11,
       TienDatCoc: 15000000.0,
       SoLuongBan: 40,
       SoBanDuTru: 8,
@@ -887,7 +917,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-08-10',
       MaCa: 3,
       MaSanh: 3,
-      MaThucDon: 3,
+      MaThucDon: 12,
       TienDatCoc: 10000000.0,
       SoLuongBan: 25,
       SoBanDuTru: 3,
@@ -900,7 +930,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-09-05',
       MaCa: 4,
       MaSanh: 4,
-      MaThucDon: 4,
+      MaThucDon: 13,
       TienDatCoc: 13000000.0,
       SoLuongBan: 35,
       SoBanDuTru: 5,
@@ -913,7 +943,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-10-12',
       MaCa: 5,
       MaSanh: 5,
-      MaThucDon: 5,
+      MaThucDon: 14,
       TienDatCoc: 11000000.0,
       SoLuongBan: 28,
       SoBanDuTru: 4,
@@ -926,7 +956,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-11-18',
       MaCa: 1,
       MaSanh: 6,
-      MaThucDon: 6,
+      MaThucDon: 15,
       TienDatCoc: 14000000.0,
       SoLuongBan: 38,
       SoBanDuTru: 6,
@@ -939,7 +969,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-12-01',
       MaCa: 2,
       MaSanh: 7,
-      MaThucDon: 7,
+      MaThucDon: 16,
       TienDatCoc: 9000000.0,
       SoLuongBan: 20,
       SoBanDuTru: 2,
@@ -952,7 +982,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-06-25',
       MaCa: 3,
       MaSanh: 8,
-      MaThucDon: 8,
+      MaThucDon: 17,
       TienDatCoc: 16000000.0,
       SoLuongBan: 45,
       SoBanDuTru: 5,
@@ -965,7 +995,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-07-30',
       MaCa: 4,
       MaSanh: 9,
-      MaThucDon: 1,
+      MaThucDon: 18,
       TienDatCoc: 10500000.0,
       SoLuongBan: 27,
       SoBanDuTru: 3,
@@ -978,7 +1008,7 @@ export async function seed(knex) {
       NgayDaiTiec: '2025-08-15',
       MaCa: 5,
       MaSanh: 10,
-      MaThucDon: 2,
+      MaThucDon: 18,
       TienDatCoc: 12500000.0,
       SoLuongBan: 32,
       SoBanDuTru: 4,

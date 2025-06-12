@@ -352,48 +352,44 @@ function Admin_Wedding() {
     // Tìm sảnh được chọn và loại sảnh tương ứng
     const hall = halls.find((h) => h.MaSanh === booking.MaSanh);
 
-    // Kiểm tra xem thực đơn có phải là thực đơn tự chọn không
-    const existingMenu = apiMenus.find(
-      (m) => m.MaThucDon === booking.MaThucDon
-    );
-
-    // Nếu không tìm thấy trong apiMenus, có thể đây là thực đơn tự chọn
-    if (booking.MaThucDon && !existingMenu) {
-      // Lấy thông tin chi tiết thực đơn
-      try {
+    try {
+      // Lấy thông tin chi tiết thực đơn của đặt tiệc
+      if (booking.MaThucDon) {
         const menuDetail = await getThucDonById(booking.MaThucDon);
-        // Tạo tempMenu từ thực đơn tự chọn
+        // Cập nhật selectedDishes với danh sách món ăn từ thực đơn
+        const dishIds =
+          menuDetail.MonAnList?.map((dish: IMonAn) => dish.MaMonAn) || [];
+        setSelectedDishes(dishIds);
+        setSelectedMenu(booking.MaThucDon);
         setTempMenu({
           MaThucDon: menuDetail.MaThucDon,
           TenThucDon: menuDetail.TenThucDon,
           DonGiaHienTai: menuDetail.DonGiaHienTai,
           MonAnList: menuDetail.MonAnList || [],
         });
-        setIsCustomMenu(true);
-      } catch (error) {
-        console.error("Lỗi khi lấy thông tin thực đơn:", error);
       }
-    }
 
-    setFormData({
-      MaDatTiec: booking.MaDatTiec,
-      TenChuRe: booking.TenChuRe,
-      TenCoDau: booking.TenCoDau,
-      DienThoai: booking.DienThoai,
-      NgayDaiTiec: new Date(booking.NgayDaiTiec).toISOString().split("T")[0],
-      SoLuongBan: booking.SoLuongBan.toString(),
-      SoBanDuTru: booking.SoBanDuTru.toString(),
-      TienDatCoc: booking.TienDatCoc.toString(),
-    });
-    setIsEditMode(true);
-    setSelectedHallType(hall ? hall.MaLoaiSanh : null);
-    setSelectedHall(booking.MaSanh);
-    setSelectedCa(booking.MaCa);
-    setSelectedDishes(booking.MonAns || []);
-    setSelectedMenu(booking.MaThucDon || null);
-    setSelectedServices(booking.DichVus || []);
-    setSelectedServiceType(null);
-    setShowWizard(true);
+      setFormData({
+        MaDatTiec: booking.MaDatTiec,
+        TenChuRe: booking.TenChuRe,
+        TenCoDau: booking.TenCoDau,
+        DienThoai: booking.DienThoai,
+        NgayDaiTiec: new Date(booking.NgayDaiTiec).toISOString().split("T")[0],
+        SoLuongBan: booking.SoLuongBan.toString(),
+        SoBanDuTru: booking.SoBanDuTru.toString(),
+        TienDatCoc: booking.TienDatCoc.toString(),
+      });
+      setIsEditMode(true);
+      setSelectedHallType(hall ? hall.MaLoaiSanh : null);
+      setSelectedHall(booking.MaSanh);
+      setSelectedCa(booking.MaCa);
+      setSelectedServices(booking.DichVus || []);
+      setSelectedServiceType(null);
+      setShowWizard(true);
+    } catch (error) {
+      console.error("Lỗi khi tải thông tin thực đơn:", error);
+      alert("Có lỗi xảy ra khi tải thông tin thực đơn!");
+    }
   };
 
   const closeWizard = () => {
@@ -644,35 +640,40 @@ function Admin_Wedding() {
     try {
       let menuId = selectedMenu;
 
-      // If we have a temporary menu and it's selected, create the actual menu
-      if (tempMenu && selectedMenu === tempMenu.MaThucDon) {
-        const newMenu = await createThucDon({
-          tenThucDon: tempMenu.TenThucDon,
-          donGiaThoiDiemDat: tempMenu.DonGiaHienTai,
-          donGiaHienTai: tempMenu.DonGiaHienTai,
-          ghiChu: "Thực đơn tự chọn",
-          monAnIds: tempMenu.MonAnList.map((dish) => dish.MaMonAn),
-        });
-        menuId = newMenu.MaThucDon;
-        setTempMenu(null);
-      }
-
       // Tính tổng giá trị menu mới
       const menuPrice = selectedDishes.reduce((total, dishId) => {
         const dish = apiDishes.find((d) => d.MaMonAn === dishId);
         return total + (dish ? Number(dish.DonGia) : 0);
       }, 0);
 
-      // Tạo menu mới cho đặt tiệc này
-      const newMenu = await createThucDon({
-        tenThucDon: `Menu tiệc cưới - ${formData.TenChuRe} & ${formData.TenCoDau}`,
-        donGiaThoiDiemDat: menuPrice,
-        donGiaHienTai: menuPrice,
-        ghiChu: "Menu được tạo cho tiệc cưới",
-        monAnIds: selectedDishes,
-      });
+      // Nếu đang trong chế độ sửa và có menu
+      if (isEditMode && menuId) {
+        // Cập nhật menu hiện tại với danh sách món ăn mới
+        await updateThucDon(menuId, {
+          tenThucDon:
+            tempMenu?.TenThucDon ||
+            `Menu tiệc cưới - ${formData.TenChuRe} & ${formData.TenCoDau}`,
+          donGiaThoiDiemDat: menuPrice,
+          donGiaHienTai: menuPrice,
+          monAnIds: selectedDishes,
+        });
+      } else {
+        // Tạo menu mới cho đặt tiệc này
+        const newMenu = await createThucDon({
+          tenThucDon: `Menu tiệc cưới - ${formData.TenChuRe} & ${formData.TenCoDau}`,
+          donGiaThoiDiemDat: menuPrice,
+          donGiaHienTai: menuPrice,
+          monAnIds: selectedDishes,
+        });
+        menuId = newMenu.MaThucDon;
+      }
 
-      // Prepare booking data with the new menu
+      // Ensure menuId is a number
+      if (!menuId) {
+        throw new Error("Không thể tạo hoặc cập nhật thực đơn");
+      }
+
+      // Prepare booking data
       const datTiecData = {
         tenChuRe: formData.TenChuRe,
         tenCoDau: formData.TenCoDau,
@@ -683,14 +684,14 @@ function Admin_Wedding() {
         soLuongBan: Number(formData.SoLuongBan),
         soBanDuTru: Number(formData.SoBanDuTru),
         tienDatCoc: Number(formData.TienDatCoc),
-        maThucDon: newMenu.MaThucDon, // Use the newly created menu
+        maThucDon: menuId, // Now menuId is guaranteed to be a number
         dichVus: selectedServices.map((service) => ({
           maDichVu: service.MaDichVu,
           soLuong: service.SoLuong,
           donGiaThoiDiemDat: service.DonGiaThoiDiemDat,
         })),
       };
-      console.log("datTiecData:", JSON.stringify(datTiecData, null, 2));
+
       setConfirmationModal({
         isOpen: true,
         message: isEditMode
@@ -700,7 +701,6 @@ function Admin_Wedding() {
           try {
             let newBookingId;
             if (isEditMode && formData.MaDatTiec) {
-              // Nếu là chế độ sửa, tạo menu mới và cập nhật đặt tiệc
               const updatedBooking = await updateDatTiec(
                 formData.MaDatTiec,
                 datTiecData
@@ -719,7 +719,6 @@ function Admin_Wedding() {
               );
               newBookingId = formData.MaDatTiec;
             } else {
-              // Tạo đặt tiệc mới với menu mới đã được tạo ở trên
               const newBooking = await createDatTiec(datTiecData);
               setBookings((prev) => [
                 ...prev,
@@ -732,7 +731,7 @@ function Admin_Wedding() {
               newBookingId = newBooking.MaDatTiec;
             }
 
-            // Tạo hóa đơn mới
+            // Create invoice
             const tongTienBan =
               selectedDishes.reduce((total, dishId) => {
                 const dish = dishes.find((d) => d.id === dishId);
@@ -766,7 +765,6 @@ function Admin_Wedding() {
               TrangThai: 0,
             };
 
-            console.log("hoaDonData:", JSON.stringify(hoaDonData, null, 2));
             await createHoaDon(hoaDonData);
             closeWizard();
             alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
@@ -952,64 +950,109 @@ function Admin_Wedding() {
   const renderEditModeMenu = () => {
     if (!selectedMenu) return null;
 
-    const menu = apiMenus.find((m) => m.MaThucDon === selectedMenu);
+    const menu = tempMenu || apiMenus.find((m) => m.MaThucDon === selectedMenu);
     if (!menu) return null;
+
+    const totalPrice = selectedDishes.reduce((total, dishId) => {
+      const dish = apiDishes.find((d) => d.MaMonAn === dishId);
+      return total + (dish ? Number(dish.DonGia) : 0);
+    }, 0);
 
     return (
       <div className="mb-8">
         <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
-          Thực Đơn Đã Chọn
+          Thực Đơn Hiện Tại
         </h4>
         <div className="grid grid-cols-1 gap-6">
-          {renderMenuCard(menu)}
-          <div className="mt-6">
-            <h5 className="text-sm font-medium text-[#001F3F] mb-3">
-              Tùy chỉnh món ăn trong thực đơn
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+            <h5 className="text-lg font-medium text-[#001F3F] mb-2">
+              {menu.TenThucDon}
             </h5>
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              {apiDishTypes.map((category) => (
-                <div key={category.MaLoaiMonAn} className="mb-4">
-                  <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
-                    {category.TenLoaiMonAn}
-                  </h6>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {apiDishes
-                      .filter(
-                        (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
-                      )
-                      .map((dish) => (
-                        <div
-                          key={dish.MaMonAn}
-                          className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={
-                              menu.MonAnList?.some(
-                                (d) => d.MaMonAn === dish.MaMonAn
-                              ) || false
-                            }
-                            onChange={(e) =>
-                              handleDishSelect(dish.MaMonAn, e.target.checked)
-                            }
-                            className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
-                          />
-                          <div className="flex-1">
-                            <span className="text-sm font-medium text-[#001F3F]">
-                              {dish.TenMonAn}
-                            </span>
-                            <p className="text-xs text-gray-600">
-                              {dish.GhiChu || "Không có ghi chú"}
-                            </p>
-                            <p className="text-xs text-[#B8860B] mt-1">
-                              {formatVND(dish.DonGia)}
-                            </p>
+            <p className="text-sm text-[#001F3F] mb-2">
+              Tổng đơn giá hiện tại: {formatVND(totalPrice)}
+            </p>
+            <div className="mt-6">
+              <h5 className="text-sm font-medium text-[#001F3F] mb-3">
+                Danh sách món ăn
+              </h5>
+              <div className="border rounded-lg p-4 bg-white shadow-sm">
+                {apiDishTypes.map((category) => (
+                  <div key={category.MaLoaiMonAn} className="mb-4">
+                    <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
+                      {category.TenLoaiMonAn}
+                    </h6>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {apiDishes
+                        .filter(
+                          (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
+                        )
+                        .map((dish) => (
+                          <div
+                            key={dish.MaMonAn}
+                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedDishes.includes(dish.MaMonAn)}
+                              onChange={(e) => {
+                                const newSelectedDishes = e.target.checked
+                                  ? [...selectedDishes, dish.MaMonAn]
+                                  : selectedDishes.filter(
+                                      (id) => id !== dish.MaMonAn
+                                    );
+                                setSelectedDishes(newSelectedDishes);
+
+                                // Update temp menu
+                                if (tempMenu) {
+                                  const newTotalPrice =
+                                    newSelectedDishes.reduce(
+                                      (total, dishId) => {
+                                        const dish = apiDishes.find(
+                                          (d) => d.MaMonAn === dishId
+                                        );
+                                        return (
+                                          total +
+                                          (dish ? Number(dish.DonGia) : 0)
+                                        );
+                                      },
+                                      0
+                                    );
+
+                                  setTempMenu({
+                                    ...tempMenu,
+                                    DonGiaHienTai: newTotalPrice,
+                                    MonAnList: newSelectedDishes
+                                      .map((id) => {
+                                        const dish = apiDishes.find(
+                                          (d) => d.MaMonAn === id
+                                        );
+                                        return dish || null;
+                                      })
+                                      .filter(
+                                        (dish): dish is IMonAn => dish !== null
+                                      ),
+                                  });
+                                }
+                              }}
+                              className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
+                            />
+                            <div className="flex-1">
+                              <span className="text-sm font-medium text-[#001F3F]">
+                                {dish.TenMonAn}
+                              </span>
+                              <p className="text-xs text-gray-600">
+                                {dish.GhiChu || "Không có ghi chú"}
+                              </p>
+                              <p className="text-xs text-[#B8860B] mt-1">
+                                {formatVND(dish.DonGia)}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1475,7 +1518,7 @@ function Admin_Wedding() {
                         >
                           {hallType.TenLoaiSanh}
                         </h5>
-                        <p className="text-sm text-[#001F3F]">
+                        <p className="text-sm text-[#001F3F] text-center">
                           Đơn giá tối thiểu:{" "}
                           {formatVND(hallType.DonGiaBanToiThieu)}/bàn
                         </p>
