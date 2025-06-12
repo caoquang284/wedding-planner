@@ -28,6 +28,15 @@ interface Dish {
   AnhURL?: string;
 }
 
+const formatVND = (value: number | string) => {
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(numValue)) return "0 VNĐ";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(numValue);
+};
+
 interface Category {
   id: number | null;
   name: string;
@@ -37,6 +46,7 @@ interface Menu {
   id: number | null;
   name: string;
   price: number;
+  orderprice: number;
   dishIds: number[];
   dishNames?: string[];
   note?: string;
@@ -76,6 +86,7 @@ function Menus() {
       try {
         // Fetch menus
         const menusData = await getAllThucDon();
+        console.log(menusData);
         const menusWithDetails = await Promise.all(
           menusData.map(async (menu: any) => {
             const menuDetail = await getThucDonById(menu.MaThucDon);
@@ -83,6 +94,7 @@ function Menus() {
               id: menu.MaThucDon,
               name: menu.TenThucDon,
               price: menu.DonGiaHienTai,
+              orderprice: menu.DonGiaThoiDiemDat,
               dishIds: menu.MonAnList?.map((monAn: any) => monAn.MaMonAn) || [],
               dishNames:
                 menuDetail.MonAnList?.map((monAn: any) => monAn.TenMonAn) || [],
@@ -161,15 +173,25 @@ function Menus() {
     setIsMenuModalOpen(true);
   };
 
-  const openEditMenuModal = (menu: Menu) => {
-    setMenuFormData({
-      id: menu.id,
-      name: menu.name,
-      price: menu.price,
-      dishIds: [...menu.dishIds],
-    });
-    setIsMenuEditMode(true);
-    setIsMenuModalOpen(true);
+  const openEditMenuModal = async (menu: Menu) => {
+    try {
+      if (!menu.id) {
+        throw new Error("Menu ID is required");
+      }
+      // Fetch full menu details
+      const menuDetail = await getThucDonById(menu.id);
+      setMenuFormData({
+        id: menu.id,
+        name: menu.name,
+        price: menuDetail.DonGiaHienTai,
+        dishIds: menuDetail.MonAnList?.map((monAn: any) => monAn.MaMonAn) || [],
+      });
+      setIsMenuEditMode(true);
+      setIsMenuModalOpen(true);
+    } catch (error) {
+      console.error("Error loading menu details:", error);
+      alert("Có lỗi xảy ra khi tải thông tin thực đơn!");
+    }
   };
 
   // Mở modal để thêm/sửa món ăn
@@ -320,6 +342,7 @@ function Menus() {
               id: newMenu.MaThucDon,
               name: newMenu.TenThucDon,
               price: newMenu.DonGiaHienTai,
+              orderprice: newMenu.DonGiaThoiDiemDat,
               dishIds: menuFormData.dishIds,
               dishNames:
                 newMenuDetail.MonAnList?.map((monAn: any) => monAn.TenMonAn) ||
@@ -602,7 +625,10 @@ function Menus() {
                     Tên thực đơn
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                    Giá (VNĐ)
+                    Giá hiện tại (VNĐ)
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Giá tại thời điểm đặt (VNĐ)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Danh sách món ăn
@@ -622,7 +648,10 @@ function Menus() {
                       {menu.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {Number(menu.price).toLocaleString("vi-VN")}
+                      {formatVND(menu.price)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatVND(menu.orderprice)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       <span className="line-clamp-2">
@@ -665,7 +694,7 @@ function Menus() {
                       {menu.name}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Giá: {Number(menu.price).toLocaleString("vi-VN")} VNĐ
+                      Giá: {formatVND(menu.price)}
                     </p>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                       Món ăn: {menu.dishNames?.join(", ") || "Chưa có món ăn"}
@@ -781,7 +810,7 @@ function Menus() {
                         {category ? category.name : "Chưa phân loại"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {dish.DonGia.toLocaleString("vi-VN")}
+                        {formatVND(dish.DonGia)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {dish.GhiChu || "Không có ghi chú"}
@@ -838,7 +867,7 @@ function Menus() {
                         Loại: {category ? category.name : "Chưa phân loại"}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Giá: {dish.DonGia.toLocaleString("vi-VN")} VNĐ
+                        Giá: {formatVND(dish.DonGia)}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
                         Ghi chú: {dish.GhiChu || "Không có ghi chú"}
@@ -897,8 +926,8 @@ function Menus() {
                   Giá tổng (VNĐ)
                 </label>
                 <p className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 text-gray-700">
-                  {menuFormData.dishIds
-                    .reduce((total, dishId) => {
+                  {formatVND(
+                    menuFormData.dishIds.reduce((total, dishId) => {
                       const dish = dishes.find((d) => d.MaMonAn === dishId);
                       const dishPrice = dish ? Number(dish.DonGia) : 0;
                       if (isNaN(dishPrice)) {
@@ -910,8 +939,7 @@ function Menus() {
                       }
                       return total + dishPrice;
                     }, 0)
-                    .toLocaleString("vi-VN")}{" "}
-                  VNĐ
+                  )}
                 </p>
               </div>
               <div className="mb-4">
@@ -927,8 +955,7 @@ function Menus() {
                         className="flex items-center gap-2 mb-2"
                       >
                         <span>
-                          {dish.TenMonAn} ({dish.DonGia.toLocaleString("vi-VN")}{" "}
-                          VNĐ)
+                          {dish.TenMonAn} ({formatVND(dish.DonGia)})
                         </span>
                         <button
                           type="button"
@@ -958,8 +985,7 @@ function Menus() {
                       )
                       .map((dish) => (
                         <option key={dish.MaMonAn} value={dish.MaMonAn || ""}>
-                          {dish.TenMonAn} ({dish.DonGia.toLocaleString("vi-VN")}{" "}
-                          VNĐ)
+                          {dish.TenMonAn} ({formatVND(dish.DonGia)})
                         </option>
                       ))}
                   </select>

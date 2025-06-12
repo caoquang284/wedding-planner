@@ -49,6 +49,7 @@ const ThucDon = {
         'td.MaThucDon',
         'td.TenThucDon',
         'td.DonGiaHienTai',
+        'td.DonGiaThoiDiemDat',
         'td.GhiChu',
         'ma.TenMonAn'
       );
@@ -62,6 +63,7 @@ const ThucDon = {
           MaThucDon: row.MaThucDon,
           TenThucDon: row.TenThucDon,
           DonGiaHienTai: row.DonGiaHienTai,
+          DonGiaThoiDiemDat: row.DonGiaThoiDiemDat,
           GhiChu: row.GhiChu,
           TenMonAnList: [],
         };
@@ -112,6 +114,10 @@ const ThucDon = {
         MaMonAn: maMonAn,
       })
       .delete();
+  },
+
+  removeAllMonAn: async (maThucDon) => {
+    return await knex('THUCDON_MONAN').where({ MaThucDon: maThucDon }).delete();
   },
 
   updateMonAn: async (maThucDon, maMonAn, donGiaThoiDiemDat) => {

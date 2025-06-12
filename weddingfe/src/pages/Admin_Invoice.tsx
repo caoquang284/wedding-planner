@@ -519,12 +519,12 @@ const AdminInvoice: React.FC = () => {
                 <option value="2">Đã hủy</option>
               </select>
             </div>
-            <button
+            {/* <button
               onClick={openAddModal}
               className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
             >
               Thêm hóa đơn
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -1033,11 +1033,18 @@ const AdminInvoice: React.FC = () => {
                               Số lượng bàn:{" "}
                             </span>{" "}
                             <span className="font-medium">
-                              {Number(chiTietDatTiec?.SoBanDuTru || 0) +
-                                Number(chiTietDatTiec?.SoLuongBan || 0)}{" "}
-                              bàn
+                              {Number(chiTietDatTiec?.SoLuongBan || 0)} bàn
                             </span>
                           </p>
+                          <p>
+                            <span className="text-gray-600">
+                              Số bàn dự trữ:{" "}
+                            </span>{" "}
+                            <span className="font-medium">
+                              {Number(chiTietDatTiec?.SoBanDuTru || 0)} bàn
+                            </span>
+                          </p>
+
                           {/* <p>
                             <span className="text-gray-600">Đơn giá:</span>{" "}
                             <span className="font-medium">
@@ -1057,12 +1064,12 @@ const AdminInvoice: React.FC = () => {
                             <span className="text-gray-600">Tên ca:</span>{" "}
                             <span className="font-medium">{ca.TenCa}</span>
                           </p>
-                          <p>
+                          {/* <p>
                             <span className="text-gray-600">Thời gian:</span>{" "}
                             <span className="font-medium">
                               {ca.ThoiGianBatDau} - {ca.ThoiGianKetThuc}
                             </span>
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     )}

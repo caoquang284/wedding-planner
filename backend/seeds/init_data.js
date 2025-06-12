@@ -501,7 +501,6 @@ export async function seed(knex) {
   ];
   await knex('LOAIMONAN').insert(loaiMonAnData);
 
-  // 2. Seed bảng MONAN (Khoảng 100 món ăn)
   const monAnData = [];
   const baseMonAn = [
     // Khai vị (MaLoaiMonAn: 1)
@@ -557,7 +556,7 @@ export async function seed(knex) {
       GhiChu: 'Cay nồng đặc trưng',
     },
     { TenMonAn: 'Gà rang muối Hồng Kông', MaLoaiMonAn: 4, DonGia: 360000 },
-    { TenMonAn: 'Lẩu gà nấm thiên nhiên', MaLoaiMonAn: 4, DonGia: 450000 }, // Cũng có thể là loại Lẩu
+    { TenMonAn: 'Lẩu gà nấm thiên nhiên', MaLoaiMonAn: 4, DonGia: 450000 },
     { TenMonAn: 'Cánh gà chiên nước mắm', MaLoaiMonAn: 4, DonGia: 180000 },
     {
       TenMonAn: 'Chân gà rút xương ngâm sả tắc',
@@ -575,7 +574,7 @@ export async function seed(knex) {
     { TenMonAn: 'Bò nhúng dấm', MaLoaiMonAn: 5, DonGia: 320000 },
     { TenMonAn: 'Nạm bò xào sả ớt', MaLoaiMonAn: 5, DonGia: 220000 },
     { TenMonAn: 'Bò cuộn nấm kim châm nướng', MaLoaiMonAn: 5, DonGia: 260000 },
-    { TenMonAn: 'Phở bò tái lăn', MaLoaiMonAn: 5, DonGia: 120000 }, // Cũng có thể là Cơm - Mì
+    { TenMonAn: 'Phở bò tái lăn', MaLoaiMonAn: 5, DonGia: 120000 },
     // Món Heo (MaLoaiMonAn: 6)
     {
       TenMonAn: 'Sườn non nướng BBQ',
@@ -617,7 +616,7 @@ export async function seed(knex) {
       MaLoaiMonAn: 8,
       DonGia: 95000,
     },
-    { TenMonAn: 'Bông thiên lý xào thịt bò', MaLoaiMonAn: 8, DonGia: 130000 }, // Có thể là món bò
+    { TenMonAn: 'Bông thiên lý xào thịt bò', MaLoaiMonAn: 8, DonGia: 130000 },
     { TenMonAn: 'Mướp đắng xào trứng', MaLoaiMonAn: 8, DonGia: 80000 },
     { TenMonAn: 'Đậu que xào tôm', MaLoaiMonAn: 8, DonGia: 110000 },
     // Cơm - Mì - Miến (MaLoaiMonAn: 9)
@@ -685,7 +684,6 @@ export async function seed(knex) {
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
     let newTenMonAn = `${randomPrefix} ${randomBaseDish.TenMonAn.split(' ')[0]} ${randomSuffix}`;
-    // Đảm bảo tên không quá dài và duy nhất (trong phạm vi seed này)
     if (monAnData.some((m) => m.TenMonAn === newTenMonAn)) {
       newTenMonAn = `${newTenMonAn} #${maMonAnCounter}`;
     }
@@ -697,7 +695,7 @@ export async function seed(knex) {
       DonGia:
         Math.floor(
           (randomBaseDish.DonGia * (0.8 + Math.random() * 0.4)) / 1000
-        ) * 1000, // Giá biến đổi chút
+        ) * 1000,
       GhiChu: `Biến tấu từ ${randomBaseDish.TenMonAn}`,
       AnhURL: `https://via.placeholder.com/150?text=${encodeURIComponent(newTenMonAn.substring(0, 15))}`,
     });
@@ -705,52 +703,145 @@ export async function seed(knex) {
   }
   await knex('MONAN').insert(monAnData);
 
-  // 3. Seed bảng THUCDON (10 thực đơn)
+  // Seed bảng THUCDON (9 thực đơn: 3 mức giá 1-2tr, 2-4tr, 4tr+)
   const thucDonEntries = [];
   const thucDonMonAnEntries = [];
 
-  for (let i = 1; i <= 10; i++) {
-    const tenThucDon = `Thực đơn Đặc Biệt ${i}`;
-    const ghiChuThucDon = `Set menu bao gồm các món ăn chọn lọc, phù hợp cho ${Math.floor(Math.random() * 4 + 4)} người.`;
+  const priceRanges = [
+    { min: 1000000, max: 2000000, count: 3 }, // 3 thực đơn 1-2 triệu
+    { min: 2000001, max: 4000000, count: 3 }, // 3 thực đơn 2-4 triệu
+    { min: 4000001, max: 6000000, count: 3 }, // 3 thực đơn 4 triệu trở lên
+  ];
 
-    const monAnTrongThucDon = [];
-    let tongGiaThucDon = 0;
-    const soLuongMon = Math.floor(Math.random() * 6) + 5; // 5-10 món mỗi thực đơn
+  let maThucDonCounter = 1;
 
-    // Chọn món ngẫu nhiên, đảm bảo không trùng lặp trong một thực đơn
-    const availableMonAnIds = [...monAnData.map((m) => m.MaMonAn)];
-    for (let j = 0; j < soLuongMon; j++) {
-      if (availableMonAnIds.length === 0) break;
-      const randomIndex = Math.floor(Math.random() * availableMonAnIds.length);
-      const selectedMonAnId = availableMonAnIds.splice(randomIndex, 1)[0];
-      const monAnDetail = monAnData.find((m) => m.MaMonAn === selectedMonAnId);
+  for (const range of priceRanges) {
+    for (let i = 0; i < range.count; i++) {
+      const tenThucDon = `Thực đơn Đặc Biệt ${maThucDonCounter}`;
+      const soNguoi = Math.floor(Math.random() * 4 + 4); // 4-7 người
+      const ghiChuThucDon = `Set menu bao gồm các món ăn chọn lọc, phù hợp cho ${soNguoi} người.`;
 
-      if (monAnDetail) {
-        monAnTrongThucDon.push({
-          MaThucDon: i,
-          MaMonAn: monAnDetail.MaMonAn,
-          DonGiaThoiDiemDat: monAnDetail.DonGia, // Lấy giá hiện tại của món ăn làm giá tại thời điểm đặt
-        });
-        tongGiaThucDon += monAnDetail.DonGia;
+      const monAnTrongThucDon = [];
+      let tongGiaThucDon = 0;
+      let soLuongMon;
+
+      // Xác định số lượng món dựa trên mức giá
+      if (range.min <= 2000000) {
+        soLuongMon = Math.floor(Math.random() * 3) + 5; // 5-7 món cho 1-2 triệu
+      } else if (range.min <= 4000000) {
+        soLuongMon = Math.floor(Math.random() * 4) + 7; // 7-10 món cho 2-4 triệu
+      } else {
+        soLuongMon = Math.floor(Math.random() * 5) + 10; // 10-14 món cho 4 triệu+
       }
-    }
 
-    thucDonEntries.push({
-      MaThucDon: i,
-      TenThucDon: tenThucDon,
-      DonGiaThoiDiemDat: tongGiaThucDon,
-      DonGiaHienTai: tongGiaThucDon, // Ban đầu có thể giống nhau
-      GhiChu: ghiChuThucDon,
-    });
-    thucDonMonAnEntries.push(...monAnTrongThucDon);
+      // Chọn món ngẫu nhiên, ưu tiên món đắt cho mức giá cao
+      const availableMonAnIds = [...monAnData.map((m) => m.MaMonAn)];
+      let attempts = 0;
+      const maxAttempts = 100;
+
+      while (tongGiaThucDon < range.min && attempts < maxAttempts) {
+        if (availableMonAnIds.length === 0) break;
+        const randomIndex = Math.floor(
+          Math.random() * availableMonAnIds.length
+        );
+        const selectedMonAnId = availableMonAnIds.splice(randomIndex, 1)[0];
+        const monAnDetail = monAnData.find(
+          (m) => m.MaMonAn === selectedMonAnId
+        );
+
+        if (monAnDetail) {
+          // Ưu tiên món đắt (như hải sản) cho thực đơn giá cao
+          if (
+            range.min > 2000000 &&
+            monAnDetail.DonGia < 300000 &&
+            Math.random() > 0.3
+          ) {
+            continue; // Bỏ qua món rẻ với xác suất 70% cho thực đơn giá cao
+          }
+          monAnTrongThucDon.push({
+            MaThucDon: maThucDonCounter,
+            MaMonAn: monAnDetail.MaMonAn,
+            DonGiaThoiDiemDat: monAnDetail.DonGia,
+          });
+          tongGiaThucDon += monAnDetail.DonGia;
+        }
+        attempts++;
+      }
+
+      // Đảm bảo tổng giá nằm trong khoảng yêu cầu
+      if (tongGiaThucDon < range.min || tongGiaThucDon > range.max) {
+        // Điều chỉnh bằng cách thêm hoặc bớt món
+        if (tongGiaThucDon < range.min) {
+          const highPriceMonAn = monAnData
+            .filter(
+              (m) =>
+                m.DonGia >= 300000 &&
+                !monAnTrongThucDon.some((item) => item.MaMonAn === m.MaMonAn)
+            )
+            .sort((a, b) => b.DonGia - a.DonGia);
+          for (const mon of highPriceMonAn) {
+            if (tongGiaThucDon >= range.min && tongGiaThucDon <= range.max)
+              break;
+            if (tongGiaThucDon + mon.DonGia <= range.max) {
+              monAnTrongThucDon.push({
+                MaThucDon: maThucDonCounter,
+                MaMonAn: mon.MaMonAn,
+                DonGiaThoiDiemDat: mon.DonGia,
+              });
+              tongGiaThucDon += mon.DonGia;
+            }
+          }
+        } else if (tongGiaThucDon > range.max) {
+          monAnTrongThucDon.sort(
+            (a, b) => b.DonGiaThoiDiemDat - a.DonGiaThoiDiemDat
+          );
+          while (tongGiaThucDon > range.max && monAnTrongThucDon.length > 0) {
+            const removed = monAnTrongThucDon.pop();
+            tongGiaThucDon -= removed.DonGiaThoiDiemDat;
+            availableMonAnIds.push(removed.MaMonAn);
+          }
+        }
+      }
+
+      // Đảm bảo có ít nhất số lượng món tối thiểu
+      while (
+        monAnTrongThucDon.length < soLuongMon &&
+        availableMonAnIds.length > 0
+      ) {
+        const randomIndex = Math.floor(
+          Math.random() * availableMonAnIds.length
+        );
+        const selectedMonAnId = availableMonAnIds.splice(randomIndex, 1)[0];
+        const monAnDetail = monAnData.find(
+          (m) => m.MaMonAn === selectedMonAnId
+        );
+        if (monAnDetail && tongGiaThucDon + monAnDetail.DonGia <= range.max) {
+          monAnTrongThucDon.push({
+            MaThucDon: maThucDonCounter,
+            MaMonAn: monAnDetail.MaMonAn,
+            DonGiaThoiDiemDat: monAnDetail.DonGia,
+          });
+          tongGiaThucDon += monAnDetail.DonGia;
+        }
+      }
+
+      thucDonEntries.push({
+        MaThucDon: maThucDonCounter,
+        TenThucDon: tenThucDon,
+        DonGiaThoiDiemDat: tongGiaThucDon,
+        DonGiaHienTai: tongGiaThucDon,
+        GhiChu: ghiChuThucDon,
+      });
+      thucDonMonAnEntries.push(...monAnTrongThucDon);
+      maThucDonCounter++;
+    }
   }
   await knex('THUCDON').insert(thucDonEntries);
 
-  // 4. Seed bảng THUCDON_MONAN
+  // Seed bảng THUCDON_MONAN
   await knex('THUCDON_MONAN').insert(thucDonMonAnEntries);
 
-  // 5. Đặt lại sequence cho các bảng (Quan trọng cho PostgreSQL)
-  // Tên sequence có thể khác nhau tùy theo cách Knex tạo bảng, thường là TênBảng_TênCộtPK_seq
+  // Đặt lại sequence cho các bảng
   await knex.raw(
     `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT MAX("MaLoaiMonAn") FROM "LOAIMONAN"))`
   );

@@ -16,22 +16,6 @@ const createHoaDon = async (req, res) => {
       TrangThai,
     } = req.body;
 
-    // Kiểm tra các trường bắt buộc
-    if (
-      !MaDatTiec ||
-      !NgayThanhToan ||
-      TongTienBan === undefined ||
-      TongTienDichVu === undefined ||
-      TongTienHoaDon === undefined ||
-      ApDungQuyDinhPhat === undefined ||
-      PhanTramPhatMotNgay === undefined ||
-      TongTienPhat === undefined ||
-      TongTienConLai === undefined ||
-      TrangThai === undefined
-    ) {
-      return res.status(400).json({ error: 'Thiếu các trường bắt buộc' });
-    }
-
     const hoaDonData = {
       MaDatTiec,
       NgayThanhToan,

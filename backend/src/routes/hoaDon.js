@@ -35,7 +35,7 @@ router.get(
 // Sửa hóa đơn
 router.put(
   '/sua/:id',
-  auth,
+  // auth,
   // checkPermission(21), // Quyền sửa hóa đơn
   // validation.validateHoaDon, // Sử dụng validation tương tự tạo hóa đơn
   // validation.validateIdParam,

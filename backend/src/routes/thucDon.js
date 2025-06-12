@@ -28,7 +28,7 @@ router.get(
 );
 router.put(
   '/cap-nhat/:id',
-  auth,
+  // auth,
   // checkPermission('Quản lý món ăn'),
   // validation.validateIdParam,
   // validation.validateThucDon,

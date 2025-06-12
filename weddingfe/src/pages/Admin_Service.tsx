@@ -21,6 +21,15 @@ interface Service {
   TenLoaiDichVu?: string;
 }
 
+const formatVND = (value: number | string) => {
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(numValue)) return "0 VNĐ";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(numValue);
+};
+
 interface Category {
   MaLoaiDichVu: number | null;
   TenLoaiDichVu: string;
@@ -430,7 +439,7 @@ function Services() {
                       {service.GhiChu || "Không có mô tả"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 align-middle">
-                      {service.DonGia.toLocaleString("vi-VN")}
+                      {formatVND(service.DonGia)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 align-middle">
                       {service.TenLoaiDichVu || "Chưa phân loại"}
@@ -483,7 +492,7 @@ function Services() {
                     {service.GhiChu || "Không có mô tả"}
                   </p>
                   <p className="text-sm text-[#B8860B]">
-                    Giá: {service.DonGia.toLocaleString("vi-VN")} VNĐ
+                    Giá: {formatVND(service.DonGia)}
                   </p>
                   <p className="text-sm text-gray-500">
                     Loại: {service.TenLoaiDichVu || "Chưa phân loại"}

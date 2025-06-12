@@ -83,6 +83,31 @@ export const up = async (knex) => {
     'ALTER TABLE "MONAN" ADD CONSTRAINT "chk_dongia_monan" CHECK ("DonGia" >= 0)'
   );
 
+  // Tạo function cho trigger
+  await knex.raw(`
+    CREATE OR REPLACE FUNCTION update_thucdon_price()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      -- Cập nhật DonGiaHienTai cho tất cả các thực đơn có chứa món ăn được cập nhật
+      UPDATE "THUCDON" td
+      SET "DonGiaHienTai" = td."DonGiaHienTai" + (NEW."DonGia" - OLD."DonGia")
+      FROM "THUCDON_MONAN" tdm
+      WHERE tdm."MaThucDon" = td."MaThucDon"
+      AND tdm."MaMonAn" = NEW."MaMonAn";
+      
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+  `);
+
+  // Tạo trigger
+  await knex.raw(`
+    CREATE TRIGGER trigger_update_thucdon_price
+    AFTER UPDATE OF "DonGia" ON "MONAN"
+    FOR EACH ROW
+    EXECUTE FUNCTION update_thucdon_price();
+  `);
+
   await knex.schema.createTable('THUCDON', (table) => {
     table.increments('MaThucDon').primary();
     table.string('TenThucDon', 100).notNullable();
@@ -261,6 +286,12 @@ export const up = async (knex) => {
 };
 
 export const down = async (knex) => {
+  // Drop trigger and function first
+  await knex.raw(
+    'DROP TRIGGER IF EXISTS trigger_update_thucdon_price ON "MONAN"'
+  );
+  await knex.raw('DROP FUNCTION IF EXISTS update_thucdon_price()');
+
   await knex.schema.dropTableIfExists('THAMSO');
   await knex.schema.dropTableIfExists('CHITIET_BAOCAODOANHSO');
   await knex.schema.dropTableIfExists('BAOCAODOANHSO');

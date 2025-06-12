@@ -94,7 +94,7 @@ const getThucDon = async (req, res) => {
 const updateThucDon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tenThucDon, donGiaThoiDiemDat, donGiaHienTai, ghiChu, coverImg } =
+    const { tenThucDon, donGiaThoiDiemDat, donGiaHienTai, ghiChu, monAnIds } =
       req.body;
 
     const thucDon = await ThucDon.findById(id);
@@ -102,15 +102,42 @@ const updateThucDon = async (req, res) => {
       return res.status(404).json({ error: 'Thực đơn không tồn tại' });
     }
 
+    // Kiểm tra món ăn tồn tại
+    if (monAnIds && Array.isArray(monAnIds)) {
+      for (const maMonAn of monAnIds) {
+        const exists = await ThucDon.isMonAnExists(maMonAn);
+        if (!exists) {
+          return res
+            .status(400)
+            .json({ error: `Món ăn với ID ${maMonAn} không tồn tại` });
+        }
+      }
+    }
+
+    // Cập nhật thông tin cơ bản của thực đơn
     const updatedThucDon = await ThucDon.update(id, {
       TenThucDon: tenThucDon,
       DonGiaThoiDiemDat: donGiaThoiDiemDat,
       DonGiaHienTai: donGiaHienTai,
       GhiChu: ghiChu || null,
-      Cover_Img: coverImg || null,
     });
 
-    return res.status(200).json(updatedThucDon);
+    // Nếu có danh sách món ăn mới, cập nhật THUCDON_MONAN
+    if (monAnIds && Array.isArray(monAnIds)) {
+      // Xóa tất cả món ăn cũ
+      await ThucDon.removeAllMonAn(id);
+
+      // Thêm các món ăn mới
+      for (const maMonAn of monAnIds) {
+        // Lấy DonGia từ MONAN làm DonGiaThoiDiemDat
+        const monAn = await knex('MONAN').where({ MaMonAn: maMonAn }).first();
+        await ThucDon.addMonAn(id, maMonAn, monAn.DonGia);
+      }
+    }
+
+    // Trả về thực đơn với danh sách món ăn đã cập nhật
+    const thucDonWithDetails = await ThucDon.findByIdWithMonAn(id);
+    return res.status(200).json(thucDonWithDetails);
   } catch (error) {
     return res
       .status(500)

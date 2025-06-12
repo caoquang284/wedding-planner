@@ -37,6 +37,7 @@ export const getHoaDonById = async (id : number) => {
 
 // Tạo mới hóa đơn
 export const createHoaDon = async (data: any) => {
+  console.log(data);
   const response = await axiosInstance.post("/tao", data);
   return response.data;
 };
