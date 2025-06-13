@@ -5,7 +5,7 @@ const SANH_URL = "http://localhost:3000/api/sanh";
 const LOAI_SANH_URL = "http://localhost:3000/api/loaisanh";
 
 // Lấy token từ localStorage
-const getToken = () => localStorage.getItem("token") || "";
+const getToken = () => localStorage.getItem("accessToken") || "";
 
 // Tạo instance axios với header mặc định
 const axiosInstance = axios.create({

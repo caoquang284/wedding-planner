@@ -9,7 +9,7 @@ const axiosInstance = axios.create({
 
 // Interceptor request: Gắn token vào header
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token') || '';
+  const token = localStorage.getItem('accessToken') || ''; 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -22,7 +22,8 @@ axiosInstance.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ
-      localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       window.location.href = '/login'; // Redirect về login
       return Promise.reject(new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.'));
     }

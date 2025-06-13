@@ -16,11 +16,14 @@ const createPhanQuyen = async (req, res) => {
 
 const getPhanQuyenByNhom = async (req, res) => {
   try {
-    const maNhom = parseInt(req.params.maNhom);
-    const phanQuyenList = await PhanQuyen.findByNhom(maNhom);
+    const { maNhom } = req.params;
+    const phanQuyenList = await db('PHANQUYEN')
+      .where({ MaNhom: maNhom })
+      .join('CHUCNANG', 'PHANQUYEN.MaChucNang', 'CHUCNANG.MaChucNang')
+      .select('PHANQUYEN.MaNhom', 'PHANQUYEN.MaChucNang', 'CHUCNANG.TenChucNang', 'CHUCNANG.TenManHinh');
     res.status(200).json(phanQuyenList);
   } catch (error) {
-    res.status(500).json({ error: 'Lỗi khi lấy danh sách quyền: ' + error.message });
+    res.status(500).json({ error: 'Lỗi khi lấy quyền: ' + error.message });
   }
 };
 

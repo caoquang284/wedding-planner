@@ -35,7 +35,13 @@ router.delete(
   nguoiDungController.deleteNguoiDung
 );
 router.get('/chuc-nang', auth, nguoiDungController.getChucNang);
-router.post('/refresh', validation.validateLogin, nguoiDungController.refreshToken); // Thêm validation
-router.post('/dang-xuat', auth, nguoiDungController.logout); // Thêm auth
+router.get(
+  '/chuc-nang-danh-sach',
+  auth,
+  checkPermission('Quản lý phân quyền'),
+  nguoiDungController.getAllChucNang
+);
+router.post('/refresh', validation.validateLogin, nguoiDungController.refreshToken);
+router.post('/dang-xuat', auth, nguoiDungController.logout);
 
 export default router;
