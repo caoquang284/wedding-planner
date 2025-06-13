@@ -562,14 +562,35 @@ const AdminInvoice: React.FC = () => {
     try {
       setIsProcessingPayment(true);
 
+      // Lấy thông tin đặt tiệc hiện tại
+      const datTiecResponse = await getDatTiecById(selectedInvoice.MaDatTiec);
+
+      // Cập nhật tiền đặt cọc thành tổng tiền còn lại
+      const updatedDatTiec = {
+        ...datTiecResponse,
+        TienDatCoc: datTiecResponse.TienDatCoc + selectedInvoice.TongTienConLai,
+      };
+
+      // Cập nhật thông tin đặt tiệc
+      await fetch(`/api/dattiec/${selectedInvoice.MaDatTiec}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedDatTiec),
+      });
+
+      // Cập nhật hóa đơn
       const updatedInvoice = {
         ...selectedInvoice,
-        TrangThai: 1,
+        TrangThai: 1, // Đã thanh toán
         NgayThanhToan: new Date().toISOString().split("T")[0],
+        TongTienConLai: 0, // Set tiền còn lại về 0
       };
 
       await updateHoaDon(selectedInvoice.MaHoaDon, updatedInvoice);
 
+      // Cập nhật UI
       setInvoices((prev) =>
         prev.map((inv) =>
           inv.MaHoaDon === selectedInvoice.MaHoaDon
@@ -577,6 +598,14 @@ const AdminInvoice: React.FC = () => {
             : inv
         )
       );
+
+      // Cập nhật lại thông tin đặt tiệc trong state nếu đang hiển thị
+      if (
+        chiTietDatTiec &&
+        chiTietDatTiec.MaDatTiec === selectedInvoice.MaDatTiec
+      ) {
+        setChiTietDatTiec(updatedDatTiec);
+      }
 
       setSuccessMessage("Thanh toán thành công!");
       setShowPaymentModal(false);
