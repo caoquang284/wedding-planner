@@ -52,6 +52,15 @@ router.delete(
   datTiecController.deleteDatTiec
 );
 
+// Hủy đặt tiệc
+router.put(
+  '/huy/:id',
+  // auth,
+  // checkPermission(17),
+  // validation.validateIdParam,
+  datTiecController.cancelDatTiec
+);
+
 // Thêm món ăn vào thực đơn
 router.post(
   '/them-mon-an/:id',

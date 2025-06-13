@@ -32,7 +32,36 @@ const HoaDon = {
       throw new Error(`Lỗi khi lấy danh sách hóa đơn: ${error.message}`);
     }
   },
+  // Lấy hóa đơn theo mã đặt tiệc
+  findByMaDatTiec: async (maDatTiec) => {
+    try {
+      console.log('HoaDon.findByMaDatTiec - MaDatTiec:', maDatTiec);
 
+      // Kiểm tra MaDatTiec tồn tại trong DATTIEC
+      const datTiecExists = await knex('DATTIEC')
+        .where({ MaDatTiec: maDatTiec })
+        .first();
+      console.log('HoaDon.findByMaDatTiec - DatTiec exists:', !!datTiecExists);
+      if (!datTiecExists) {
+        throw new Error('Mã đặt tiệc không tồn tại');
+      }
+
+      // Lấy danh sách hóa đơn
+      const hoaDons = await knex('HOADON')
+        .where({ MaDatTiec: maDatTiec })
+        .select('*');
+      console.log('HoaDon.findByMaDatTiec - Found hoaDons:', hoaDons.length);
+
+      return hoaDons;
+    } catch (error) {
+      console.error('HoaDon.findByMaDatTiec - Error:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      });
+      throw new Error(`Lỗi khi lấy hóa đơn theo mã đặt tiệc: ${error.message}`);
+    }
+  },
   // Cập nhật hóa đơn
   update: async (id, data) => {
     try {
@@ -59,14 +88,16 @@ const HoaDon = {
         (data.TongTienHoaDon !== undefined && data.TongTienHoaDon < 0) ||
         (data.PhanTramPhatMotNgay !== undefined &&
           (data.PhanTramPhatMotNgay < 0 || data.PhanTramPhatMotNgay > 100)) ||
-        (data.TongTienPhat !== undefined && data.TongTienPhat < 0) ||
-        (data.TongTienConLai !== undefined && data.TongTienConLai < 0)
+        (data.TongTienPhat !== undefined && data.TongTienPhat < 0)
       ) {
         throw new Error('Các trường tiền hoặc phần trăm phạt phải hợp lệ');
       }
 
       // Kiểm tra TrangThai nếu được cập nhật
-      if (data.TrangThai !== undefined && ![0, 1, 2].includes(data.TrangThai)) {
+      if (
+        data.TrangThai !== undefined &&
+        ![0, 1, 2, 3].includes(data.TrangThai)
+      ) {
         throw new Error('Trạng thái không hợp lệ (phải là 0, 1 hoặc 2)');
       }
 

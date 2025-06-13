@@ -69,6 +69,7 @@ export const getAllDatTiec = async (filters: {
   tenChuRe?: string;
   tenCoDau?: string;
   dienThoai?: string;
+  daHuy?: boolean;
 } = {}) => {
   try {
     const response = await axiosInstance.get('/danh-sach', { params: filters });
@@ -108,6 +109,14 @@ export const deleteDatTiec = async (id: number) => {
   }
 };
 
+export const cancelDatTiec = async (id: number) => {
+  try {
+    const response = await axiosInstance.put(`/huy/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
 
 // Thêm dịch vụ
 export const themDichVu = async (id: number, data: DichVu) => {

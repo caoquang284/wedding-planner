@@ -61,11 +61,12 @@ const createDatTiec = async (req, res) => {
       });
     }
 
+    const soLuongBanToiDa = await DatTiec.getSoLuongBanToiDa(maSanh);
     // Kiểm tra tổng số bàn
-    if (soLuongBan + soBanDuTru > 50) {
-      return res
-        .status(400)
-        .json({ error: 'Tổng số bàn không được vượt quá 50' });
+    if (soLuongBan + soBanDuTru > soLuongBanToiDa) {
+      return res.status(400).json({
+        error: 'Tổng số bàn không được vượt qua số lượng bàn tối đa của sảnh',
+      });
     }
 
     // Kiểm tra tiền đặt cọc
@@ -272,11 +273,12 @@ const updateDatTiec = async (req, res) => {
       });
     }
 
+    const soLuongBanToiDa = await DatTiec.getSoLuongBanToiDa(maSanh);
     // Kiểm tra tổng số bàn
-    if (soLuongBan + soBanDuTru > 50) {
-      return res
-        .status(400)
-        .json({ error: 'Tổng số bàn không được vượt quá 50' });
+    if (soLuongBan + soBanDuTru > soLuongBanToiDa) {
+      return res.status(400).json({
+        error: 'Tổng số bàn không được vượt quá số lượng bàn tối đa của sảnh',
+      });
     }
 
     // Kiểm tra tiền đặt cọc
@@ -377,6 +379,33 @@ const deleteDatTiec = async (req, res) => {
     return res
       .status(500)
       .json({ error: 'Lỗi khi xóa đặt tiệc: ' + error.message });
+  }
+};
+
+const cancelDatTiec = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const datTiec = await DatTiec.findById(id);
+    if (!datTiec) {
+      return res.status(404).json({ error: 'Đặt tiệc không tồn tại' });
+    }
+
+    // Kiểm tra nếu đã hủy
+    if (datTiec.DaHuy) {
+      return res.status(400).json({ error: 'Đặt tiệc đã được hủy trước đó' });
+    }
+
+    // Cập nhật trạng thái hủy
+    await DatTiec.delete(id); // Tên hàm giữ nguyên, nhưng thực chất là update DaHuy
+    return res.status(200).json({ message: 'Hủy đặt tiệc thành công' });
+  } catch (error) {
+    console.error('Error canceling dat tiec:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    return res
+      .status(500)
+      .json({ error: 'Lỗi khi hủy đặt tiệc: ' + error.message });
   }
 };
 
@@ -548,4 +577,5 @@ export default {
   xoaMonAn,
   themDichVu,
   xoaDichVu,
+  cancelDatTiec,
 };

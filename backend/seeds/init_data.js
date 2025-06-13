@@ -475,15 +475,6 @@ export async function seed(knex) {
     },
   ]);
 
-  // Đặt lại sequence sau khi chèn dữ liệu
-  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 11)'); // Sau MaChucNang: 11
-  await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 1)'); // Sau MaNhom: 1
-  await knex.raw('SELECT setval(\'"NGUOIDUNG_MaNguoiDung_seq"\', 1)'); // Sau MaNguoiDung: 1
-  await knex.raw('SELECT setval(\'"LOAISANH_MaLoaiSanh_seq"\', 5)'); // Sau MaLoaiSanh: 5
-  await knex.raw('SELECT setval(\'"CA_MaCa_seq"\', 2)'); // Sau MaCa: 2
-  await knex.raw('SELECT setval(\'"LOAIDICHVU_MaLoaiDichVu_seq"\', 5)'); // Sau MaLoaiDichVu: 5
-  await knex.raw('SELECT setval(\'"DICHVU_MaDichVu_seq"\', 20)'); // Sau MaDichVu: 20
-
   // 1. Seed bảng LOAIMONAN
   const loaiMonAnData = [
     { MaLoaiMonAn: 1, TenLoaiMonAn: 'Khai vị' },
@@ -655,7 +646,7 @@ export async function seed(knex) {
     monAnData.push({
       MaMonAn: maMonAnCounter++,
       ...mon,
-      AnhURL: `https://via.placeholder.com/150?text=${encodeURIComponent(mon.TenMonAn)}`,
+      AnhURL: `k co`,
     });
   }
 
@@ -697,7 +688,7 @@ export async function seed(knex) {
           (randomBaseDish.DonGia * (0.8 + Math.random() * 0.4)) / 1000
         ) * 1000,
       GhiChu: `Biến tấu từ ${randomBaseDish.TenMonAn}`,
-      AnhURL: `https://via.placeholder.com/150?text=${encodeURIComponent(newTenMonAn.substring(0, 15))}`,
+      AnhURL: `k co`,
     });
     additionalDishesCount++;
   }
@@ -871,16 +862,6 @@ export async function seed(knex) {
   // Seed bảng THUCDON_MONAN
   await knex('THUCDON_MONAN').insert(thucDonMonAnEntries);
 
-  // Đặt lại sequence cho các bảng
-  await knex.raw(
-    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT MAX("MaLoaiMonAn") FROM "LOAIMONAN"))`
-  );
-  await knex.raw(
-    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT MAX("MaMonAn") FROM "MONAN"))`
-  );
-  await knex.raw(
-    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT MAX("MaThucDon") FROM "THUCDON"))`
-  );
   // Bảng THUCDON_MONAN không có cột SERIAL nên không cần reset sequence cho nó.
   await knex('DATTIEC').insert([
     {
@@ -1362,4 +1343,24 @@ export async function seed(knex) {
       TrangThai: 1,
     },
   ]);
+  // Đặt lại sequence sau khi chèn dữ liệu
+  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 15)'); // Sau MaChucNang: 11
+  await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 5)'); // Sau MaNhom: 1
+  await knex.raw('SELECT setval(\'"NGUOIDUNG_MaNguoiDung_seq"\', 5)'); // Sau MaNguoiDung: 1
+  await knex.raw('SELECT setval(\'"LOAISANH_MaLoaiSanh_seq"\', 3)'); // Sau MaLoaiSanh: 5
+  await knex.raw('SELECT setval(\'"CA_MaCa_seq"\', 5)'); // Sau MaCa: 2
+  await knex.raw('SELECT setval(\'"LOAIDICHVU_MaLoaiDichVu_seq"\', 5)'); // Sau MaLoaiDichVu: 5
+  await knex.raw('SELECT setval(\'"DICHVU_MaDichVu_seq"\', 20)'); // Sau MaDichVu: 20
+  await knex.raw('SELECT setval(\'"HOADON_MaHoaDon_seq"\', 10)'); // Sau MaHoaDon: 11
+  // Đặt lại sequence cho các bảng
+  await knex.raw(
+    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT MAX("MaLoaiMonAn") FROM "LOAIMONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT MAX("MaMonAn") FROM "MONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT MAX("MaThucDon") FROM "THUCDON"))`
+  );
+  await knex.raw('SELECT setval(\'"DATTIEC_MaDatTiec_seq"\', 10)'); // Sau MaDatTiec: 11
 }

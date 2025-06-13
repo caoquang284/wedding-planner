@@ -14,8 +14,13 @@ import {
   getAllDatTiec,
   updateDatTiec,
   deleteDatTiec,
+  cancelDatTiec,
 } from "../../Api/datTiecApi";
-import { createHoaDon } from "../../Api/hoaDonApi";
+import {
+  createHoaDon,
+  updateHoaDon,
+  getHoaDonByMaDatTiec,
+} from "../../Api/hoaDonApi";
 
 // Interface cho món ăn
 interface IMonAn {
@@ -59,6 +64,7 @@ interface IDatTiec {
   MaThucDon?: number;
   DichVus?: { MaDichVu: number; SoLuong: number; DonGiaThoiDiemDat: number }[];
   MonAns?: number[];
+  DaHuy?: boolean;
 }
 
 // Interface cho loại sảnh
@@ -268,6 +274,7 @@ function Admin_Wedding() {
         // Load bookings
         setIsLoadingBookings(true);
         const bookingsData = await getAllDatTiec();
+        console.log(bookingsData);
         setBookings(bookingsData);
         setIsLoadingBookings(false);
 
@@ -383,7 +390,22 @@ function Admin_Wedding() {
       setSelectedHallType(hall ? hall.MaLoaiSanh : null);
       setSelectedHall(booking.MaSanh);
       setSelectedCa(booking.MaCa);
-      setSelectedServices(booking.DichVus || []);
+
+      // Map the selected services with their full details from apiServices
+      const mappedServices = (booking.DichVus || []).map((service) => {
+        const fullService = apiServices.find(
+          (s) => s.MaDichVu === service.MaDichVu
+        );
+        return {
+          ...service,
+          TenDichVu: fullService?.TenDichVu || "",
+          MaLoaiDichVu: fullService?.MaLoaiDichVu || 0,
+          DonGia: fullService?.DonGia || 0,
+          GhiChu: fullService?.GhiChu || "",
+          AnhURL: fullService?.AnhURL || "",
+        };
+      });
+      setSelectedServices(mappedServices);
       setSelectedServiceType(null);
       setShowWizard(true);
     } catch (error) {
@@ -582,62 +604,29 @@ function Admin_Wedding() {
   // Modify handleSubmit to create the actual menu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate dữ liệu
-    const tienDatCocNumber = Number(formData.TienDatCoc);
-    const soLuongBan = Number(formData.SoLuongBan);
-    const soBanDuTru = Number(formData.SoBanDuTru);
-    const tienDatCoc = Number(formData.TienDatCoc);
-
-    // Additional date validation
-    if (!formData.NgayDaiTiec) {
-      alert("Vui lòng chọn ngày đặt tiệc");
-      return;
-    }
-
-    if (isNaN(tienDatCocNumber) || tienDatCocNumber < 0) {
-      alert("Tiền đặt cọc phải là số không âm");
-      return;
-    }
-    if (isNaN(soLuongBan) || soLuongBan <= 0) {
-      alert("Số lượng bàn phải là số dương");
-      return;
-    }
-    if (isNaN(soBanDuTru) || soBanDuTru < 0) {
-      alert("Số lượng bàn dự trữ phải là số không âm");
-      return;
-    }
-    if (!selectedHall) {
-      alert("Vui lòng chọn sảnh");
-      return;
-    }
-    if (selectedDishes.length === 0) {
-      alert("Vui lòng chọn ít nhất một món ăn");
-      return;
-    }
-    if (selectedServices.length === 0) {
-      alert("Vui lòng chọn ít nhất một dịch vụ");
-      return;
-    }
-    const selectedHallData = halls.find((hall) => hall.MaSanh === selectedHall);
-    if (
-      selectedHallData &&
-      soLuongBan + soBanDuTru > selectedHallData.SoLuongBanToiDa
-    ) {
-      alert("Tổng số bàn vượt quá sức chứa của sảnh");
-      return;
-    }
-    if (isNaN(tienDatCoc) || tienDatCoc < minDeposit) {
-      alert(
-        `Tiền đặt cọc phải ít nhất ${minDeposit.toLocaleString(
-          "vi-VN"
-        )} VNĐ (30% tổng tiền).`
-      );
-      setFormData((prev) => ({ ...prev, TienDatCoc: minDeposit.toString() }));
-      return;
-    }
-
     try {
+      // Validate form data
+      if (
+        !formData.TenChuRe ||
+        !formData.TenCoDau ||
+        !formData.DienThoai ||
+        !formData.NgayDaiTiec
+      ) {
+        alert("Vui lòng điền đầy đủ thông tin!");
+        return;
+      }
+
+      // Validate required fields
+      if (!selectedHall || !selectedCa) {
+        alert("Vui lòng chọn sảnh và ca");
+        return;
+      }
+
+      // Validate menu selection
+      if (!selectedMenu) {
+        alert("Vui lòng chọn thực đơn");
+        return;
+      }
       let menuId = selectedMenu;
 
       // Tính tổng giá trị menu mới
@@ -667,29 +656,23 @@ function Admin_Wedding() {
         });
         menuId = newMenu.MaThucDon;
       }
-
-      // Ensure menuId is a number
-      if (!menuId) {
-        throw new Error("Không thể tạo hoặc cập nhật thực đơn");
-      }
-
-      // Prepare booking data
       const datTiecData = {
         tenChuRe: formData.TenChuRe,
         tenCoDau: formData.TenCoDau,
         dienThoai: formData.DienThoai,
-        ngayDaiTiec: new Date(formData.NgayDaiTiec).toISOString(),
-        maCa: selectedCa || 1,
-        maSanh: selectedHall,
+        ngayDaiTiec: formData.NgayDaiTiec,
         soLuongBan: Number(formData.SoLuongBan),
         soBanDuTru: Number(formData.SoBanDuTru),
         tienDatCoc: Number(formData.TienDatCoc),
-        maThucDon: menuId, // Now menuId is guaranteed to be a number
+        maSanh: selectedHall,
+        maCa: selectedCa,
+        maThucDon: menuId,
         dichVus: selectedServices.map((service) => ({
           maDichVu: service.MaDichVu,
           soLuong: service.SoLuong,
           donGiaThoiDiemDat: service.DonGiaThoiDiemDat,
         })),
+        monAns: selectedDishes,
       };
 
       setConfirmationModal({
@@ -701,73 +684,110 @@ function Admin_Wedding() {
           try {
             let newBookingId;
             if (isEditMode && formData.MaDatTiec) {
-              const updatedBooking = await updateDatTiec(
-                formData.MaDatTiec,
-                datTiecData
-              );
-              setBookings((prev) =>
-                prev.map((booking) =>
-                  booking.MaDatTiec === formData.MaDatTiec
-                    ? {
-                        ...booking,
-                        ...updatedBooking,
-                        MonAns: selectedDishes,
-                        DichVus: selectedServices,
-                      }
-                    : booking
-                )
-              );
+              // Update existing booking
+              await updateDatTiec(formData.MaDatTiec, datTiecData);
               newBookingId = formData.MaDatTiec;
             } else {
+              // Create new booking
               const newBooking = await createDatTiec(datTiecData);
-              setBookings((prev) => [
-                ...prev,
-                {
-                  ...newBooking,
-                  MonAns: selectedDishes,
-                  DichVus: selectedServices,
-                },
-              ]);
               newBookingId = newBooking.MaDatTiec;
             }
 
-            // Create invoice
+            // Calculate totals for invoice
             const tongTienBan =
               selectedDishes.reduce((total, dishId) => {
-                const dish = dishes.find((d) => d.id === dishId);
-                return total + (dish && dish.dongia ? Number(dish.dongia) : 0);
+                const dish = apiDishes.find((d) => d.MaMonAn === dishId);
+                return total + (dish && dish.DonGia ? Number(dish.DonGia) : 0);
               }, 0) *
               ((Number(formData.SoLuongBan) || 0) +
                 (Number(formData.SoBanDuTru) || 0));
 
             const tongTienDichVu = selectedServices.reduce(
               (total, service) =>
-                total +
-                (Number(service.SoLuong) || 1) *
-                  (Number(service.DonGiaThoiDiemDat) || 0),
+                total + service.SoLuong * service.DonGiaThoiDiemDat,
               0
             );
 
-            const tongTienHoaDon = tongTienBan + tongTienDichVu;
-            const tienDatCoc = Number(formData.TienDatCoc) || 0;
-            const tongTienConLai = tongTienHoaDon - tienDatCoc;
+            // Get existing invoice if in edit mode
+            if (isEditMode && formData.MaDatTiec) {
+              const existingInvoice = await getHoaDonByMaDatTiec(
+                formData.MaDatTiec
+              );
+              console.log(existingInvoice);
+              if (existingInvoice) {
+                const invoice = existingInvoice.data[0]; // Lấy hóa đơn đầu tiên
+                const maHoaDon = invoice.MaHoaDon;
+                const tongTienHoaDon = tongTienBan + tongTienDichVu;
+                const tongTienConLai =
+                  tongTienHoaDon - Number(formData.TienDatCoc);
+                // Update existing invoice
+                const updateData: any = {
+                  TongTienConLai: tongTienConLai,
+                  TongTienBan: tongTienBan,
+                  TongTienDichVu: tongTienDichVu,
+                  TongTienHoaDon: tongTienHoaDon,
+                };
 
-            const hoaDonData = {
-              MaDatTiec: newBookingId,
-              NgayThanhToan: new Date().toISOString().split("T")[0],
-              TongTienBan: tongTienBan,
-              TongTienDichVu: tongTienDichVu,
-              TongTienHoaDon: tongTienHoaDon,
-              ApDungQuyDinhPhat: false,
-              PhanTramPhatMotNgay: 0,
-              TongTienPhat: 0,
-              TongTienConLai: tongTienConLai,
-              TrangThai: 0,
-            };
+                if (existingInvoice.data[0].TrangThai === 1) {
+                  // If invoice is paid, calculate remaining amount
+                  const diffTienBan = Number(
+                    tongTienBan - existingInvoice.data[0].TongTienBan
+                  );
+                  const diffTienDichVu = Number(
+                    tongTienDichVu - existingInvoice.data[0].TongTienDichVu
+                  );
+                  updateData.TongTienConLai = Number(
+                    diffTienBan + diffTienDichVu
+                  );
+                  updateData.TrangThai = 3;
+                }
+                console.log(updateData);
+                await updateHoaDon(maHoaDon, updateData);
+              }
+            } else {
+              const tongTienHoaDon = tongTienBan + tongTienDichVu;
+              const tienDatCoc = Number(formData.TienDatCoc) || 0;
+              const tongTienConLai = tongTienHoaDon - tienDatCoc;
+              // Create new invoice
+              await createHoaDon({
+                MaDatTiec: newBookingId,
+                NgayThanhToan: formData.NgayDaiTiec,
+                TongTienBan: tongTienBan,
+                TongTienDichVu: tongTienDichVu,
+                TongTienHoaDon: tongTienBan + tongTienDichVu,
+                ApDungQuyDinhPhat: false,
+                PhanTramPhatMotNgay: 0,
+                TongTienPhat: 0,
+                TongTienConLai: tongTienConLai,
+                TrangThai: 0,
+              });
+            }
 
-            await createHoaDon(hoaDonData);
+            // Update bookings list
+            setBookings((prev) =>
+              prev.map((booking) =>
+                booking.MaDatTiec === newBookingId
+                  ? {
+                      ...booking,
+                      ...datTiecData,
+                      MaDatTiec: newBookingId,
+                    }
+                  : booking
+              )
+            );
+
+            // Close wizard and reset form
             closeWizard();
-            alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
+            setFormData({
+              MaDatTiec: null,
+              TenChuRe: "",
+              TenCoDau: "",
+              DienThoai: "",
+              NgayDaiTiec: "",
+              SoLuongBan: "",
+              SoBanDuTru: "",
+              TienDatCoc: "",
+            });
           } catch (error: any) {
             alert("Lỗi: " + (error.message || "Không thể lưu đặt tiệc"));
           }
@@ -784,7 +804,7 @@ function Admin_Wedding() {
       message: "Bạn có chắc chắn muốn xóa đặt tiệc này?",
       onConfirm: async () => {
         try {
-          await deleteDatTiec(id);
+          await cancelDatTiec(id);
           setBookings((prev) =>
             prev.filter((booking) => booking.MaDatTiec !== id)
           );
@@ -1160,10 +1180,10 @@ function Admin_Wedding() {
               src={firstDish.AnhURL}
               alt={menu.TenThucDon}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/300x200?text=Không+có+ảnh";
-              }}
+              // onError={(e) => {
+              //   e.currentTarget.src =
+              //     "https://via.placeholder.com/300x200?text=Không+có+ảnh";
+              // }}
             />
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -1314,7 +1334,9 @@ function Admin_Wedding() {
                     {filteredBookings.map((booking) => (
                       <tr
                         key={booking.MaDatTiec}
-                        className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                        className={`hover:bg-[#F8F9FA] transition-colors duration-200 ${
+                          booking.DaHuy ? "bg-yellow-100" : ""
+                        }`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#001F3F]">
                           {booking.TenChuRe}
@@ -1984,9 +2006,9 @@ function Admin_Wedding() {
                     min="0"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#001F3F]">
-                    Tiền Đặt Cọc
+                <div className="mb-3">
+                  <label className="block text-sm font-medium">
+                    Tiền đặt cọc (VNĐ)
                   </label>
                   <input
                     type="number"
@@ -1994,9 +2016,12 @@ function Admin_Wedding() {
                     value={formData.TienDatCoc}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    className="py-2 px-3 mt-1 border border-gray-200 rounded-md w-full"
+                    className={`py-2 px-3 mt-1 w-full rounded border ${
+                      isEditMode ? "bg-gray-100" : "border-gray-300"
+                    } focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
                     required
-                    min={minDeposit}
+                    min="0"
+                    disabled={isEditMode}
                   />
                 </div>
               </div>

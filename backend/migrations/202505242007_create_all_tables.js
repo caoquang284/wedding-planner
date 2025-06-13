@@ -174,6 +174,7 @@ export const up = async (knex) => {
     table.decimal('TienDatCoc', 15, 2).notNullable();
     table.integer('SoLuongBan').notNullable();
     table.integer('SoBanDuTru').notNullable();
+    table.boolean('DaHuy').notNullable().defaultTo(false);
     table.foreign('MaCa').references('MaCa').inTable('CA');
     table.foreign('MaSanh').references('MaSanh').inTable('SANH');
     table.foreign('MaThucDon').references('MaThucDon').inTable('THUCDON');
@@ -236,9 +237,6 @@ export const up = async (knex) => {
   );
   await knex.raw(
     'ALTER TABLE "HOADON" ADD CONSTRAINT "chk_tongtienphat" CHECK ("TongTienPhat" >= 0)'
-  );
-  await knex.raw(
-    'ALTER TABLE "HOADON" ADD CONSTRAINT "chk_tongtienconlai" CHECK ("TongTienConLai" >= 0)'
   );
 
   // aplicativos--- Báo cáo doanh số ---
