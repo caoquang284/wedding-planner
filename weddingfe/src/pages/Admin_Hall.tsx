@@ -1,491 +1,461 @@
-import { useState } from "react";
-interface HallType {
-  MaLoaiSanh: number | null;
+import { useState, useEffect } from "react";
+import {
+  getAllSanh,
+  createSanh,
+  updateSanh,
+  deleteSanh,
+  getAllLoaiSanh,
+  createLoaiSanh,
+  updateLoaiSanh,
+  deleteLoaiSanh,
+} from "../../Api/sanhApi";
+
+// Định nghĩa interface
+interface Sanh {
+  MaSanh: number;
+  TenSanh: string;
+  MaLoaiSanh: number;
+  TenLoaiSanh: string;
+  SoLuongBanToiDa: number;
+  GhiChu?: string;
+  AnhURL?: string;
+  DonGiaBanToiThieu: number;
+}
+
+interface LoaiSanh {
+  MaLoaiSanh: number;
   TenLoaiSanh: string;
   DonGiaBanToiThieu: number;
 }
 
-interface Hall {
-  MaSanh: number | null;
-  TenSanh: string;
-  MaLoaiSanh: number | null;
-  SoLuongBanToiDa: number;
-  GhiChu: string;
-  Cover_Img?: string;
+interface SanhFormData {
+  id?: number;
+  tenSanh: string;
+  maLoaiSanh: number;
+  soLuongBanToiDa: number;
+  ghiChu?: string;
+  anhURL?: string;
 }
 
-interface HallFormData {
-  MaSanh: number | null;
-  TenSanh: string;
-  MaLoaiSanh: number | null;
-  SoLuongBanToiDa: string;
-  GhiChu: string;
-  Cover_Img?: string;
+interface LoaiSanhFormData {
+  id?: number;
+  tenLoaiSanh: string;
+  donGiaBanToiThieu: number;
 }
 
-interface HallTypeFormData {
-  MaLoaiSanh: number | null;
-  TenLoaiSanh: string;
-  DonGiaBanToiThieu: string;
+interface ConfirmationModal {
+  isOpen: boolean;
+  message: string;
+  onConfirm: () => void;
 }
 
-function Admin_Hall() {
-  const [halls, setHalls] = useState<Hall[]>([
-    {
-      MaSanh: 1,
-      TenSanh: "Sảnh VIP 1",
-      MaLoaiSanh: 1,
-      SoLuongBanToiDa: 50,
-      GhiChu: "Sảnh cao cấp với view đẹp",
-      Cover_Img: "https://riversidepalace.vn/multidata/3-482.jpg",
-    },
-    {
-      MaSanh: 2,
-      TenSanh: "Sảnh Thường 1",
-      MaLoaiSanh: 2,
-      SoLuongBanToiDa: 30,
-      GhiChu: "Sảnh phổ thông",
-      Cover_Img: "https://i.imgur.com/MXjrTcw.jpg",
-    },
-  ]);
-
-  const [hallTypes, setHallTypes] = useState<HallType[]>([
-    { MaLoaiSanh: 1, TenLoaiSanh: "VIP", DonGiaBanToiThieu: 5000000 },
-    { MaLoaiSanh: 2, TenLoaiSanh: "Thường", DonGiaBanToiThieu: 3000000 },
-  ]);
-
-  // State cho modal và form
-  const [isHallModalOpen, setIsHallModalOpen] = useState<boolean>(false);
-  const [isHallTypeModalOpen, setIsHallTypeModalOpen] =
-    useState<boolean>(false);
-  const [hallFormData, setHallFormData] = useState<HallFormData>({
-    MaSanh: null,
-    TenSanh: "",
-    MaLoaiSanh: null,
-    SoLuongBanToiDa: "",
-    GhiChu: "",
-    Cover_Img: "",
+function AdminHall() {
+  // State cho sảnh
+  const [sanhs, setSanhs] = useState<Sanh[]>([]);
+  const [sanhSearchTerm, setSanhSearchTerm] = useState<string>("");
+  const [isSanhModalOpen, setIsSanhModalOpen] = useState<boolean>(false);
+  const [isSanhEditMode, setIsSanhEditMode] = useState<boolean>(false);
+  const [sanhFormData, setSanhFormData] = useState<SanhFormData>({
+    tenSanh: "",
+    maLoaiSanh: 0,
+    soLuongBanToiDa: 0,
+    ghiChu: "",
+    anhURL: "",
   });
-  const [hallTypeFormData, setHallTypeFormData] = useState<HallTypeFormData>({
-    MaLoaiSanh: null,
-    TenLoaiSanh: "",
-    DonGiaBanToiThieu: "",
+
+  // State cho loại sảnh
+  const [loaiSanhs, setLoaiSanhs] = useState<LoaiSanh[]>([]);
+  const [loaiSanhSearchTerm, setLoaiSanhSearchTerm] = useState<string>("");
+  const [isLoaiSanhModalOpen, setIsLoaiSanhModalOpen] = useState<boolean>(false);
+  const [isLoaiSanhEditMode, setIsLoaiSanhEditMode] = useState<boolean>(false);
+  const [loaiSanhFormData, setLoaiSanhFormData] = useState<LoaiSanhFormData>({
+    tenLoaiSanh: "",
+    donGiaBanToiThieu: 0,
   });
-  const [isHallEditMode, setIsHallEditMode] = useState<boolean>(false);
-  const [isHallTypeEditMode, setIsHallTypeEditMode] = useState<boolean>(false);
 
-  // State cho tìm kiếm và lọc
-  const [hallSearchTerm, setHallSearchTerm] = useState<string>("");
-  const [hallTypeFilter, setHallTypeFilter] = useState<string>("");
+  // State chung cho modal xác nhận
+  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>({
+    isOpen: false,
+    message: "",
+    onConfirm: () => {},
+  });
 
-  // Mở modal để thêm/sửa sảnh
-  const openAddHallModal = () => {
-    setHallFormData({
-      MaSanh: null,
-      TenSanh: "",
-      MaLoaiSanh: null,
-      SoLuongBanToiDa: "",
-      GhiChu: "",
-      Cover_Img: "",
+  // Lấy dữ liệu sảnh và loại sảnh khi component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const sanhData = await getAllSanh();
+        setSanhs(sanhData);
+
+        const loaiSanhData = await getAllLoaiSanh();
+        setLoaiSanhs(loaiSanhData);
+        if (loaiSanhData.length > 0 && !sanhFormData.maLoaiSanh) {
+          setSanhFormData((prev) => ({
+            ...prev,
+            maLoaiSanh: loaiSanhData[0].MaLoaiSanh,
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Có lỗi xảy ra khi tải dữ liệu!");
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Hàm xử lý sảnh
+  const openAddSanhModal = () => {
+    if (loaiSanhs.length === 0) {
+      alert("Vui lòng thêm ít nhất một loại sảnh trước khi thêm sảnh");
+      return;
+    }
+    setSanhFormData({
+      tenSanh: "",
+      maLoaiSanh: loaiSanhs[0]?.MaLoaiSanh || 0,
+      soLuongBanToiDa: 0,
+      ghiChu: "",
+      anhURL: "",
     });
-    setIsHallEditMode(false);
-    setIsHallModalOpen(true);
+    setIsSanhEditMode(false);
+    setIsSanhModalOpen(true);
   };
 
-  const openEditHallModal = (hall: Hall) => {
-    setHallFormData({
-      MaSanh: hall.MaSanh,
-      TenSanh: hall.TenSanh,
-      MaLoaiSanh: hall.MaLoaiSanh,
-      SoLuongBanToiDa: hall.SoLuongBanToiDa.toString(),
-      GhiChu: hall.GhiChu,
-      Cover_Img: hall.Cover_Img || "",
+  const openEditSanhModal = (sanh: Sanh) => {
+    setSanhFormData({
+      id: sanh.MaSanh,
+      tenSanh: sanh.TenSanh,
+      maLoaiSanh: sanh.MaLoaiSanh,
+      soLuongBanToiDa: sanh.SoLuongBanToiDa,
+      ghiChu: sanh.GhiChu || "",
+      anhURL: sanh.AnhURL || "",
     });
-    setIsHallEditMode(true);
-    setIsHallModalOpen(true);
+    setIsSanhEditMode(true);
+    setIsSanhModalOpen(true);
   };
 
-  // Mở modal để thêm/sửa loại sảnh
-  const openAddHallTypeModal = () => {
-    setHallTypeFormData({
-      MaLoaiSanh: null,
-      TenLoaiSanh: "",
-      DonGiaBanToiThieu: "",
-    });
-    setIsHallTypeEditMode(false);
-    setIsHallTypeModalOpen(true);
-  };
+  const closeSanhModal = () => setIsSanhModalOpen(false);
 
-  const openEditHallTypeModal = (hallType: HallType) => {
-    setHallTypeFormData({
-      MaLoaiSanh: hallType.MaLoaiSanh,
-      TenLoaiSanh: hallType.TenLoaiSanh,
-      DonGiaBanToiThieu: hallType.DonGiaBanToiThieu.toString(),
-    });
-    setIsHallTypeEditMode(true);
-    setIsHallTypeModalOpen(true);
-  };
-
-  // Đóng modal
-  const closeHallModal = () => setIsHallModalOpen(false);
-  const closeHallTypeModal = () => setIsHallTypeModalOpen(false);
-
-  // Xử lý thay đổi input trong form
-  const handleHallInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+  const handleSanhInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setHallFormData((prev) => ({
+    setSanhFormData((prev) => ({
       ...prev,
-      [name]: name === "MaLoaiSanh" ? Number(value) : value,
+      [name]: name === "maLoaiSanh" || name === "soLuongBanToiDa" ? Number(value) : value,
     }));
   };
 
-  const handleHallTypeInputChange = (
+  const handleSanhSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sanhFormData.tenSanh || sanhFormData.tenSanh.length < 3) {
+      alert("Tên sảnh không được để trống và phải có ít nhất 3 ký tự");
+      return;
+    }
+    if (!sanhFormData.maLoaiSanh || isNaN(sanhFormData.maLoaiSanh)) {
+      alert("Vui lòng chọn loại sảnh hợp lệ");
+      return;
+    }
+    if (sanhFormData.soLuongBanToiDa <= 0) {
+      alert("Số lượng bàn tối đa phải lớn hơn 0");
+      return;
+    }
+
+    const dataToSend = {
+      tenSanh: sanhFormData.tenSanh,
+      maLoaiSanh: sanhFormData.maLoaiSanh,
+      soLuongBanToiDa: sanhFormData.soLuongBanToiDa,
+      ghiChu: sanhFormData.ghiChu || "",
+      anhURL: sanhFormData.anhURL || "",
+    };
+
+    const action = async () => {
+      try {
+        if (isSanhEditMode && sanhFormData.id) {
+          const updatedSanh = await updateSanh(sanhFormData.id, dataToSend);
+          setSanhs((prev) =>
+            prev.map((sanh) =>
+              sanh.MaSanh === sanhFormData.id
+                ? {
+                    ...sanh,
+                    ...updatedSanh,
+                    TenLoaiSanh: loaiSanhs.find(
+                      (ls) => ls.MaLoaiSanh === updatedSanh.MaLoaiSanh
+                    )?.TenLoaiSanh,
+                  }
+                : sanh
+            )
+          );
+        } else {
+          const newSanh = await createSanh(dataToSend);
+          setSanhs((prev) => [
+            ...prev,
+            {
+              ...newSanh,
+              TenLoaiSanh: loaiSanhs.find(
+                (ls) => ls.MaLoaiSanh === newSanh.MaLoaiSanh
+              )?.TenLoaiSanh,
+            },
+          ]);
+        }
+        closeSanhModal();
+      } catch (error: any) {
+        console.error("Error saving sanh:", error.response?.data || error);
+        alert(
+          `Lỗi khi lưu sảnh: ${error.response?.data?.error || error.message}`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: `Bạn có chắc chắn muốn ${isSanhEditMode ? "sửa" : "thêm"} sảnh này không?`,
+      onConfirm: action,
+    });
+  };
+
+  const handleDeleteSanh = (id: number) => {
+    const action = async () => {
+      try {
+        await deleteSanh(id);
+        setSanhs((prev) => prev.filter((sanh) => sanh.MaSanh !== id));
+      } catch (error: any) {
+        console.error("Error deleting sanh:", error.response?.data || error);
+        alert(
+          `Lỗi khi xóa sảnh: ${error.response?.data?.error || error.message}`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: "Bạn có chắc chắn muốn xóa sảnh này không?",
+      onConfirm: action,
+    });
+  };
+
+  // Hàm xử lý loại sảnh
+  const openAddLoaiSanhModal = () => {
+    setLoaiSanhFormData({
+      tenLoaiSanh: "",
+      donGiaBanToiThieu: 0,
+    });
+    setIsLoaiSanhEditMode(false);
+    setIsLoaiSanhModalOpen(true);
+  };
+
+  const openEditLoaiSanhModal = (loaiSanh: LoaiSanh) => {
+    setLoaiSanhFormData({
+      id: loaiSanh.MaLoaiSanh,
+      tenLoaiSanh: loaiSanh.TenLoaiSanh,
+      donGiaBanToiThieu: loaiSanh.DonGiaBanToiThieu,
+    });
+    setIsLoaiSanhEditMode(true);
+    setIsLoaiSanhModalOpen(true);
+  };
+
+  const closeLoaiSanhModal = () => setIsLoaiSanhModalOpen(false);
+
+  const handleLoaiSanhInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
-    setHallTypeFormData((prev) => ({ ...prev, [name]: value }));
+    setLoaiSanhFormData((prev) => ({
+      ...prev,
+      [name]: name === "donGiaBanToiThieu" ? Number(value) : value,
+    }));
   };
 
-  // Thêm hoặc sửa sảnh
-  const handleHallSubmit = (e: React.FormEvent) => {
+  const handleLoaiSanhSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const soLuongBanToiDa = Number(hallFormData.SoLuongBanToiDa);
-    if (isNaN(soLuongBanToiDa) || soLuongBanToiDa <= 0) {
-      alert("Số lượng bàn tối đa phải là số dương");
+    if (!loaiSanhFormData.tenLoaiSanh || loaiSanhFormData.tenLoaiSanh.length < 2) {
+      alert("Tên loại sảnh không được để trống và phải có ít nhất 2 ký tự");
       return;
     }
-    if (isHallEditMode) {
-      setHalls((prev) =>
-        prev.map((hall) =>
-          hall.MaSanh === hallFormData.MaSanh
-            ? {
-                ...hall,
-                TenSanh: hallFormData.TenSanh,
-                MaLoaiSanh: hallFormData.MaLoaiSanh,
-                SoLuongBanToiDa: soLuongBanToiDa,
-                GhiChu: hallFormData.GhiChu,
-                Cover_Img: hallFormData.Cover_Img,
-              }
-            : hall
-        )
-      );
-    } else {
-      const newHall: Hall = {
-        MaSanh:
-          halls.length > 0
-            ? Math.max(...halls.map((h) => h.MaSanh || 0)) + 1
-            : 1,
-        TenSanh: hallFormData.TenSanh,
-        MaLoaiSanh: hallFormData.MaLoaiSanh,
-        SoLuongBanToiDa: soLuongBanToiDa,
-        GhiChu: hallFormData.GhiChu,
-        Cover_Img: hallFormData.Cover_Img,
-      };
-      setHalls((prev) => [...prev, newHall]);
-    }
-    closeHallModal();
-  };
-
-  // Thêm hoặc sửa loại sảnh
-  const handleHallTypeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const donGiaBanToiThieu = Number(hallTypeFormData.DonGiaBanToiThieu);
-    if (isNaN(donGiaBanToiThieu) || donGiaBanToiThieu < 0) {
-      alert("Đơn giá bàn tối thiểu phải là số không âm");
+    if (loaiSanhFormData.donGiaBanToiThieu < 0) {
+      alert("Đơn giá bàn tối thiểu không được âm");
       return;
     }
-    if (isHallTypeEditMode) {
-      setHallTypes((prev) =>
-        prev.map((hallType) =>
-          hallType.MaLoaiSanh === hallTypeFormData.MaLoaiSanh
-            ? {
-                ...hallType,
-                TenLoaiSanh: hallTypeFormData.TenLoaiSanh,
-                DonGiaBanToiThieu: donGiaBanToiThieu,
-              }
-            : hallType
-        )
-      );
-    } else {
-      const newHallType: HallType = {
-        MaLoaiSanh:
-          hallTypes.length > 0
-            ? Math.max(...hallTypes.map((ht) => ht.MaLoaiSanh || 0)) + 1
-            : 1,
-        TenLoaiSanh: hallTypeFormData.TenLoaiSanh,
-        DonGiaBanToiThieu: donGiaBanToiThieu,
-      };
-      setHallTypes((prev) => [...prev, newHallType]);
-    }
-    closeHallTypeModal();
+
+    const dataToSend = {
+      tenLoaiSanh: loaiSanhFormData.tenLoaiSanh,
+      donGiaBanToiThieu: loaiSanhFormData.donGiaBanToiThieu,
+    };
+
+    const action = async () => {
+      try {
+        if (isLoaiSanhEditMode && loaiSanhFormData.id) {
+          const updatedLoaiSanh = await updateLoaiSanh(loaiSanhFormData.id, dataToSend);
+          setLoaiSanhs((prev) =>
+            prev.map((ls) =>
+              ls.MaLoaiSanh === loaiSanhFormData.id ? updatedLoaiSanh : ls
+            )
+          );
+          // Cập nhật TenLoaiSanh trong danh sách sảnh
+          setSanhs((prev) =>
+            prev.map((sanh) =>
+              sanh.MaLoaiSanh === loaiSanhFormData.id
+                ? { ...sanh, TenLoaiSanh: updatedLoaiSanh.TenLoaiSanh }
+                : sanh
+            )
+          );
+        } else {
+          const newLoaiSanh = await createLoaiSanh(dataToSend);
+          setLoaiSanhs((prev) => [...prev, newLoaiSanh]);
+          if (!sanhFormData.maLoaiSanh) {
+            setSanhFormData((prev) => ({
+              ...prev,
+              maLoaiSanh: newLoaiSanh.MaLoaiSanh,
+            }));
+          }
+        }
+        closeLoaiSanhModal();
+      } catch (error: any) {
+        console.error("Error saving loai sanh:", error.response?.data || error);
+        alert(
+          `Lỗi khi lưu loại sảnh: ${error.response?.data?.error || error.message}`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: `Bạn có chắc chắn muốn ${isLoaiSanhEditMode ? "sửa" : "thêm"} loại sảnh này không?`,
+      onConfirm: action,
+    });
   };
 
-  // Xóa sảnh
-  const handleDeleteHall = (MaSanh: number | null) => {
-    // Kiểm tra nếu sảnh đang được sử dụng trong DATTIEC
-    // Giả sử bạn có một API hoặc logic kiểm tra, ở đây chỉ minh họa
-    const isHallInUse = false; // Thay bằng logic kiểm tra thực tế
-    if (isHallInUse) {
-      alert("Không thể xóa sảnh đang được sử dụng trong đặt tiệc!");
-      return;
-    }
-    setHalls((prev) => prev.filter((hall) => hall.MaSanh !== MaSanh));
-  };
-
-  // Xóa loại sảnh
-  const handleDeleteHallType = (MaLoaiSanh: number | null) => {
-    const isHallTypeInUse = halls.some(
-      (hall) => hall.MaLoaiSanh === MaLoaiSanh
-    );
-    if (isHallTypeInUse) {
+  const handleDeleteLoaiSanh = (id: number) => {
+    const isLoaiSanhInUse = sanhs.some((sanh) => sanh.MaLoaiSanh === id);
+    if (isLoaiSanhInUse) {
       alert("Không thể xóa loại sảnh đang được sử dụng!");
       return;
     }
-    setHallTypes((prev) =>
-      prev.filter((hallType) => hallType.MaLoaiSanh !== MaLoaiSanh)
-    );
+
+    const action = async () => {
+      try {
+        await deleteLoaiSanh(id);
+        setLoaiSanhs((prev) => prev.filter((ls) => ls.MaLoaiSanh !== id));
+      } catch (error: any) {
+        console.error("Error deleting loai sanh:", error.response?.data || error);
+        alert(
+          `Lỗi khi xóa loại sảnh: ${error.response?.data?.error || error.message}`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: "Bạn có chắc chắn muốn xóa loại sảnh này không?",
+      onConfirm: action,
+    });
   };
 
-  // Lọc sảnh
-  const filteredHalls = halls.filter(
-    (hall) =>
-      hall.TenSanh.toLowerCase().includes(hallSearchTerm.toLowerCase()) &&
-      (hallTypeFilter === "" || hall.MaLoaiSanh === Number(hallTypeFilter))
+  const closeConfirmationModal = () => {
+    setConfirmationModal({ isOpen: false, message: "", onConfirm: () => {} });
+  };
+
+  const handleConfirm = () => {
+    confirmationModal.onConfirm();
+    closeConfirmationModal();
+  };
+
+  const filteredSanhs = sanhs.filter(
+    (sanh) =>
+      sanh.TenSanh.toLowerCase().includes(sanhSearchTerm.toLowerCase()) ||
+      sanh.TenLoaiSanh.toLowerCase().includes(sanhSearchTerm.toLowerCase())
+  );
+
+  const filteredLoaiSanhs = loaiSanhs.filter((loaiSanh) =>
+    loaiSanh.TenLoaiSanh.toLowerCase().includes(loaiSanhSearchTerm.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hàng đầu tiên: Tìm kiếm và thêm sảnh */}
+        {/* Phần quản lý sảnh */}
         <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
-            Danh sách sảnh có sẵn
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Danh sách sảnh
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <input
               type="text"
               placeholder="Tìm kiếm sảnh..."
-              value={hallSearchTerm}
-              onChange={(e) => setHallSearchTerm(e.target.value)}
-              className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={sanhSearchTerm}
+              onChange={(e) => setSanhSearchTerm(e.target.value)}
+              className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
             />
             <button
-              onClick={openAddHallModal}
-              className="w-full sm:w-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+              onClick={openAddSanhModal}
+              className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#00152A]"
             >
               Thêm sảnh
             </button>
           </div>
         </div>
 
-        {/* Danh sách sảnh: Thay thế bảng bằng danh sách card trên mobile */}
         <div className="mb-8">
-          {/* Ẩn bảng trên mobile */}
           <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-[#FAFAFA]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Tên sảnh
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Loại sảnh
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Số lượng bàn tối đa
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Số bàn tối đa
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Ghi chú
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ảnh bìa
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Hình ảnh
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                     Hành động
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredHalls.map((hall) => {
-                  const hallType = hallTypes.find(
-                    (ht) => ht.MaLoaiSanh === hall.MaLoaiSanh
-                  );
-                  return (
-                    <tr key={hall.MaSanh}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {hall.TenSanh}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {hallType ? hallType.TenLoaiSanh : "Chưa phân loại"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {hall.SoLuongBanToiDa}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {hall.GhiChu || "Không có ghi chú"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {hall.Cover_Img ? (
-                          <img
-                            src={hall.Cover_Img}
-                            alt={hall.TenSanh}
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        ) : (
-                          "Không có ảnh"
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => openEditHallModal(hall)}
-                          className="text-blue-600 hover:text-blue-800 mr-4"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDeleteHall(hall.MaSanh)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Xóa
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Hiển thị dạng card trên mobile */}
-          <div className="block sm:hidden space-y-4">
-            {filteredHalls.map((hall) => {
-              const hallType = hallTypes.find(
-                (ht) => ht.MaLoaiSanh === hall.MaLoaiSanh
-              );
-              return (
-                <div
-                  key={hall.MaSanh}
-                  className="bg-white shadow-md rounded-lg p-4"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {hall.TenSanh}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Loại:{" "}
-                        {hallType ? hallType.TenLoaiSanh : "Chưa phân loại"}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Số bàn tối đa: {hall.SoLuongBanToiDa}
-                      </p>
-                      <p className="text-sm text-gray-500 line-clamp-2">
-                        Ghi chú: {hall.GhiChu || "Không có ghi chú"}
-                      </p>
-                      {hall.Cover_Img && (
-                        <img
-                          src={hall.Cover_Img}
-                          alt={hall.TenSanh}
-                          className="w-24 h-24 object-cover rounded mt-2"
-                        />
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openEditHallModal(hall)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDeleteHall(hall.MaSanh)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Hàng thứ hai: Tìm kiếm và thêm loại sảnh */}
-        <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
-            Quản lý loại sảnh
-          </h2>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <select
-                value={hallTypeFilter}
-                onChange={(e) => setHallTypeFilter(e.target.value)}
-                className="w-full sm:w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Tất cả loại sảnh</option>
-                {hallTypes.map((hallType) => (
-                  <option
-                    key={hallType.MaLoaiSanh}
-                    value={hallType.MaLoaiSanh || ""}
-                  >
-                    {hallType.TenLoaiSanh}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={openAddHallTypeModal}
-              className="w-full sm:w-auto bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600"
-            >
-              Thêm loại sảnh
-            </button>
-          </div>
-        </div>
-
-        {/* Danh sách loại sảnh: Thay thế bảng bằng danh sách card trên mobile */}
-        <div>
-          {/* Ẩn bảng trên mobile */}
-          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tên loại sảnh
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Đơn giá bàn tối thiểu (VNĐ)
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hành động
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {hallTypes.map((hallType) => (
-                  <tr key={hallType.MaLoaiSanh}>
+                {filteredSanhs.map((sanh) => (
+                  <tr key={sanh.MaSanh}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {hallType.TenLoaiSanh}
+                      {sanh.TenSanh}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {hallType.DonGiaBanToiThieu.toLocaleString("vi-VN")}
+                      {sanh.TenLoaiSanh}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {sanh.SoLuongBanToiDa}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {sanh.GhiChu || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {sanh.AnhURL ? (
+                        <img
+                          src={sanh.AnhURL}
+                          alt={sanh.TenSanh}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      ) : (
+                        "N/A"
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => openEditHallTypeModal(hallType)}
-                        className="text-blue-600 hover:text-blue-800 mr-4"
+                        onClick={() => openEditSanhModal(sanh)}
+                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
                       >
                         Sửa
                       </button>
                       <button
-                        onClick={() =>
-                          handleDeleteHallType(hallType.MaLoaiSanh)
-                        }
-                        className="text-red-600 hover:text-red-800"
+                        onClick={() => handleDeleteSanh(sanh.MaSanh)}
+                        className="text-[#D4B2B2] hover:text-[#B89999]"
                       >
                         Xóa
                       </button>
@@ -496,33 +466,146 @@ function Admin_Hall() {
             </table>
           </div>
 
-          {/* Hiển thị dạng card trên mobile */}
           <div className="block sm:hidden space-y-4">
-            {hallTypes.map((hallType) => (
+            {filteredSanhs.map((sanh) => (
               <div
-                key={hallType.MaLoaiSanh}
-                className="bg-white shadow-md rounded-lg p-4"
+                key={sanh.MaSanh}
+                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-medium text-gray-900">
-                      {hallType.TenLoaiSanh}
+                      {sanh.TenSanh}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Đơn giá:{" "}
-                      {hallType.DonGiaBanToiThieu.toLocaleString("vi-VN")} VNĐ
+                      Loại sảnh: {sanh.TenLoaiSanh}
                     </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Số bàn: {sanh.SoLuongBanToiDa}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Ghi chú: {sanh.GhiChu || "N/A"}
+                    </p>
+                    {sanh.AnhURL && (
+                      <img
+                        src={sanh.AnhURL}
+                        alt={sanh.TenSanh}
+                        className="w-16 h-16 object-cover rounded mt-2"
+                      />
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => openEditHallTypeModal(hallType)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      onClick={() => openEditSanhModal(sanh)}
+                      className="text-[#B8860B] hover:text-[#8B6508] text-sm"
                     >
                       Sửa
                     </button>
                     <button
-                      onClick={() => handleDeleteHallType(hallType.MaLoaiSanh)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      onClick={() => handleDeleteSanh(sanh.MaSanh)}
+                      className="text-[#D4B2B2] hover:text-[#B89999] text-sm"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Phần quản lý loại sảnh */}
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Quản lý loại sảnh
+          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <input
+              type="text"
+              placeholder="Tìm kiếm loại sảnh..."
+              value={loaiSanhSearchTerm}
+              onChange={(e) => setLoaiSanhSearchTerm(e.target.value)}
+              className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
+            />
+            <button
+              onClick={openAddLoaiSanhModal}
+              className="w-full sm:w-auto bg-[#D4B2B2] text-white py-2 px-4 rounded hover:bg-[#B89999]"
+            >
+              Thêm loại sảnh
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tên loại sảnh
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Đơn giá bàn tối thiểu
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredLoaiSanhs.map((loaiSanh) => (
+                  <tr key={loaiSanh.MaLoaiSanh}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {loaiSanh.TenLoaiSanh}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {loaiSanh.DonGiaBanToiThieu.toLocaleString('vi-VN')} VNĐ
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => openEditLoaiSanhModal(loaiSanh)}
+                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDeleteLoaiSanh(loaiSanh.MaLoaiSanh)}
+                        className="text-[#D4B2B2] hover:text-[#B89999]"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="block sm:hidden space-y-4">
+            {filteredLoaiSanhs.map((loaiSanh) => (
+              <div
+                key={loaiSanh.MaLoaiSanh}
+                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {loaiSanh.TenLoaiSanh}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Đơn giá: {loaiSanh.DonGiaBanToiThieu.toLocaleString('vi-VN')} VNĐ
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditLoaiSanhModal(loaiSanh)}
+                      className="text-[#B8860B] hover:text-[#8B6508] text-sm"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLoaiSanh(loaiSanh.MaLoaiSanh)}
+                      className="text-[#D4B2B2] hover:text-[#B89999] text-sm"
                     >
                       Xóa
                     </button>
@@ -534,24 +617,21 @@ function Admin_Hall() {
         </div>
 
         {/* Modal thêm/sửa sảnh */}
-        {isHallModalOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                  transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {isHallEditMode ? "Sửa sảnh" : "Thêm sảnh"}
+        {isSanhModalOpen && (
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-[#D4B2B2] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+              {isSanhEditMode ? "Sửa sảnh" : "Thêm sảnh"}
             </h3>
-            <form onSubmit={handleHallSubmit}>
+            <form onSubmit={handleSanhSubmit}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
                   Tên sảnh
                 </label>
                 <input
                   type="text"
-                  name="TenSanh"
-                  value={hallFormData.TenSanh}
-                  onChange={handleHallInputChange}
+                  name="tenSanh"
+                  value={sanhFormData.tenSanh}
+                  onChange={handleSanhInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                   required
                 />
@@ -561,33 +641,32 @@ function Admin_Hall() {
                   Loại sảnh
                 </label>
                 <select
-                  name="MaLoaiSanh"
-                  value={hallFormData.MaLoaiSanh || ""}
-                  onChange={handleHallInputChange}
+                  name="maLoaiSanh"
+                  value={sanhFormData.maLoaiSanh || ""}
+                  onChange={handleSanhInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  required
                 >
                   <option value="">Chọn loại sảnh</option>
-                  {hallTypes.map((hallType) => (
-                    <option
-                      key={hallType.MaLoaiSanh}
-                      value={hallType.MaLoaiSanh || ""}
-                    >
-                      {hallType.TenLoaiSanh}
+                  {loaiSanhs.map((loai) => (
+                    <option key={loai.MaLoaiSanh} value={loai.MaLoaiSanh}>
+                      {loai.TenLoaiSanh}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Số lượng bàn tối đa
+                  Số bàn tối đa
                 </label>
                 <input
                   type="number"
-                  name="SoLuongBanToiDa"
-                  value={hallFormData.SoLuongBanToiDa}
-                  onChange={handleHallInputChange}
+                  name="soLuongBanToiDa"
+                  value={sanhFormData.soLuongBanToiDa}
+                  onChange={handleSanhInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                   required
+                  min="1"
                 />
               </div>
               <div className="mb-4">
@@ -595,38 +674,38 @@ function Admin_Hall() {
                   Ghi chú
                 </label>
                 <textarea
-                  name="GhiChu"
-                  value={hallFormData.GhiChu}
-                  onChange={handleHallInputChange}
+                  name="ghiChu"
+                  value={sanhFormData.ghiChu || ""}
+                  onChange={handleSanhInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  rows={4}
                 />
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Ảnh bìa
+                  URL hình ảnh
                 </label>
                 <input
                   type="text"
-                  name="Cover_Img"
-                  value={hallFormData.Cover_Img}
-                  onChange={handleHallInputChange}
+                  name="anhURL"
+                  value={sanhFormData.anhURL || ""}
+                  onChange={handleSanhInputChange}
                   className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                  placeholder="Nhập URL ảnh bìa"
                 />
               </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={closeHallModal}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                  onClick={closeSanhModal}
+                  className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                  className="bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#00152A]"
                 >
-                  {isHallEditMode ? "Cập nhật" : "Thêm"}
+                  {isSanhEditMode ? "Cập nhật" : "Thêm"}
                 </button>
               </div>
             </form>
@@ -634,57 +713,83 @@ function Admin_Hall() {
         )}
 
         {/* Modal thêm/sửa loại sảnh */}
-        {isHallTypeModalOpen && (
-          <div
-            className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-gray-300
-                  transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {isHallTypeEditMode ? "Sửa loại sảnh" : "Thêm loại sảnh"}
+        {isLoaiSanhModalOpen && (
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-[#B8860B] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+              {isLoaiSanhEditMode ? "Sửa loại sảnh" : "Thêm loại sảnh"}
             </h3>
-            <form onSubmit={handleHallTypeSubmit}>
+            <form onSubmit={handleLoaiSanhSubmit}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
                   Tên loại sảnh
                 </label>
                 <input
                   type="text"
-                  name="TenLoaiSanh"
-                  value={hallTypeFormData.TenLoaiSanh}
-                  onChange={handleHallTypeInputChange}
-                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50"
+                  name="tenLoaiSanh"
+                  value={loaiSanhFormData.tenLoaiSanh}
+                  onChange={handleLoaiSanhInputChange}
+                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                   required
                 />
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Đơn giá bàn tối thiểu (VNĐ)
+                  Đơn giá bàn tối thiểu
                 </label>
                 <input
                   type="number"
-                  name="DonGiaBanToiThieu"
-                  value={hallTypeFormData.DonGiaBanToiThieu}
-                  onChange={handleHallTypeInputChange}
-                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50"
+                  name="donGiaBanToiThieu"
+                  value={loaiSanhFormData.donGiaBanToiThieu}
+                  onChange={handleLoaiSanhInputChange}
+                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                   required
+                  min="0"
                 />
               </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={closeHallTypeModal}
-                  className="bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                  onClick={closeLoaiSanhModal}
+                  className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600"
+                  className="bg-[#B8860B] text-white py-2 px-4 rounded hover:bg-[#8B6508]"
                 >
-                  {isHallTypeEditMode ? "Cập nhật" : "Thêm"}
+                  {isLoaiSanhEditMode ? "Cập nhật" : "Thêm"}
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Modal xác nhận */}
+        {confirmationModal.isOpen && (
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-sm bg-white rounded-lg p-6 shadow-lg border border-[#D4B2B2] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+              Xác nhận
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              {confirmationModal.message}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={closeConfirmationModal}
+                className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className="bg-[#D4B2B2] text-white py-2 px-4 rounded hover:bg-[#B89999]"
+              >
+                Xác nhận
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -692,4 +797,4 @@ function Admin_Hall() {
   );
 }
 
-export default Admin_Hall;
+export default AdminHall;
