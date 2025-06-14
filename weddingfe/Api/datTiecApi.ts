@@ -73,6 +73,7 @@ export const getAllDatTiec = async (filters: {
 } = {}) => {
   try {
     const response = await axiosInstance.get('/danh-sach', { params: filters });
+    //console.log(response.data);
     return response.data;
   } catch (error) {
     throw new Error((error as Error).message);

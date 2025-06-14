@@ -18,6 +18,7 @@ import {
   updateThucDon,
   deleteThucDon,
 } from "../../Api/thucDonApi"; // Giả sử bạn đã tạo các API này trong monAnApi.ts
+import { getAllDatTiec } from "../../Api/datTiecApi";
 // Định nghĩa interface
 interface Dish {
   MaMonAn: number | null;
