@@ -28,7 +28,7 @@ export const createPhanQuyen = async (data: {
   maNhom: number;
   maChucNang: number;
 }) => {
-  const response = await axiosInstance.post("/tao", data);
+  const response = await axiosInstance.post("/gan-quyen", data);
   return response.data;
 };
 
@@ -40,6 +40,6 @@ export const getPhanQuyenByNhom = async (maNhom: number) => {
 
 // Xóa phân quyền
 export const deletePhanQuyen = async (maNhom: number, maChucNang: number) => {
-  const response = await axiosInstance.delete(`/xoa/${maNhom}/${maChucNang}`);
+  const response = await axiosInstance.delete(`/xoa-quyen/${maNhom}/${maChucNang}`);
   return response.data;
 };
