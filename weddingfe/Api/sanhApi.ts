@@ -82,3 +82,9 @@ export const deleteLoaiSanh = async (id: number) => {
   const response = await axiosInstance.delete(`${LOAI_SANH_URL}/xoa/${id}`);
   return response.data;
 };
+export const getDonGiaBanToiThieu = async (maLoaiSanh: number) => {
+  const response = await axiosInstance.get(
+    `${SANH_URL}/don-gia-ban-toi-thieu/${maLoaiSanh}`
+  );
+  return response.data;
+};

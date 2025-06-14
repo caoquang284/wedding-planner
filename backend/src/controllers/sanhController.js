@@ -113,11 +113,9 @@ const deleteSanh = async (req, res) => {
       .count('MaDatTiec as count')
       .first();
     if (parseInt(datTiecCount.count) > 0) {
-      return res
-        .status(400)
-        .json({
-          error: 'Sảnh đang được sử dụng trong đặt tiệc, không thể xóa',
-        });
+      return res.status(400).json({
+        error: 'Sảnh đang được sử dụng trong đặt tiệc, không thể xóa',
+      });
     }
     await Sanh.delete(id);
     return res.status(200).json({ message: 'Xóa sảnh thành công' });
@@ -128,10 +126,24 @@ const deleteSanh = async (req, res) => {
   }
 };
 
+const getDonGiaBanToiThieuTuMaSanh = async (req, res) => {
+  try {
+    const maSanh = parseInt(req.params.maSanh);
+    const donGiaBanToiThieu = await Sanh.getDonGiaBanToiThieuTuMaSanh(maSanh);
+    console.log(donGiaBanToiThieu);
+    return res.status(200).json(donGiaBanToiThieu);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: 'Lỗi khi lấy đơn giá bàn tối thiểu: ' + error.message });
+  }
+};
+
 export default {
   createSanh,
   getAllSanh,
   getSanh,
   updateSanh,
   deleteSanh,
+  getDonGiaBanToiThieuTuMaSanh,
 };

@@ -258,6 +258,138 @@ const AdminInvoice: React.FC = () => {
     }));
   };
 
+  // Hàm xử lý in
+  const handlePrint = (invoice: HoaDon) => {
+    console.log("Starting print process...");
+    const printContent = document.getElementById("printSection");
+    if (printContent) {
+      console.log(
+        "printSection found, content length:",
+        printContent.innerHTML.length
+      );
+
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow!.document;
+      iframeDoc.open();
+      iframeDoc.write(`
+        <html>
+          <head>
+            <!-- Nhúng Tailwind CSS qua CDN -->
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+                color: #000;
+                margin: 0;
+                padding: 0;
+              }
+              .print-section {
+                max-width: 210mm;
+                margin: 15mm auto;
+                padding: 20px;
+              }
+              /* Áp dụng style từ index.css */
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .print-section, .print-section * {
+                  visibility: visible;
+                }
+                .print-section {
+                  position: static !important;
+                  width: 100% !important;
+                  max-width: 210mm !important;
+                  margin: 15mm auto !important;
+                  padding: 20px !important;
+                  box-shadow: none !important;
+                  overflow: visible !important;
+                }
+                .print\\:hidden {
+                  display: none !important;
+                }
+                .text-gray-600 { color: #4B5563 !important; }
+                .text-[#001F3F] { color: #001F3F !important; }
+                .bg-gray-50 { background-color: #F9FAFB !important; }
+                .text-red-500 { color: #EF4444 !important; }
+                .text-green-600 { color: #16A34A !important; }
+                .shadow-xl, .rounded-lg, .fixed, .z-50, .bg-black\\/30 {
+                  box-shadow: none !important;
+                  border-radius: 0 !important;
+                  position: static !important;
+                  background: none !important;
+                }
+                .grid-cols-1, .grid-cols-2 {
+                  display: grid !important;
+                }
+                .md\\:grid-cols-2 {
+                  grid-template-columns: repeat(2, 1fr) !important;
+                }
+                .bg-gray-50 {
+                  break-inside: avoid !important;
+                  border: 1px solid #E5E7EB !important;
+                }
+                @page {
+                  size: A4;
+                  margin: 15mm;
+                }
+                /* Đảm bảo Tailwind classes */
+                .space-y-2 > * + * { margin-top: 0.5rem !important; }
+                .space-y-3 > * + * { margin-top: 0.75rem !important; }
+                .space-y-8 > * + * { margin-top: 2rem !important; }
+                .py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+                .py-2 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+                .py-3 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+                .p-6 { padding: 1.5rem !important; }
+                .mb-2 { margin-bottom: 0.5rem !important; }
+                .mb-3 { margin-bottom: 0.75rem !important; }
+                .mb-4 { margin-bottom: 1rem !important; }
+                .mt-2 { margin-top: 0.5rem !important; }
+                .mt-6 { margin-top: 1.5rem !important; }
+                .pb-6 { padding-bottom: 1.5rem !important; }
+                .font-medium { font-weight: 500 !important; }
+                .font-semibold { font-weight: 600 !important; }
+                .text-lg { font-size: 1.125rem !important; }
+                .text-xl { font-size: 1.25rem !important; }
+                .text-3xl { font-size: 1.875rem !important; }
+                .font-bold { font-weight: 700 !important; }
+                .border-dashed { border-style: dashed !important; }
+                .border-gray-200 { border-color: #E5E7EB !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-section">${printContent.innerHTML}</div>
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        console.log("Attempting to print iframe...");
+        iframe.contentWindow!.focus();
+        try {
+          iframe.contentWindow!.print();
+          console.log("Print command sent");
+        } catch (error) {
+          console.error("Error calling print:", error);
+        }
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          console.log("Iframe removed");
+        }, 100);
+      }, 100);
+
+      console.log("Printed invoice:", invoice);
+    } else {
+      console.error("printSection not found");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const {
@@ -881,21 +1013,13 @@ const AdminInvoice: React.FC = () => {
                   <label className="block text-sm font-medium">
                     Mã đặt tiệc
                   </label>
-                  <select
+                  <input
+                    type="number"
                     name="MaDatTiec"
                     value={formData.MaDatTiec || ""}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    required
-                  >
-                    <option value="">Chọn đặt tiệc</option>
-                    {datTiecs.map((datTiec) => (
-                      <option key={datTiec.MaDatTiec} value={datTiec.MaDatTiec}>
-                        {datTiec.TenChuRe} & {datTiec.TenCoDau} (
-                        {datTiec.MaDatTiec})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div className="mb-3">
                   <label className="block text-sm font-medium">
@@ -905,7 +1029,7 @@ const AdminInvoice: React.FC = () => {
                     type="date"
                     name="NgayThanhToan"
                     value={formData.NgayThanhToan}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
                   />
@@ -918,7 +1042,7 @@ const AdminInvoice: React.FC = () => {
                     type="number"
                     name="TongTienBan"
                     value={formData.TongTienBan}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
                     min="0"
@@ -932,7 +1056,7 @@ const AdminInvoice: React.FC = () => {
                     type="number"
                     name="TongTienDichVu"
                     value={formData.TongTienDichVu}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
                     min="0"
@@ -946,7 +1070,7 @@ const AdminInvoice: React.FC = () => {
                     type="number"
                     name="TongTienHoaDon"
                     value={formData.TongTienHoaDon}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
                     min="0"
@@ -1002,7 +1126,7 @@ const AdminInvoice: React.FC = () => {
                     type="number"
                     name="TongTienConLai"
                     value={formData.TongTienConLai}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
                     min="0"
@@ -1015,13 +1139,14 @@ const AdminInvoice: React.FC = () => {
                   <select
                     name="TrangThai"
                     value={formData.TrangThai}
-                    onChange={handleInputChange}
+                    disabled={true}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     required
                   >
                     <option value="0">Chưa thanh toán</option>
                     <option value="1">Đã thanh toán</option>
                     <option value="2">Đã hủy</option>
+                    <option value="3">Đang xử lý thêm/hoàn tiền</option>
                   </select>
                 </div>
                 <div className="flex justify-end space-x-2">
@@ -1114,249 +1239,259 @@ const AdminInvoice: React.FC = () => {
                 </svg>
               </button>
 
-              {/* Header */}
-              <div className="text-center border-b pb-6">
-                <h1 className="text-3xl font-bold text-[#001F3F] mb-2">
-                  HÓA ĐƠN ĐẶT TIỆC
-                </h1>
-                <p className="text-gray-600">
-                  Mã hóa đơn: #{selectedInvoice.MaHoaDon}
-                </p>
-              </div>
-
-              <div className="space-y-8 mt-6">
-                {/* Phần 1: Thông tin đặt tiệc */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
-                    1. Thông tin đặt tiệc
-                  </h2>
-
-                  {chiTietDatTiec && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="mb-2">
-                          <span className="text-gray-600">Chú rể:</span>{" "}
-                          <span className="font-medium">
-                            {chiTietDatTiec.TenChuRe}
-                          </span>
-                        </p>
-                        <p className="mb-2">
-                          <span className="text-gray-600">Cô dâu:</span>{" "}
-                          <span className="font-medium">
-                            {chiTietDatTiec.TenCoDau}
-                          </span>
-                        </p>
-                      </div>
-                      <div>
-                        <p className="mb-2">
-                          <span className="text-gray-600">Ngày đãi tiệc:</span>{" "}
-                          <span className="font-medium">
-                            {new Date(
-                              chiTietDatTiec.NgayDaiTiec
-                            ).toLocaleDateString("vi-VN")}
-                          </span>
-                        </p>
-                        <p className="mb-2">
-                          <span className="text-gray-600">Điện thoại:</span>{" "}
-                          <span className="font-medium">
-                            {chiTietDatTiec.DienThoai}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
+              <div id="printSection">
+                {/* Header */}
+                <div className="text-center border-b pb-6">
+                  <h1 className="text-3xl font-bold text-[#001F3F] mb-2">
+                    HÓA ĐƠN ĐẶT TIỆC
+                  </h1>
+                  <p className="text-gray-600">
+                    Mã hóa đơn: #{selectedInvoice.MaHoaDon}
+                  </p>
                 </div>
 
-                {/* Phần 2: Thông tin sảnh và ca */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
-                    2. Thông tin sảnh và ca
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {sanh && (
-                      <div>
-                        <h3 className="font-medium text-lg mb-3">
-                          Thông tin sảnh:
-                        </h3>
-                        <div className="space-y-2">
-                          <p>
-                            <span className="text-gray-600">Tên sảnh:</span>{" "}
-                            <span className="font-medium">{sanh.TenSanh}</span>
-                          </p>
-                          <p>
-                            <span className="text-gray-600">Loại sảnh:</span>{" "}
-                            <span className="font-medium">
-                              {sanh.TenLoaiSanh}
-                            </span>
-                          </p>
-                          <p>
-                            <span className="text-gray-600">
-                              Số lượng bàn:{" "}
-                            </span>{" "}
-                            <span className="font-medium">
-                              {Number(chiTietDatTiec?.SoLuongBan || 0)} bàn
-                            </span>
-                          </p>
-                          <p>
-                            <span className="text-gray-600">
-                              Số bàn dự trữ:{" "}
-                            </span>{" "}
-                            <span className="font-medium">
-                              {Number(chiTietDatTiec?.SoBanDuTru || 0)} bàn
-                            </span>
-                          </p>
+                <div className="space-y-8 mt-6">
+                  {/* Phần 1: Thông tin đặt tiệc */}
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                      1. Thông tin đặt tiệc
+                    </h2>
 
-                          {/* <p>
+                    {chiTietDatTiec && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="mb-2">
+                            <span className="text-gray-600">Chú rể:</span>{" "}
+                            <span className="font-medium">
+                              {chiTietDatTiec.TenChuRe}
+                            </span>
+                          </p>
+                          <p className="mb-2">
+                            <span className="text-gray-600">Cô dâu:</span>{" "}
+                            <span className="font-medium">
+                              {chiTietDatTiec.TenCoDau}
+                            </span>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="mb-2">
+                            <span className="text-gray-600">
+                              Ngày đãi tiệc:
+                            </span>{" "}
+                            <span className="font-medium">
+                              {new Date(
+                                chiTietDatTiec.NgayDaiTiec
+                              ).toLocaleDateString("vi-VN")}
+                            </span>
+                          </p>
+                          <p className="mb-2">
+                            <span className="text-gray-600">Điện thoại:</span>{" "}
+                            <span className="font-medium">
+                              {chiTietDatTiec.DienThoai}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phần 2: Thông tin sảnh và ca */}
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                      2. Thông tin sảnh và ca
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {sanh && (
+                        <div>
+                          <h3 className="font-medium text-lg mb-3">
+                            Thông tin sảnh:
+                          </h3>
+                          <div className="space-y-2">
+                            <p>
+                              <span className="text-gray-600">Tên sảnh:</span>{" "}
+                              <span className="font-medium">
+                                {sanh.TenSanh}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="text-gray-600">Loại sảnh:</span>{" "}
+                              <span className="font-medium">
+                                {sanh.TenLoaiSanh}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="text-gray-600">
+                                Số lượng bàn:{" "}
+                              </span>{" "}
+                              <span className="font-medium">
+                                {Number(chiTietDatTiec?.SoLuongBan || 0)} bàn
+                              </span>
+                            </p>
+                            <p>
+                              <span className="text-gray-600">
+                                Số bàn dự trữ:{" "}
+                              </span>{" "}
+                              <span className="font-medium">
+                                {Number(chiTietDatTiec?.SoBanDuTru || 0)} bàn
+                              </span>
+                            </p>
+
+                            {/* <p>
                             <span className="text-gray-600">Đơn giá:</span>{" "}
                             <span className="font-medium">
                               {formatVND(sanh.DonGia)}
                             </span>
                           </p> */}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {ca && (
-                      <div>
-                        <h3 className="font-medium text-lg mb-3">
-                          Thông tin ca:
-                        </h3>
-                        <div className="space-y-2">
-                          <p>
-                            <span className="text-gray-600">Tên ca:</span>{" "}
-                            <span className="font-medium">{ca.TenCa}</span>
-                          </p>
-                          {/* <p>
+                      )}
+                      {ca && (
+                        <div>
+                          <h3 className="font-medium text-lg mb-3">
+                            Thông tin ca:
+                          </h3>
+                          <div className="space-y-2">
+                            <p>
+                              <span className="text-gray-600">Tên ca:</span>{" "}
+                              <span className="font-medium">{ca.TenCa}</span>
+                            </p>
+                            {/* <p>
                             <span className="text-gray-600">Thời gian:</span>{" "}
                             <span className="font-medium">
                               {ca.ThoiGianBatDau} - {ca.ThoiGianKetThuc}
                             </span>
                           </p> */}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Phần 3: Thực đơn */}
+                  {monAnChiTiet.length > 0 && (
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                      <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                        3. Thực đơn
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {monAnChiTiet.map((monAn) => (
+                          <div
+                            key={monAn.MaMonAn}
+                            className="flex justify-between items-center p-2 border-b border-gray-200"
+                          >
+                            <span className="font-medium">
+                              {monAn.TenMonAn}
+                            </span>
+                            <span className="font-medium">
+                              {formatVND(monAn.DonGiaThoiDiemDat)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Phần 4: Dịch vụ đi kèm */}
+                  {dichVuChiTiet.length > 0 && (
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                      <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                        4. Dịch vụ đi kèm
+                      </h2>
+                      <div className="space-y-3">
+                        {dichVuChiTiet.map((dichVu) => (
+                          <div
+                            key={dichVu.MaDichVu}
+                            className="flex justify-between items-center p-2 border-b border-gray-200"
+                          >
+                            <div>
+                              <span className="font-medium">
+                                {dichVu.TenDichVu}
+                              </span>
+                              <span className="text-gray-500 text-sm ml-2">
+                                ({dichVu.SoLuong} x{" "}
+                                {formatVND(dichVu.DonGiaThoiDiemDat)})
+                              </span>
+                            </div>
+                            <span className="font-medium">
+                              {formatVND(dichVu.ThanhTien)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chi tiết thanh toán */}
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
+                      5. Chi tiết thanh toán
+                    </h2>
+                    {selectedInvoice && (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600">Tổng tiền bàn:</span>
+                          <span className="font-medium">
+                            {formatVND(Number(selectedInvoice.TongTienBan))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600">
+                            Tổng tiền dịch vụ:
+                          </span>
+                          <span className="font-medium">
+                            {formatVND(Number(selectedInvoice.TongTienDichVu))}
+                          </span>
+                        </div>
+                        {selectedInvoice.ApDungQuyDinhPhat && (
+                          <div className="flex justify-between items-center py-2 text-red-500">
+                            <span>
+                              Tiền phạt ({selectedInvoice.PhanTramPhatMotNgay}
+                              %/ngày):
+                            </span>
+                            <span className="font-medium">
+                              {formatVND(Number(selectedInvoice.TongTienPhat))}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600">Tiền đặt cọc:</span>
+                          <span className="font-medium text-green-600">
+                            -
+                            {formatVND(Number(chiTietDatTiec?.TienDatCoc || 0))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-t border-dashed mt-2">
+                          <span className="font-semibold text-[#001F3F]">
+                            Tổng tiền hóa đơn:
+                          </span>
+                          <span className="font-semibold text-[#001F3F]">
+                            {formatVND(Number(selectedInvoice.TongTienHoaDon))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-600">
+                            Số tiền còn lại:
+                          </span>
+                          <span className="font-semibold text-[#001F3F]">
+                            {formatVND(Number(selectedInvoice.TongTienConLai))}
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Phần 3: Thực đơn */}
-                {monAnChiTiet.length > 0 && (
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
-                      3. Thực đơn
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {monAnChiTiet.map((monAn) => (
-                        <div
-                          key={monAn.MaMonAn}
-                          className="flex justify-between items-center p-2 border-b border-gray-200"
-                        >
-                          <span className="font-medium">{monAn.TenMonAn}</span>
-                          <span className="font-medium">
-                            {formatVND(monAn.DonGiaThoiDiemDat)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                {/* Footer */}
+                <div className="border-t pt-6 mt-8">
+                  <div className="text-center text-gray-500 text-sm space-y-2">
+                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
                   </div>
-                )}
-
-                {/* Phần 4: Dịch vụ đi kèm */}
-                {dichVuChiTiet.length > 0 && (
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
-                      4. Dịch vụ đi kèm
-                    </h2>
-                    <div className="space-y-3">
-                      {dichVuChiTiet.map((dichVu) => (
-                        <div
-                          key={dichVu.MaDichVu}
-                          className="flex justify-between items-center p-2 border-b border-gray-200"
-                        >
-                          <div>
-                            <span className="font-medium">
-                              {dichVu.TenDichVu}
-                            </span>
-                            <span className="text-gray-500 text-sm ml-2">
-                              ({dichVu.SoLuong} x{" "}
-                              {formatVND(dichVu.DonGiaThoiDiemDat)})
-                            </span>
-                          </div>
-                          <span className="font-medium">
-                            {formatVND(dichVu.ThanhTien)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Chi tiết thanh toán */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h2 className="text-xl font-semibold text-[#001F3F] mb-4">
-                    5. Chi tiết thanh toán
-                  </h2>
-                  {selectedInvoice && (
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Tổng tiền bàn:</span>
-                        <span className="font-medium">
-                          {formatVND(Number(selectedInvoice.TongTienBan))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">
-                          Tổng tiền dịch vụ:
-                        </span>
-                        <span className="font-medium">
-                          {formatVND(Number(selectedInvoice.TongTienDichVu))}
-                        </span>
-                      </div>
-                      {selectedInvoice.ApDungQuyDinhPhat && (
-                        <div className="flex justify-between items-center py-2 text-red-500">
-                          <span>
-                            Tiền phạt ({selectedInvoice.PhanTramPhatMotNgay}
-                            %/ngày):
-                          </span>
-                          <span className="font-medium">
-                            {formatVND(Number(selectedInvoice.TongTienPhat))}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Tiền đặt cọc:</span>
-                        <span className="font-medium text-green-600">
-                          -{formatVND(Number(chiTietDatTiec?.TienDatCoc || 0))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-3 border-t border-dashed mt-2">
-                        <span className="font-semibold text-[#001F3F]">
-                          Tổng tiền hóa đơn:
-                        </span>
-                        <span className="font-semibold text-[#001F3F]">
-                          {formatVND(Number(selectedInvoice.TongTienHoaDon))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600">Số tiền còn lại:</span>
-                        <span className="font-semibold text-[#001F3F]">
-                          {formatVND(Number(selectedInvoice.TongTienConLai))}
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
-
-              {/* Footer */}
-              <div className="border-t pt-6 mt-8">
-                <div className="text-center text-gray-500 text-sm space-y-2">
-                  <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
-                </div>
-              </div>
-
               {/* Nút in */}
               <div className="flex justify-end mt-6">
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => handlePrint(selectedInvoice)}
                   className="bg-[#001F3F] text-white px-6 py-2 rounded-lg hover:bg-[#003366] transition-colors duration-300 flex items-center"
                 >
                   <svg

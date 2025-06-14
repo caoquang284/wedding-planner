@@ -61,6 +61,18 @@ const DatTiec = {
       .select('SoLuongBanToiDa');
     return soLuongBanToiDa;
   },
+  getMaLoaiSanh: async (maSanh) => {
+    const maLoaiSanh = await knex('SANH')
+      .where({ MaSanh: maSanh })
+      .select('MaLoaiSanh');
+    return maLoaiSanh;
+  },
+  getDonGiaBanToiThieu: async (maLoaiSanh) => {
+    const donGiaBanToiThieu = await knex('LOAISANH')
+      .where({ MaLoaiSanh: maLoaiSanh })
+      .select('DonGiaBanToiThieu');
+    return donGiaBanToiThieu;
+  },
 };
 
 export default DatTiec;

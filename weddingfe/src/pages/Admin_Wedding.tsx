@@ -7,7 +7,11 @@ import {
 } from "../../Api/thucDonApi";
 import { getAllDichVu, getAllLoaiDichVu } from "../../Api/dichVuApi";
 import { getAllMonAn, getAllLoaiMonAn } from "../../Api/monAnApi";
-import { getAllSanh, getAllLoaiSanh } from "../../Api/sanhApi";
+import {
+  getAllSanh,
+  getAllLoaiSanh,
+  getDonGiaBanToiThieu,
+} from "../../Api/sanhApi";
 import { getAllCa } from "../../Api/caApi";
 import {
   createDatTiec,
@@ -647,6 +651,12 @@ function Admin_Wedding() {
           monAnIds: selectedDishes,
         });
       } else {
+        const donGiaBanToiThieu = await getDonGiaBanToiThieu(selectedHall);
+        console.log(donGiaBanToiThieu);
+        if (menuPrice < donGiaBanToiThieu) {
+          alert("Đơn giá thực đơn phải lớn hơn đơn giá bàn tối thiểu");
+          return;
+        }
         // Tạo menu mới cho đặt tiệc này
         const newMenu = await createThucDon({
           tenThucDon: `Menu tiệc cưới - ${formData.TenChuRe} & ${formData.TenCoDau}`,
@@ -713,8 +723,8 @@ function Admin_Wedding() {
               const existingInvoice = await getHoaDonByMaDatTiec(
                 formData.MaDatTiec
               );
-              console.log(existingInvoice);
-              if (existingInvoice) {
+              console.log(existingInvoice.data[0]);
+              if (existingInvoice.data[0]) {
                 const invoice = existingInvoice.data[0]; // Lấy hóa đơn đầu tiên
                 const maHoaDon = invoice.MaHoaDon;
                 const tongTienHoaDon = tongTienBan + tongTienDichVu;
@@ -805,9 +815,19 @@ function Admin_Wedding() {
       onConfirm: async () => {
         try {
           await cancelDatTiec(id);
-          setBookings((prev) =>
-            prev.filter((booking) => booking.MaDatTiec !== id)
-          );
+          const existingInvoice = await getHoaDonByMaDatTiec(id);
+          if (existingInvoice) {
+            const invoice = existingInvoice.data[0]; // Lấy hóa đơn đầu tiên
+            const maHoaDon = invoice.MaHoaDon;
+            const updateData: any = {
+              TrangThai: 2,
+            };
+            console.log(updateData);
+            await updateHoaDon(maHoaDon, updateData);
+          }
+          // setBookings((prev) =>
+          //   prev.filter((booking) => booking.MaDatTiec !== id)
+          // );
         } catch (error: any) {
           alert("Lỗi: " + (error.message || "Không thể xóa đặt tiệc"));
         }
@@ -860,15 +880,131 @@ function Admin_Wedding() {
 
   // Add function to handle print
   const handlePrint = () => {
+    console.log("Starting print process...");
     const printContent = document.getElementById("printSection");
-    const originalContents = document.body.innerHTML;
-
     if (printContent) {
-      document.body.innerHTML = printContent.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContents;
-      // Re-render the component after printing
-      setShowDetailModal(true);
+      console.log(
+        "printSection found, content length:",
+        printContent.innerHTML.length
+      );
+
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow!.document;
+      iframeDoc.open();
+      iframeDoc.write(`
+        <html>
+          <head>
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+                color: #000;
+                margin: 0;
+                padding: 0;
+              }
+              .print-section {
+                max-width: 210mm;
+                min-height: 297mm;
+                margin: 15mm auto;
+                padding: 20mm;
+                background: white;
+              }
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .print-section, .print-section * {
+                  visibility: visible;
+                }
+                .print-section {
+                  position: static !important;
+                  width: 100% !important;
+                  max-width: 210mm !important;
+                  min-height: 297mm !important;
+                  margin: 15mm auto !important;
+                  padding: 20mm !important;
+                  box-shadow: none !important;
+                  overflow: visible !important;
+                }
+                .print\\:hidden {
+                  display: none !important;
+                }
+                .print\\:shadow-none {
+                  box-shadow: none !important;
+                }
+                .text-gray-500 { color: #6B7280 !important; }
+                .text-gray-600 { color: #4B5563 !important; }
+                .text-[#001F3F] { color: #001F3F !important; }
+                .text-[#B8860B] { color: #B8860B !important; }
+                .bg-white { background-color: #FFFFFF !important; }
+                .border { border: 1px solid #E5E7EB !important; }
+                .border-gray-200 { border-color: #E5E7EB !important; }
+                .rounded { border-radius: 0.25rem !important; }
+                .rounded-lg { border-radius: 0.5rem !important; }
+                .shadow-lg, .fixed, .z-50, .bg-black\\/50 {
+                  box-shadow: none !important;
+                  position: static !important;
+                  background: none !important;
+                }
+                .grid-cols-1, .grid-cols-2 {
+                  display: grid !important;
+                }
+                .gap-4 { gap: 1rem !important; }
+                .gap-8 { gap: 2rem !important; }
+                .space-y-2 > * + * { margin-top: 0.5rem !important; }
+                .space-x-2 > * + * { margin-left: 0.5rem !important; }
+                .mb-2 { margin-bottom: 0.5rem !important; }
+                .mb-4 { margin-bottom: 1rem !important; }
+                .mb-8 { margin-bottom: 2rem !important; }
+                .mt-8 { margin-top: 2rem !important; }
+                .p-3 { padding: 0.75rem !important; }
+                .p-4 { padding: 1rem !important; }
+                .p-8 { padding: 2rem !important; }
+                .text-sm { font-size: 0.875rem !important; }
+                .text-lg { font-size: 1.125rem !important; }
+                .text-2xl { font-size: 1.5rem !important; }
+                .font-medium { font-weight: 500 !important; }
+                .font-semibold { font-weight: 600 !important; }
+                .font-bold { font-weight: 700 !important; }
+                @page {
+                  size: A4;
+                  margin: 15mm;
+                }
+                .print-section > div {
+                  break-inside: avoid !important;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-section">${printContent.innerHTML}</div>
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        console.log("Attempting to print iframe...");
+        iframe.contentWindow!.focus();
+        try {
+          iframe.contentWindow!.print();
+          console.log("Print command sent");
+        } catch (error) {
+          console.error("Error calling print:", error);
+        }
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          console.log("Iframe removed");
+        }, 100);
+      }, 100);
+
+      console.log("Printed booking detail:", selectedBookingDetail);
+    } else {
+      console.error("printSection not found");
     }
   };
 
@@ -1305,6 +1441,9 @@ function Admin_Wedding() {
                   <thead className="bg-[#F8F9FA]">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                        Mã Đặt Tiệc
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tên Chú Rể
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
@@ -1338,6 +1477,9 @@ function Admin_Wedding() {
                           booking.DaHuy ? "bg-yellow-100" : ""
                         }`}
                       >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#001F3F]">
+                          {booking.MaDatTiec}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#001F3F]">
                           {booking.TenChuRe}
                         </td>
@@ -2264,7 +2406,7 @@ function Admin_Wedding() {
                   Đóng
                 </button>
                 <button
-                  onClick={handlePrint}
+                  onClick={() => handlePrint()}
                   className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366]"
                 >
                   In

@@ -9,8 +9,9 @@ import {
   createLoaiDichVu,
   updateLoaiDichVu,
   deleteLoaiDichVu,
+  getDichVuByMaDatTiec,
 } from "../../Api/dichVuApi";
-
+import { getAllDatTiec } from "../../Api/datTiecApi";
 interface Service {
   MaDichVu: number;
   TenDichVu: string;
@@ -52,8 +53,8 @@ interface ConfirmationModal {
 }
 
 function Services() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] =
     useState<boolean>(false);
@@ -81,25 +82,45 @@ function Services() {
       onConfirm: () => {},
     }
   );
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [orderedServices, setOrderedServices] = useState<any[]>([]);
 
-  // Load dữ liệu từ backend khi component được render
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
       try {
-        const dichVuList = await getAllDichVu();
-        const loaiDichVuList = await getAllLoaiDichVu();
-        setServices(dichVuList);
-        setCategories(loaiDichVuList);
-      } catch (err) {
-        setError("Lỗi khi lấy dữ liệu: " + (err as any).message);
+        // Fetch services
+        const servicesData = await getAllDichVu();
+        setServices(servicesData);
+
+        // Fetch categories
+        const categoriesData = await getAllLoaiDichVu();
+        setCategories(categoriesData);
+
+        // Fetch wedding bookings and their services
+        const bookingsData = await getAllDatTiec();
+        const servicesPromises = bookingsData.map(async (booking: any) => {
+          const bookingServices = await getDichVuByMaDatTiec(booking.MaDatTiec);
+          return bookingServices.map((service: any) => ({
+            ...service,
+            MaDatTiec: booking.MaDatTiec,
+            NgayDatTiec: booking.NgayDatTiec,
+            TenKhachHang: booking.TenKhachHang,
+          }));
+        });
+        const allOrderedServices = await Promise.all(servicesPromises);
+        setOrderedServices(allOrderedServices.flat());
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Có lỗi xảy ra khi tải dữ liệu!");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -330,17 +351,6 @@ function Services() {
       (categoryFilter === "" || service.MaLoaiDichVu === Number(categoryFilter))
   );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#001F3F] mx-auto mb-4"></div>
-          <p className="text-[#001F3F]">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
@@ -352,6 +362,12 @@ function Services() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
+
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
             Quản lý dịch vụ
@@ -524,6 +540,138 @@ function Services() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Danh sách dịch vụ đã đặt
+          </h2>
+
+          {isLoading ? (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#001F3F] border-t-transparent"></div>
+              <p className="mt-2 text-gray-600">Đang tải dữ liệu...</p>
+            </div>
+          ) : orderedServices.length === 0 ? (
+            <div className="text-center py-4 text-gray-500">
+              Chưa có dịch vụ nào được đặt
+            </div>
+          ) : (
+            <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-[#001F3F]/10">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Tên dịch vụ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Khách hàng
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Ngày đặt tiệc
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Giá (VNĐ)
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Loại dịch vụ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Ảnh
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                      Ghi chú
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {orderedServices.map((service) => (
+                    <tr
+                      key={`${service.MaDatTiec}-${service.MaDichVu}`}
+                      className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                    >
+                      <td className="px-6 py-4 text-sm font-medium text-[#001F3F]">
+                        {service.TenDichVu}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {service.TenKhachHang}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(service.NgayDatTiec).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {formatVND(service.DonGia)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {service.TenLoaiDichVu || "Chưa phân loại"}
+                      </td>
+                      <td className="px-6 py-4">
+                        {service.AnhURL ? (
+                          <img
+                            src={service.AnhURL}
+                            alt={service.TenDichVu}
+                            className="w-16 h-16 object-cover rounded-lg mx-auto"
+                          />
+                        ) : (
+                          <span className="text-gray-500">Không có ảnh</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {service.GhiChu || "Không có ghi chú"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Mobile view for ordered services */}
+          <div className="block sm:hidden space-y-4">
+            {isLoading ? (
+              <div className="text-center py-4">Đang tải dữ liệu...</div>
+            ) : (
+              orderedServices.map((service) => (
+                <div
+                  key={`${service.MaDatTiec}-${service.MaDichVu}`}
+                  className="bg-white shadow-md rounded-lg p-4 border border-gray-100"
+                >
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-lg font-medium text-[#001F3F]">
+                      {service.TenDichVu}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Khách hàng: {service.TenKhachHang}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Ngày đặt tiệc:{" "}
+                      {new Date(service.NgayDatTiec).toLocaleDateString(
+                        "vi-VN"
+                      )}
+                    </p>
+                    <p className="text-sm text-[#B8860B]">
+                      Giá: {formatVND(service.DonGia)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Loại: {service.TenLoaiDichVu || "Chưa phân loại"}
+                    </p>
+                    {service.AnhURL && (
+                      <img
+                        src={service.AnhURL}
+                        alt={service.TenDichVu}
+                        className="w-16 h-16 object-cover rounded-lg mt-2"
+                      />
+                    )}
+                    <p className="text-sm text-gray-500">
+                      Ghi chú: {service.GhiChu || "Không có ghi chú"}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

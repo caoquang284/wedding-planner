@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import DichVu from '../models/DichVu.js';
-
+import DatTiecDichVu from '../models/DatTiecDichVu.js';
 const createDichVu = async (req, res) => {
   try {
     const { tenDichVu, maLoaiDichVu, donGia, ghiChu, anhURL } = req.body;
@@ -87,11 +87,9 @@ const deleteDichVu = async (req, res) => {
     }
     const isUsed = await DichVu.isUsedByDatTiec(id);
     if (isUsed) {
-      return res
-        .status(400)
-        .json({
-          error: 'Không thể xóa dịch vụ đang được sử dụng trong một đặt tiệc',
-        });
+      return res.status(400).json({
+        error: 'Không thể xóa dịch vụ đang được sử dụng trong một đặt tiệc',
+      });
     }
     await DichVu.delete(id);
     return res.status(200).json({ message: 'Xóa dịch vụ thành công' });
@@ -101,6 +99,17 @@ const deleteDichVu = async (req, res) => {
       .json({ error: 'Lỗi khi xóa dịch vụ: ' + error.message });
   }
 };
+const getDichVuByMaDatTiec = async (req, res) => {
+  try {
+    const { maDatTiec } = req.params;
+    const dichVu = await DatTiecDichVu.getByMaDatTiec(maDatTiec);
+    return res.status(200).json(dichVu);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Lỗi khi lấy dịch vụ theo mã đặt tiệc: ' + error.message,
+    });
+  }
+};
 
 export default {
   createDichVu,
@@ -108,4 +117,5 @@ export default {
   getDichVu,
   updateDichVu,
   deleteDichVu,
+  getDichVuByMaDatTiec,
 };

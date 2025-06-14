@@ -41,5 +41,8 @@ router.delete(
   // validation.validateIdParam,
   dichVuController.deleteDichVu
 );
-
+router.get(
+  '/theo-ma-dat-tiec/:maDatTiec',
+  dichVuController.getDichVuByMaDatTiec
+);
 export default router;

@@ -49,6 +49,7 @@ interface Menu {
   orderprice: number;
   dishIds: number[];
   dishNames?: string[];
+  dishPrices?: number[];
   note?: string;
 }
 
@@ -99,6 +100,10 @@ function Menus() {
               dishNames:
                 menuDetail.MonAnList?.map((monAn: any) => monAn.TenMonAn) || [],
               note: menuDetail.GhiChu,
+              dishPrices:
+                menuDetail.MonAnList?.map(
+                  (monAn: any) => monAn.DonGiaThoiDiemDat
+                ) || [],
             };
           })
         );
@@ -595,7 +600,7 @@ function Menus() {
         {/* Hàng đầu tiên: Tìm kiếm và thêm thực đơn */}
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
-            Danh sách thực đơn có sẵn
+            Danh sách thực đơn mẫu
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <input
@@ -614,7 +619,7 @@ function Menus() {
           </div>
         </div>
 
-        {/* Danh sách thực đơn: Thay thế bảng bằng danh sách card trên mobile */}
+        {/* Danh sách thực đơn mẫu */}
         <div className="mb-8">
           {/* Ẩn bảng trên mobile */}
           <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
@@ -642,7 +647,7 @@ function Menus() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMenus.map((menu) => (
+                {filteredMenus.slice(0, 9).map((menu) => (
                   <tr key={menu.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {menu.name}
@@ -681,9 +686,9 @@ function Menus() {
             </table>
           </div>
 
-          {/* Hiển thị dạng card trên mobile */}
+          {/* Hiển thị dạng card trên mobile cho thực đơn mẫu */}
           <div className="block sm:hidden space-y-4">
-            {filteredMenus.map((menu) => (
+            {filteredMenus.slice(0, 9).map((menu) => (
               <div
                 key={menu.id}
                 className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
@@ -695,6 +700,9 @@ function Menus() {
                     </h3>
                     <p className="text-sm text-gray-500">
                       Giá: {formatVND(menu.price)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Giá đặt: {formatVND(menu.orderprice)}
                     </p>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                       Món ăn: {menu.dishNames?.join(", ") || "Chưa có món ăn"}
@@ -718,6 +726,95 @@ function Menus() {
                     >
                       Xóa
                     </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Danh sách thực đơn tiệc cưới */}
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Danh sách thực đơn tiệc cưới
+          </h2>
+        </div>
+
+        <div className="mb-8">
+          {/* Ẩn bảng trên mobile */}
+          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-[#FAFAFA]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Tên thực đơn
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Giá hiện tại (VNĐ)
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Giá tại thời điểm đặt (VNĐ)
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Danh sách món ăn
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Ghi chú
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredMenus.slice(9).map((menu) => (
+                  <tr key={menu.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {menu.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatVND(menu.price)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatVND(menu.orderprice)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <span className="line-clamp-2">
+                        {menu.dishNames?.join(", ") || "Chưa có món ăn"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {menu.note || "Không có ghi chú"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Hiển thị dạng card trên mobile cho thực đơn tiệc cưới */}
+          <div className="block sm:hidden space-y-4">
+            {filteredMenus.slice(9).map((menu) => (
+              <div
+                key={menu.id}
+                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {menu.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Giá: {formatVND(menu.price)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Giá đặt: {formatVND(menu.orderprice)}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      Món ăn: {menu.dishNames?.join(", ") || "Chưa có món ăn"}
+                    </p>
+                    {menu.note && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Ghi chú: {menu.note}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -927,9 +1024,12 @@ function Menus() {
                 </label>
                 <p className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 text-gray-700">
                   {formatVND(
-                    menuFormData.dishIds.reduce((total, dishId) => {
+                    menuFormData.dishIds.reduce((total, dishId, index) => {
                       const dish = dishes.find((d) => d.MaMonAn === dishId);
-                      const dishPrice = dish ? Number(dish.DonGia) : 0;
+                      const menu = menus.find((m) => m.id === menuFormData.id);
+                      const dishPrice =
+                        menu?.dishPrices?.[index] ||
+                        (dish ? Number(dish.DonGia) : 0);
                       if (isNaN(dishPrice)) {
                         console.warn(
                           `Invalid DonGia for dishId ${dishId}:`,
@@ -947,15 +1047,19 @@ function Menus() {
                   Danh sách món ăn
                 </label>
                 <div className="mt-1">
-                  {menuFormData.dishIds.map((dishId) => {
+                  {menuFormData.dishIds.map((dishId, index) => {
                     const dish = dishes.find((d) => d.MaMonAn === dishId);
+                    const menu = menus.find((m) => m.id === menuFormData.id);
+                    const dishPrice =
+                      menu?.dishPrices?.[index] ||
+                      (dish ? Number(dish.DonGia) : 0);
                     return dish ? (
                       <div
                         key={dishId}
                         className="flex items-center gap-2 mb-2"
                       >
                         <span>
-                          {dish.TenMonAn} ({formatVND(dish.DonGia)})
+                          {dish.TenMonAn} ({formatVND(dishPrice)})
                         </span>
                         <button
                           type="button"

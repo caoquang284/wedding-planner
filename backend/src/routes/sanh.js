@@ -41,5 +41,12 @@ router.delete(
   // validation.validateIdParam,
   sanhController.deleteSanh
 );
+router.get(
+  '/don-gia-ban-toi-thieu/:maSanh',
+  // auth,
+  // checkPermission('Quản lý sảnh'),
+  // validation.validateIdParam,
+  sanhController.getDonGiaBanToiThieuTuMaSanh
+);
 
 export default router;

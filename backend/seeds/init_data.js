@@ -1236,7 +1236,7 @@ export async function seed(knex) {
       PhanTramPhatMotNgay: 0.0,
       TongTienPhat: 0.0,
       TongTienConLai: 28000000.0, // 43,000,000 - 15,000,000
-      TrangThai: 1,
+      TrangThai: 0,
     },
     {
       MaHoaDon: 3,
@@ -1262,7 +1262,7 @@ export async function seed(knex) {
       PhanTramPhatMotNgay: 0.0,
       TongTienPhat: 0.0,
       TongTienConLai: 26000000.0, // 39,000,000 - 13,000,000
-      TrangThai: 1,
+      TrangThai: 0,
     },
     {
       MaHoaDon: 5,
@@ -1288,7 +1288,7 @@ export async function seed(knex) {
       PhanTramPhatMotNgay: 0.0,
       TongTienPhat: 0.0,
       TongTienConLai: 29000000.0, // 43,000,000 - 14,000,000
-      TrangThai: 1,
+      TrangThai: 0,
     },
     {
       MaHoaDon: 7,
@@ -1301,7 +1301,7 @@ export async function seed(knex) {
       PhanTramPhatMotNgay: 4.0,
       TongTienPhat: 800000.0, // (20,000,000 * 4% * 1 ngày)
       TongTienConLai: 11800000.0, // 20,000,000 + 800,000 - 9,000,000
-      TrangThai: 2,
+      TrangThai: 0,
     },
     {
       MaHoaDon: 8,
@@ -1314,7 +1314,7 @@ export async function seed(knex) {
       PhanTramPhatMotNgay: 0.0,
       TongTienPhat: 0.0,
       TongTienConLai: 32000000.0, // 48,000,000 - 16,000,000
-      TrangThai: 1,
+      TrangThai: 0,
     },
     {
       MaHoaDon: 9,
@@ -1340,7 +1340,7 @@ export async function seed(knex) {
       PhanTramPhatMotNgay: 0.0,
       TongTienPhat: 0.0,
       TongTienConLai: 23500000.0, // 36,000,000 - 12,500,000
-      TrangThai: 1,
+      TrangThai: 0,
     },
   ]);
   // Đặt lại sequence sau khi chèn dữ liệu
