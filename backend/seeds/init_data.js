@@ -417,13 +417,27 @@ export async function seed(knex) {
   ]);
 
   // Đặt lại sequence sau khi chèn dữ liệu
-  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 11)'); // Sau MaChucNang: 11
-  await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 1)'); // Sau MaNhom: 1
-  await knex.raw('SELECT setval(\'"NGUOIDUNG_MaNguoiDung_seq"\', 1)'); // Sau MaNguoiDung: 1
-  await knex.raw('SELECT setval(\'"LOAISANH_MaLoaiSanh_seq"\', 5)'); // Sau MaLoaiSanh: 5
-  await knex.raw('SELECT setval(\'"CA_MaCa_seq"\', 2)'); // Sau MaCa: 2
-  await knex.raw('SELECT setval(\'"LOAIDICHVU_MaLoaiDichVu_seq"\', 5)'); // Sau MaLoaiDichVu: 5
-  await knex.raw('SELECT setval(\'"DICHVU_MaDichVu_seq"\', 20)'); // Sau MaDichVu: 20
+  await knex.raw(
+    `SELECT setval('"CHUCNANG_MaChucNang_seq"', (SELECT COALESCE(MAX("MaChucNang"), 0) + 1 FROM "CHUCNANG"))`
+  );
+  await knex.raw(
+    `SELECT setval('"NHOMNGUOIDUNG_MaNhom_seq"', (SELECT COALESCE(MAX("MaNhom"), 0) + 1 FROM "NHOMNGUOIDUNG"))`
+  );
+  await knex.raw(
+    `SELECT setval('"NGUOIDUNG_MaNguoiDung_seq"', (SELECT COALESCE(MAX("MaNguoiDung"), 0) + 1 FROM "NGUOIDUNG"))`
+  );
+  await knex.raw(
+    `SELECT setval('"LOAISANH_MaLoaiSanh_seq"', (SELECT COALESCE(MAX("MaLoaiSanh"), 0) + 1 FROM "LOAISANH"))`
+  );
+  await knex.raw(
+    `SELECT setval('"CA_MaCa_seq"', (SELECT COALESCE(MAX("MaCa"), 0) + 1 FROM "CA"))`
+  );
+  await knex.raw(
+    `SELECT setval('"LOAIDICHVU_MaLoaiDichVu_seq"', (SELECT COALESCE(MAX("MaLoaiDichVu"), 0) + 1 FROM "LOAIDICHVU"))`
+  );
+  await knex.raw(
+    `SELECT setval('"DICHVU_MaDichVu_seq"', (SELECT COALESCE(MAX("MaDichVu"), 0) + 1 FROM "DICHVU"))`
+  );
 
   // 1. Seed bảng LOAIMONAN
   const loaiMonAnData = [
