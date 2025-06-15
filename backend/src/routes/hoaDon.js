@@ -50,5 +50,13 @@ router.delete(
   // validation.validateIdParam,
   hoaDonController.deleteHoaDon
 );
+// Lấy hóa đơn theo mã đặt tiệc
+router.get(
+  '/dat-tiec/:maDatTiec',
+  // auth,
+  // checkPermission(20), // Quyền xem hóa đơn
+  // validation.validateIdParam, // Kiểm tra maDatTiec là số
+  hoaDonController.getHoaDonByMaDatTiec
+);
 
 export default router;

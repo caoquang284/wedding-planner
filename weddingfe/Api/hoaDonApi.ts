@@ -53,3 +53,9 @@ export const deleteHoaDon = async (id: number) => {
   const response = await axiosInstance.delete(`/xoa/${id}`);
   return response.data;
 };
+
+// Lấy hóa đơn theo mã đặt tiệc
+export const getHoaDonByMaDatTiec = async (maDatTiec: number) => {
+  const response = await axiosInstance.get(`/dat-tiec/${maDatTiec}`);
+  return response.data;
+};

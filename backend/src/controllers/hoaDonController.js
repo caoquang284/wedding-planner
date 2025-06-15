@@ -58,7 +58,34 @@ const getHoaDon = async (req, res) => {
     return res.status(404).json({ error: error.message });
   }
 };
+// Lấy hóa đơn theo mã đặt tiệc
+const getHoaDonByMaDatTiec = async (req, res) => {
+  try {
+    const { maDatTiec } = req.params;
+    console.log('getHoaDonByMaDatTiecController - MaDatTiec:', maDatTiec);
 
+    // Chuyển maDatTiec thành số nguyên
+    const parsedMaDatTiec = parseInt(maDatTiec, 10);
+    if (isNaN(parsedMaDatTiec)) {
+      return res
+        .status(400)
+        .json({ error: 'Mã đặt tiệc không hợp lệ, phải là số' });
+    }
+
+    // Gọi hàm từ model
+    const hoaDons = await HoaDon.findByMaDatTiec(parsedMaDatTiec);
+    return res.status(200).json({ data: hoaDons });
+  } catch (error) {
+    console.error('getHoaDonByMaDatTiecController - Error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    if (error.message.includes('Mã đặt tiệc không tồn tại')) {
+      return res.status(404).json({ error: error.message });
+    }
+    return res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
+};
 // Sửa hóa đơn
 const updateHoaDon = async (req, res) => {
   try {
@@ -148,4 +175,5 @@ export default {
   getHoaDon,
   updateHoaDon,
   deleteHoaDon,
+  getHoaDonByMaDatTiec,
 };

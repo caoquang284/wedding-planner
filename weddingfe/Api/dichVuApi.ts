@@ -77,3 +77,9 @@ export const deleteLoaiDichVu = async (id: number) => {
   const response = await axiosInstance.delete(`${LOAI_DICH_VU_URL}/xoa/${id}`);
   return response.data;
 };
+export const getDichVuByMaDatTiec = async (maDatTiec: number) => {
+  const response = await axiosInstance.get(
+    `/theo-ma-dat-tiec/${maDatTiec}`
+  );
+  return response.data;
+};

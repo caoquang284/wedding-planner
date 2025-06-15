@@ -50,7 +50,22 @@ const DatTiec = {
     return datTiec;
   },
   delete: async (id) => {
-    return await knex('DATTIEC').where({ MaDatTiec: id }).delete();
+    return await knex('DATTIEC')
+      .where({ MaDatTiec: id })
+      .update({ DaHuy: true });
+  },
+
+  getSoLuongBanToiDa: async (maSanh) => {
+    const soLuongBanToiDa = await knex('SANH')
+      .where({ MaSanh: maSanh })
+      .select('SoLuongBanToiDa');
+    return soLuongBanToiDa;
+  },
+  getMaLoaiSanh: async (maSanh) => {
+    const maLoaiSanh = await knex('SANH')
+      .where({ MaSanh: maSanh })
+      .select('MaLoaiSanh');
+    return maLoaiSanh;
   },
 };
 

@@ -7,15 +7,24 @@ import {
 } from "../../Api/thucDonApi";
 import { getAllDichVu, getAllLoaiDichVu } from "../../Api/dichVuApi";
 import { getAllMonAn, getAllLoaiMonAn } from "../../Api/monAnApi";
-import { getAllSanh, getAllLoaiSanh } from "../../Api/sanhApi";
+import {
+  getAllSanh,
+  getAllLoaiSanh,
+  getDonGiaBanToiThieu,
+} from "../../Api/sanhApi";
 import { getAllCa } from "../../Api/caApi";
 import {
   createDatTiec,
   getAllDatTiec,
   updateDatTiec,
   deleteDatTiec,
+  cancelDatTiec,
 } from "../../Api/datTiecApi";
-import { createHoaDon } from "../../Api/hoaDonApi";
+import {
+  createHoaDon,
+  updateHoaDon,
+  getHoaDonByMaDatTiec,
+} from "../../Api/hoaDonApi";
 
 // Interface cho món ăn
 interface IMonAn {
@@ -27,12 +36,12 @@ interface IMonAn {
   GhiChu?: string;
   AnhURL?: string;
 }
-
 // Interface cho thực đơn
 interface IThucDon {
   MaThucDon: number;
   TenThucDon: string;
   DonGiaHienTai: number;
+  DonGiaThoiDiemDat: number;
   GhiChu?: string;
   Cover_Img?: string;
   MonAnList?: IMonAn[];
@@ -59,6 +68,7 @@ interface IDatTiec {
   MaThucDon?: number;
   DichVus?: { MaDichVu: number; SoLuong: number; DonGiaThoiDiemDat: number }[];
   MonAns?: number[];
+  DaHuy?: boolean;
 }
 
 // Interface cho loại sảnh
@@ -183,6 +193,7 @@ function Admin_Wedding() {
     MaThucDon: number;
     TenThucDon: string;
     DonGiaHienTai: number;
+    DonGiaThoiDiemDat: number;
     MonAnList: IMonAn[];
   } | null>(null);
 
@@ -230,7 +241,7 @@ function Admin_Wedding() {
         // Load menus
         setIsLoadingMenus(true);
         const menusData = await getAllThucDon();
-        const limitedMenusData = menusData.slice(0, 6); // Lấy 6 bản ghi đầu tiên
+        const limitedMenusData = menusData.slice(0, 9); // Lấy 6 bản ghi đầu tiên
         const menusWithDetails = await Promise.all(
           limitedMenusData.map(async (menu: IThucDon) => {
             const menuDetail = await getThucDonById(menu.MaThucDon);
@@ -268,6 +279,7 @@ function Admin_Wedding() {
         // Load bookings
         setIsLoadingBookings(true);
         const bookingsData = await getAllDatTiec();
+        console.log(bookingsData);
         setBookings(bookingsData);
         setIsLoadingBookings(false);
 
@@ -365,6 +377,7 @@ function Admin_Wedding() {
           MaThucDon: menuDetail.MaThucDon,
           TenThucDon: menuDetail.TenThucDon,
           DonGiaHienTai: menuDetail.DonGiaHienTai,
+          DonGiaThoiDiemDat: menuDetail.DonGiaThoiDiemDat,
           MonAnList: menuDetail.MonAnList || [],
         });
       }
@@ -383,7 +396,22 @@ function Admin_Wedding() {
       setSelectedHallType(hall ? hall.MaLoaiSanh : null);
       setSelectedHall(booking.MaSanh);
       setSelectedCa(booking.MaCa);
-      setSelectedServices(booking.DichVus || []);
+
+      // Map the selected services with their full details from apiServices
+      const mappedServices = (booking.DichVus || []).map((service) => {
+        const fullService = apiServices.find(
+          (s) => s.MaDichVu === service.MaDichVu
+        );
+        return {
+          ...service,
+          TenDichVu: fullService?.TenDichVu || "",
+          MaLoaiDichVu: fullService?.MaLoaiDichVu || 0,
+          DonGia: fullService?.DonGia || 0,
+          GhiChu: fullService?.GhiChu || "",
+          AnhURL: fullService?.AnhURL || "",
+        };
+      });
+      setSelectedServices(mappedServices);
       setSelectedServiceType(null);
       setShowWizard(true);
     } catch (error) {
@@ -559,6 +587,7 @@ function Admin_Wedding() {
       MaThucDon: Date.now(), // Temporary ID
       TenThucDon: customMenuName,
       DonGiaHienTai: totalPrice,
+      DonGiaThoiDiemDat: totalPrice,
       MonAnList: selectedDishes.map((id) => {
         const dish = apiDishes.find((d) => d.MaMonAn === id);
         return {
@@ -582,62 +611,29 @@ function Admin_Wedding() {
   // Modify handleSubmit to create the actual menu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate dữ liệu
-    const tienDatCocNumber = Number(formData.TienDatCoc);
-    const soLuongBan = Number(formData.SoLuongBan);
-    const soBanDuTru = Number(formData.SoBanDuTru);
-    const tienDatCoc = Number(formData.TienDatCoc);
-
-    // Additional date validation
-    if (!formData.NgayDaiTiec) {
-      alert("Vui lòng chọn ngày đặt tiệc");
-      return;
-    }
-
-    if (isNaN(tienDatCocNumber) || tienDatCocNumber < 0) {
-      alert("Tiền đặt cọc phải là số không âm");
-      return;
-    }
-    if (isNaN(soLuongBan) || soLuongBan <= 0) {
-      alert("Số lượng bàn phải là số dương");
-      return;
-    }
-    if (isNaN(soBanDuTru) || soBanDuTru < 0) {
-      alert("Số lượng bàn dự trữ phải là số không âm");
-      return;
-    }
-    if (!selectedHall) {
-      alert("Vui lòng chọn sảnh");
-      return;
-    }
-    if (selectedDishes.length === 0) {
-      alert("Vui lòng chọn ít nhất một món ăn");
-      return;
-    }
-    if (selectedServices.length === 0) {
-      alert("Vui lòng chọn ít nhất một dịch vụ");
-      return;
-    }
-    const selectedHallData = halls.find((hall) => hall.MaSanh === selectedHall);
-    if (
-      selectedHallData &&
-      soLuongBan + soBanDuTru > selectedHallData.SoLuongBanToiDa
-    ) {
-      alert("Tổng số bàn vượt quá sức chứa của sảnh");
-      return;
-    }
-    if (isNaN(tienDatCoc) || tienDatCoc < minDeposit) {
-      alert(
-        `Tiền đặt cọc phải ít nhất ${minDeposit.toLocaleString(
-          "vi-VN"
-        )} VNĐ (30% tổng tiền).`
-      );
-      setFormData((prev) => ({ ...prev, TienDatCoc: minDeposit.toString() }));
-      return;
-    }
-
     try {
+      // Validate form data
+      if (
+        !formData.TenChuRe ||
+        !formData.TenCoDau ||
+        !formData.DienThoai ||
+        !formData.NgayDaiTiec
+      ) {
+        alert("Vui lòng điền đầy đủ thông tin!");
+        return;
+      }
+
+      // Validate required fields
+      if (!selectedHall || !selectedCa) {
+        alert("Vui lòng chọn sảnh và ca");
+        return;
+      }
+
+      // Validate menu selection
+      if (!selectedMenu) {
+        alert("Vui lòng chọn thực đơn");
+        return;
+      }
       let menuId = selectedMenu;
 
       // Tính tổng giá trị menu mới
@@ -658,6 +654,12 @@ function Admin_Wedding() {
           monAnIds: selectedDishes,
         });
       } else {
+        const donGiaBanToiThieu = await getDonGiaBanToiThieu(selectedHall);
+        console.log(donGiaBanToiThieu);
+        if (menuPrice < donGiaBanToiThieu) {
+          alert("Đơn giá thực đơn phải lớn hơn đơn giá bàn tối thiểu");
+          return;
+        }
         // Tạo menu mới cho đặt tiệc này
         const newMenu = await createThucDon({
           tenThucDon: `Menu tiệc cưới - ${formData.TenChuRe} & ${formData.TenCoDau}`,
@@ -667,29 +669,23 @@ function Admin_Wedding() {
         });
         menuId = newMenu.MaThucDon;
       }
-
-      // Ensure menuId is a number
-      if (!menuId) {
-        throw new Error("Không thể tạo hoặc cập nhật thực đơn");
-      }
-
-      // Prepare booking data
       const datTiecData = {
         tenChuRe: formData.TenChuRe,
         tenCoDau: formData.TenCoDau,
         dienThoai: formData.DienThoai,
-        ngayDaiTiec: new Date(formData.NgayDaiTiec).toISOString(),
-        maCa: selectedCa || 1,
-        maSanh: selectedHall,
+        ngayDaiTiec: formData.NgayDaiTiec,
         soLuongBan: Number(formData.SoLuongBan),
         soBanDuTru: Number(formData.SoBanDuTru),
         tienDatCoc: Number(formData.TienDatCoc),
-        maThucDon: menuId, // Now menuId is guaranteed to be a number
+        maSanh: selectedHall,
+        maCa: selectedCa,
+        maThucDon: menuId,
         dichVus: selectedServices.map((service) => ({
           maDichVu: service.MaDichVu,
           soLuong: service.SoLuong,
           donGiaThoiDiemDat: service.DonGiaThoiDiemDat,
         })),
+        monAns: selectedDishes,
       };
 
       setConfirmationModal({
@@ -701,73 +697,110 @@ function Admin_Wedding() {
           try {
             let newBookingId;
             if (isEditMode && formData.MaDatTiec) {
-              const updatedBooking = await updateDatTiec(
-                formData.MaDatTiec,
-                datTiecData
-              );
-              setBookings((prev) =>
-                prev.map((booking) =>
-                  booking.MaDatTiec === formData.MaDatTiec
-                    ? {
-                        ...booking,
-                        ...updatedBooking,
-                        MonAns: selectedDishes,
-                        DichVus: selectedServices,
-                      }
-                    : booking
-                )
-              );
+              // Update existing booking
+              await updateDatTiec(formData.MaDatTiec, datTiecData);
               newBookingId = formData.MaDatTiec;
             } else {
+              // Create new booking
               const newBooking = await createDatTiec(datTiecData);
-              setBookings((prev) => [
-                ...prev,
-                {
-                  ...newBooking,
-                  MonAns: selectedDishes,
-                  DichVus: selectedServices,
-                },
-              ]);
               newBookingId = newBooking.MaDatTiec;
             }
 
-            // Create invoice
+            // Calculate totals for invoice
             const tongTienBan =
               selectedDishes.reduce((total, dishId) => {
-                const dish = dishes.find((d) => d.id === dishId);
-                return total + (dish && dish.dongia ? Number(dish.dongia) : 0);
+                const dish = apiDishes.find((d) => d.MaMonAn === dishId);
+                return total + (dish && dish.DonGia ? Number(dish.DonGia) : 0);
               }, 0) *
               ((Number(formData.SoLuongBan) || 0) +
                 (Number(formData.SoBanDuTru) || 0));
 
             const tongTienDichVu = selectedServices.reduce(
               (total, service) =>
-                total +
-                (Number(service.SoLuong) || 1) *
-                  (Number(service.DonGiaThoiDiemDat) || 0),
+                total + service.SoLuong * service.DonGiaThoiDiemDat,
               0
             );
 
-            const tongTienHoaDon = tongTienBan + tongTienDichVu;
-            const tienDatCoc = Number(formData.TienDatCoc) || 0;
-            const tongTienConLai = tongTienHoaDon - tienDatCoc;
+            // Get existing invoice if in edit mode
+            if (isEditMode && formData.MaDatTiec) {
+              const existingInvoice = await getHoaDonByMaDatTiec(
+                formData.MaDatTiec
+              );
+              console.log(existingInvoice.data[0]);
+              if (existingInvoice.data[0]) {
+                const invoice = existingInvoice.data[0]; // Lấy hóa đơn đầu tiên
+                const maHoaDon = invoice.MaHoaDon;
+                const tongTienHoaDon = tongTienBan + tongTienDichVu;
+                const tongTienConLai =
+                  tongTienHoaDon - Number(formData.TienDatCoc);
+                // Update existing invoice
+                const updateData: any = {
+                  TongTienConLai: tongTienConLai,
+                  TongTienBan: tongTienBan,
+                  TongTienDichVu: tongTienDichVu,
+                  TongTienHoaDon: tongTienHoaDon,
+                };
 
-            const hoaDonData = {
-              MaDatTiec: newBookingId,
-              NgayThanhToan: new Date().toISOString().split("T")[0],
-              TongTienBan: tongTienBan,
-              TongTienDichVu: tongTienDichVu,
-              TongTienHoaDon: tongTienHoaDon,
-              ApDungQuyDinhPhat: false,
-              PhanTramPhatMotNgay: 0,
-              TongTienPhat: 0,
-              TongTienConLai: tongTienConLai,
-              TrangThai: 0,
-            };
+                if (existingInvoice.data[0].TrangThai === 1) {
+                  // If invoice is paid, calculate remaining amount
+                  const diffTienBan = Number(
+                    tongTienBan - existingInvoice.data[0].TongTienBan
+                  );
+                  const diffTienDichVu = Number(
+                    tongTienDichVu - existingInvoice.data[0].TongTienDichVu
+                  );
+                  updateData.TongTienConLai = Number(
+                    diffTienBan + diffTienDichVu
+                  );
+                  updateData.TrangThai = 3;
+                }
+                console.log(updateData);
+                await updateHoaDon(maHoaDon, updateData);
+              }
+            } else {
+              const tongTienHoaDon = tongTienBan + tongTienDichVu;
+              const tienDatCoc = Number(formData.TienDatCoc) || 0;
+              const tongTienConLai = tongTienHoaDon - tienDatCoc;
+              // Create new invoice
+              await createHoaDon({
+                MaDatTiec: newBookingId,
+                NgayThanhToan: formData.NgayDaiTiec,
+                TongTienBan: tongTienBan,
+                TongTienDichVu: tongTienDichVu,
+                TongTienHoaDon: tongTienBan + tongTienDichVu,
+                ApDungQuyDinhPhat: false,
+                PhanTramPhatMotNgay: 0,
+                TongTienPhat: 0,
+                TongTienConLai: tongTienConLai,
+                TrangThai: 0,
+              });
+            }
 
-            await createHoaDon(hoaDonData);
+            // Update bookings list
+            setBookings((prev) =>
+              prev.map((booking) =>
+                booking.MaDatTiec === newBookingId
+                  ? {
+                      ...booking,
+                      ...datTiecData,
+                      MaDatTiec: newBookingId,
+                    }
+                  : booking
+              )
+            );
+
+            // Close wizard and reset form
             closeWizard();
-            alert(isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
+            setFormData({
+              MaDatTiec: null,
+              TenChuRe: "",
+              TenCoDau: "",
+              DienThoai: "",
+              NgayDaiTiec: "",
+              SoLuongBan: "",
+              SoBanDuTru: "",
+              TienDatCoc: "",
+            });
           } catch (error: any) {
             alert("Lỗi: " + (error.message || "Không thể lưu đặt tiệc"));
           }
@@ -784,10 +817,20 @@ function Admin_Wedding() {
       message: "Bạn có chắc chắn muốn xóa đặt tiệc này?",
       onConfirm: async () => {
         try {
-          await deleteDatTiec(id);
-          setBookings((prev) =>
-            prev.filter((booking) => booking.MaDatTiec !== id)
-          );
+          await cancelDatTiec(id);
+          const existingInvoice = await getHoaDonByMaDatTiec(id);
+          if (existingInvoice) {
+            const invoice = existingInvoice.data[0]; // Lấy hóa đơn đầu tiên
+            const maHoaDon = invoice.MaHoaDon;
+            const updateData: any = {
+              TrangThai: 2,
+            };
+            console.log(updateData);
+            await updateHoaDon(maHoaDon, updateData);
+          }
+          // setBookings((prev) =>
+          //   prev.filter((booking) => booking.MaDatTiec !== id)
+          // );
         } catch (error: any) {
           alert("Lỗi: " + (error.message || "Không thể xóa đặt tiệc"));
         }
@@ -840,15 +883,131 @@ function Admin_Wedding() {
 
   // Add function to handle print
   const handlePrint = () => {
+    console.log("Starting print process...");
     const printContent = document.getElementById("printSection");
-    const originalContents = document.body.innerHTML;
-
     if (printContent) {
-      document.body.innerHTML = printContent.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContents;
-      // Re-render the component after printing
-      setShowDetailModal(true);
+      console.log(
+        "printSection found, content length:",
+        printContent.innerHTML.length
+      );
+
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow!.document;
+      iframeDoc.open();
+      iframeDoc.write(`
+        <html>
+          <head>
+            <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+                color: #000;
+                margin: 0;
+                padding: 0;
+              }
+              .print-section {
+                max-width: 210mm;
+                min-height: 297mm;
+                margin: 15mm auto;
+                padding: 20mm;
+                background: white;
+              }
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .print-section, .print-section * {
+                  visibility: visible;
+                }
+                .print-section {
+                  position: static !important;
+                  width: 100% !important;
+                  max-width: 210mm !important;
+                  min-height: 297mm !important;
+                  margin: 15mm auto !important;
+                  padding: 20mm !important;
+                  box-shadow: none !important;
+                  overflow: visible !important;
+                }
+                .print\\:hidden {
+                  display: none !important;
+                }
+                .print\\:shadow-none {
+                  box-shadow: none !important;
+                }
+                .text-gray-500 { color: #6B7280 !important; }
+                .text-gray-600 { color: #4B5563 !important; }
+                .text-[#001F3F] { color: #001F3F !important; }
+                .text-[#B8860B] { color: #B8860B !important; }
+                .bg-white { background-color: #FFFFFF !important; }
+                .border { border: 1px solid #E5E7EB !important; }
+                .border-gray-200 { border-color: #E5E7EB !important; }
+                .rounded { border-radius: 0.25rem !important; }
+                .rounded-lg { border-radius: 0.5rem !important; }
+                .shadow-lg, .fixed, .z-50, .bg-black\\/50 {
+                  box-shadow: none !important;
+                  position: static !important;
+                  background: none !important;
+                }
+                .grid-cols-1, .grid-cols-2 {
+                  display: grid !important;
+                }
+                .gap-4 { gap: 1rem !important; }
+                .gap-8 { gap: 2rem !important; }
+                .space-y-2 > * + * { margin-top: 0.5rem !important; }
+                .space-x-2 > * + * { margin-left: 0.5rem !important; }
+                .mb-2 { margin-bottom: 0.5rem !important; }
+                .mb-4 { margin-bottom: 1rem !important; }
+                .mb-8 { margin-bottom: 2rem !important; }
+                .mt-8 { margin-top: 2rem !important; }
+                .p-3 { padding: 0.75rem !important; }
+                .p-4 { padding: 1rem !important; }
+                .p-8 { padding: 2rem !important; }
+                .text-sm { font-size: 0.875rem !important; }
+                .text-lg { font-size: 1.125rem !important; }
+                .text-2xl { font-size: 1.5rem !important; }
+                .font-medium { font-weight: 500 !important; }
+                .font-semibold { font-weight: 600 !important; }
+                .font-bold { font-weight: 700 !important; }
+                @page {
+                  size: A4;
+                  margin: 15mm;
+                }
+                .print-section > div {
+                  break-inside: avoid !important;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-section">${printContent.innerHTML}</div>
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        console.log("Attempting to print iframe...");
+        iframe.contentWindow!.focus();
+        try {
+          iframe.contentWindow!.print();
+          console.log("Print command sent");
+        } catch (error) {
+          console.error("Error calling print:", error);
+        }
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          console.log("Iframe removed");
+        }, 100);
+      }, 100);
+
+      console.log("Printed booking detail:", selectedBookingDetail);
+    } else {
+      console.error("printSection not found");
     }
   };
 
@@ -952,11 +1111,7 @@ function Admin_Wedding() {
 
     const menu = tempMenu || apiMenus.find((m) => m.MaThucDon === selectedMenu);
     if (!menu) return null;
-
-    const totalPrice = selectedDishes.reduce((total, dishId) => {
-      const dish = apiDishes.find((d) => d.MaMonAn === dishId);
-      return total + (dish ? Number(dish.DonGia) : 0);
-    }, 0);
+    const totalPrice = menu.DonGiaThoiDiemDat || 0;
 
     return (
       <div className="mb-8">
@@ -964,78 +1119,36 @@ function Admin_Wedding() {
           Thực Đơn Hiện Tại
         </h4>
         <div className="grid grid-cols-1 gap-6">
+          {/* Chi tiết menu */}
           <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
             <h5 className="text-lg font-medium text-[#001F3F] mb-2">
               {menu.TenThucDon}
             </h5>
             <p className="text-sm text-[#001F3F] mb-2">
-              Tổng đơn giá hiện tại: {formatVND(totalPrice)}
+              Tổng đơn giá tại thời điểm đặt: {formatVND(totalPrice)}
             </p>
-            <div className="mt-6">
+            <div className="mt-4">
               <h5 className="text-sm font-medium text-[#001F3F] mb-3">
-                Danh sách món ăn
+                Danh sách món ăn trong thực đơn
               </h5>
-              <div className="border rounded-lg p-4 bg-white shadow-sm">
-                {apiDishTypes.map((category) => (
-                  <div key={category.MaLoaiMonAn} className="mb-4">
-                    <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
-                      {category.TenLoaiMonAn}
-                    </h6>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {apiDishes
-                        .filter(
-                          (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
-                        )
-                        .map((dish) => (
+              <div className="border rounded-lg p-4 bg-gray-50">
+                {apiDishTypes.map((category) => {
+                  const categoryDishes = menu.MonAnList?.filter(
+                    (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
+                  );
+                  if (!categoryDishes?.length) return null;
+
+                  return (
+                    <div key={category.MaLoaiMonAn} className="mb-4">
+                      <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
+                        {category.TenLoaiMonAn}
+                      </h6>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {categoryDishes.map((dish) => (
                           <div
                             key={dish.MaMonAn}
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                            className="flex items-start gap-3 p-3 border rounded-lg bg-white"
                           >
-                            <input
-                              type="checkbox"
-                              checked={selectedDishes.includes(dish.MaMonAn)}
-                              onChange={(e) => {
-                                const newSelectedDishes = e.target.checked
-                                  ? [...selectedDishes, dish.MaMonAn]
-                                  : selectedDishes.filter(
-                                      (id) => id !== dish.MaMonAn
-                                    );
-                                setSelectedDishes(newSelectedDishes);
-
-                                // Update temp menu
-                                if (tempMenu) {
-                                  const newTotalPrice =
-                                    newSelectedDishes.reduce(
-                                      (total, dishId) => {
-                                        const dish = apiDishes.find(
-                                          (d) => d.MaMonAn === dishId
-                                        );
-                                        return (
-                                          total +
-                                          (dish ? Number(dish.DonGia) : 0)
-                                        );
-                                      },
-                                      0
-                                    );
-
-                                  setTempMenu({
-                                    ...tempMenu,
-                                    DonGiaHienTai: newTotalPrice,
-                                    MonAnList: newSelectedDishes
-                                      .map((id) => {
-                                        const dish = apiDishes.find(
-                                          (d) => d.MaMonAn === id
-                                        );
-                                        return dish || null;
-                                      })
-                                      .filter(
-                                        (dish): dish is IMonAn => dish !== null
-                                      ),
-                                  });
-                                }
-                              }}
-                              className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
-                            />
                             <div className="flex-1">
                               <span className="text-sm font-medium text-[#001F3F]">
                                 {dish.TenMonAn}
@@ -1049,10 +1162,94 @@ function Admin_Wedding() {
                             </div>
                           </div>
                         ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+            </div>
+          </div>
+
+          {/* Danh sách món ăn để chọn */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+            <h5 className="text-lg font-medium text-[#001F3F] mb-4">
+              Chọn món ăn cho thực đơn
+            </h5>
+            <div className="border rounded-lg p-4 bg-white shadow-sm">
+              {apiDishTypes.map((category) => (
+                <div key={category.MaLoaiMonAn} className="mb-4">
+                  <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
+                    {category.TenLoaiMonAn}
+                  </h6>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {apiDishes
+                      .filter(
+                        (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
+                      )
+                      .map((dish) => (
+                        <div
+                          key={dish.MaMonAn}
+                          className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedDishes.includes(dish.MaMonAn)}
+                            onChange={(e) => {
+                              const newSelectedDishes = e.target.checked
+                                ? [...selectedDishes, dish.MaMonAn]
+                                : selectedDishes.filter(
+                                    (id) => id !== dish.MaMonAn
+                                  );
+                              setSelectedDishes(newSelectedDishes);
+
+                              // Update temp menu
+                              if (tempMenu) {
+                                const newTotalPrice = newSelectedDishes.reduce(
+                                  (total, dishId) => {
+                                    const dish = apiDishes.find(
+                                      (d) => d.MaMonAn === dishId
+                                    );
+                                    return (
+                                      total + (dish ? Number(dish.DonGia) : 0)
+                                    );
+                                  },
+                                  0
+                                );
+
+                                setTempMenu({
+                                  ...tempMenu,
+                                  DonGiaHienTai: newTotalPrice,
+                                  MonAnList: newSelectedDishes
+                                    .map((id) => {
+                                      const dish = apiDishes.find(
+                                        (d) => d.MaMonAn === id
+                                      );
+                                      return dish || null;
+                                    })
+                                    .filter(
+                                      (dish): dish is IMonAn => dish !== null
+                                    ),
+                                });
+                              }
+                            }}
+                            className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-[#001F3F]">
+                              {dish.TenMonAn}
+                            </span>
+                            <p className="text-xs text-gray-600">
+                              {dish.GhiChu || "Không có ghi chú"}
+                            </p>
+                            <p className="text-xs text-[#B8860B] mt-1">
+                              {formatVND(dish.DonGia)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1072,10 +1269,7 @@ function Admin_Wedding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {apiMenus
             .filter((menu) => {
-              const totalPrice = (menu.MonAnList || []).reduce(
-                (total, dish) => total + Number(dish.DonGia || 0),
-                0
-              );
+              const totalPrice = menu.DonGiaHienTai || 0;
               return totalPrice >= 1000000 && totalPrice <= 2000000;
             })
             .map((menu) => renderMenuCard(menu))}
@@ -1091,10 +1285,7 @@ function Admin_Wedding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {apiMenus
             .filter((menu) => {
-              const totalPrice = (menu.MonAnList || []).reduce(
-                (total, dish) => total + Number(dish.DonGia || 0),
-                0
-              );
+              const totalPrice = menu.DonGiaHienTai || 0;
               return totalPrice > 2000000 && totalPrice <= 4000000;
             })
             .map((menu) => renderMenuCard(menu))}
@@ -1110,10 +1301,7 @@ function Admin_Wedding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {apiMenus
             .filter((menu) => {
-              const totalPrice = (menu.MonAnList || []).reduce(
-                (total, dish) => total + Number(dish.DonGia || 0),
-                0
-              );
+              const totalPrice = menu.DonGiaHienTai || 0;
               return totalPrice > 4000000 && totalPrice <= 6000000;
             })
             .map((menu) => renderMenuCard(menu))}
@@ -1138,10 +1326,7 @@ function Admin_Wedding() {
   // Thêm hàm render menu card để tái sử dụng
   const renderMenuCard = (menu: IThucDon) => {
     const menuDishes = menu.MonAnList || [];
-    const totalPrice = menuDishes.reduce(
-      (total, dish) => total + Number(dish.DonGia || 0),
-      0
-    );
+    const totalPrice = menu.DonGiaHienTai || 0;
     const firstDish = menuDishes[0];
 
     return (
@@ -1160,10 +1345,10 @@ function Admin_Wedding() {
               src={firstDish.AnhURL}
               alt={menu.TenThucDon}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/300x200?text=Không+có+ảnh";
-              }}
+              // onError={(e) => {
+              //   e.currentTarget.src =
+              //     "https://via.placeholder.com/300x200?text=Không+có+ảnh";
+              // }}
             />
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -1285,6 +1470,9 @@ function Admin_Wedding() {
                   <thead className="bg-[#F8F9FA]">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                        Mã Đặt Tiệc
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tên Chú Rể
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
@@ -1314,8 +1502,13 @@ function Admin_Wedding() {
                     {filteredBookings.map((booking) => (
                       <tr
                         key={booking.MaDatTiec}
-                        className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                        className={`hover:bg-[#F8F9FA] transition-colors duration-200 ${
+                          booking.DaHuy ? "bg-yellow-100" : ""
+                        }`}
                       >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#001F3F]">
+                          {booking.MaDatTiec}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#001F3F]">
                           {booking.TenChuRe}
                         </td>
@@ -1701,7 +1894,7 @@ function Admin_Wedding() {
                     <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
                       {category.TenLoaiMonAn}
                     </h6>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {apiDishes
                         .filter(
                           (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
@@ -1709,7 +1902,7 @@ function Admin_Wedding() {
                         .map((dish) => (
                           <div
                             key={dish.MaMonAn}
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                            className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50"
                           >
                             <input
                               type="checkbox"
@@ -1760,15 +1953,26 @@ function Admin_Wedding() {
                               className="h-4 w-4 mt-1 text-[#B8860B] rounded"
                             />
                             <div className="flex-1">
-                              <span className="text-sm font-medium text-[#001F3F]">
-                                {dish.TenMonAn}
-                              </span>
-                              <p className="text-xs text-[#001F3F] mt-1">
-                                {dish.GhiChu || "Không có ghi chú"}
-                              </p>
-                              <p className="text-xs text-[#B8860B] mt-1">
-                                {formatVND(dish.DonGia)}
-                              </p>
+                              <div className="flex items-start gap-2">
+                                {dish.AnhURL && (
+                                  <img
+                                    src={dish.AnhURL}
+                                    alt={dish.TenMonAn}
+                                    className="w-12 h-12 object-cover rounded-lg"
+                                  />
+                                )}
+                                <div>
+                                  <span className="text-sm font-medium text-[#001F3F]">
+                                    {dish.TenMonAn}
+                                  </span>
+                                  <p className="text-xs text-[#001F3F] mt-0.5">
+                                    {dish.GhiChu || "Không có ghi chú"}
+                                  </p>
+                                  <p className="text-xs text-[#B8860B] mt-0.5">
+                                    {formatVND(dish.DonGia)}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1984,9 +2188,9 @@ function Admin_Wedding() {
                     min="0"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#001F3F]">
-                    Tiền Đặt Cọc
+                <div className="mb-3">
+                  <label className="block text-sm font-medium">
+                    Tiền đặt cọc (VNĐ)
                   </label>
                   <input
                     type="number"
@@ -1994,9 +2198,12 @@ function Admin_Wedding() {
                     value={formData.TienDatCoc}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
-                    className="py-2 px-3 mt-1 border border-gray-200 rounded-md w-full"
+                    className={`py-2 px-3 mt-1 w-full rounded border ${
+                      isEditMode ? "bg-gray-100" : "border-gray-300"
+                    } focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50`}
                     required
-                    min={minDeposit}
+                    min="0"
+                    disabled={isEditMode}
                   />
                 </div>
               </div>
@@ -2239,7 +2446,7 @@ function Admin_Wedding() {
                   Đóng
                 </button>
                 <button
-                  onClick={handlePrint}
+                  onClick={() => handlePrint()}
                   className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366]"
                 >
                   In

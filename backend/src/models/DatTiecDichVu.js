@@ -7,10 +7,20 @@ const DatTiecDichVu = {
       .returning('*');
     return datTiecDichVu;
   },
+  getByMaDatTiec: async (maDatTiec) => {
+    return await knex('DATTIEC_DICHVU')
+      .where({ MaDatTiec: maDatTiec })
+      .select('*');
+  },
   delete: async (maDatTiec, maDichVu) => {
     return await knex('DATTIEC_DICHVU')
       .where({ MaDatTiec: maDatTiec, MaDichVu: maDichVu })
       .delete();
+  },
+  getByMaDichVu: async (maDichVu) => {
+    return await knex('DATTIEC_DICHVU')
+      .where({ MaDichVu: maDichVu })
+      .select('*');
   },
 };
 
