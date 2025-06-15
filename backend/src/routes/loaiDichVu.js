@@ -8,15 +8,15 @@ const router = Router();
 
 router.post(
   '/tao',
-  // auth,
-  // checkPermission('Quản lý loại dịch vụ'),
-  // validation.validateLoaiDichVu,
+  auth,
+  checkPermission('Quản lý loại dịch vụ'),
+  validation.validateLoaiDichVu,
   loaiDichVuController.createLoaiDichVu
 );
 router.get(
   '/danh-sach',
-  // auth,
-  // checkPermission('Quản lý loại dịch vụ'),
+  auth,
+  checkPermission('Quản lý loại dịch vụ'),
   loaiDichVuController.getAllLoaiDichVu
 );
 router.get(
@@ -36,9 +36,9 @@ router.put(
 );
 router.delete(
   '/xoa/:id',
-  // auth,
-  // checkPermission('Quản lý loại dịch vụ'),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Quản lý loại dịch vụ'),
+  validation.validateIdParam,
   loaiDichVuController.deleteLoaiDichVu
 );
 

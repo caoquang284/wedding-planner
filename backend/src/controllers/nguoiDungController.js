@@ -4,6 +4,7 @@ import ChucNang from '../models/ChucNang.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import process from 'node:process';
+import { knex } from '../config/database.js';
 
 const createNguoiDung = async (req, res) => {
   try {
@@ -12,7 +13,11 @@ const createNguoiDung = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'Tên đăng nhập đã tồn tại' });
     }
-    const hashedPassword = await bcrypt.hash(matKhau, 10); // Mã hóa mật khẩu
+    const nhomExists = await knex('NHOMNGUOIDUNG').where({ MaNhom: maNhom }).first();
+    if (!nhomExists) {
+      return res.status(400).json({ error: 'Mã nhóm không tồn tại' });
+    }
+    const hashedPassword = await bcrypt.hash(matKhau, 10);
     const nguoiDung = await NguoiDung.create({
       TenDangNhap: tenDangNhap,
       MatKhau: hashedPassword,
@@ -79,7 +84,13 @@ const updateNguoiDung = async (req, res) => {
     }
     const updatedData = {};
     if (tenNguoiDung) updatedData.TenNguoiDung = tenNguoiDung;
-    if (maNhom) updatedData.MaNhom = maNhom;
+    if (maNhom) {
+      const nhomExists = await knex('NHOMNGUOIDUNG').where({ MaNhom: maNhom }).first();
+      if (!nhomExists) {
+        return res.status(400).json({ error: 'Mã nhóm không tồn tại' });
+      }
+      updatedData.MaNhom = maNhom;
+    }
     const updatedNguoiDung = await NguoiDung.update(req.user.id, updatedData);
     res.status(200).json(updatedNguoiDung);
   } catch (error) {
@@ -105,7 +116,7 @@ const deleteNguoiDung = async (req, res) => {
 
 const getChucNang = async (req, res) => {
   try {
-    const maNhom = req.user.maNhom; // Được lấy từ token (payload của jwt)
+    const maNhom = req.user.maNhom;
     const phanQuyenList = await PhanQuyen.findByNhom(maNhom);
     const chucNangIds = phanQuyenList.map((pq) => pq.MaChucNang);
     const chucNangList = await ChucNang.findAll();
@@ -113,6 +124,15 @@ const getChucNang = async (req, res) => {
       chucNangIds.includes(cn.MaChucNang)
     );
     res.status(200).json(permittedChucNang);
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi khi lấy danh sách chức năng: ' + error.message });
+  }
+};
+
+const getAllChucNang = async (req, res) => {
+  try {
+    const chucNangList = await ChucNang.findAll(); 
+    res.status(200).json(chucNangList);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi khi lấy danh sách chức năng: ' + error.message });
   }
@@ -136,8 +156,8 @@ const refreshToken = async (req, res) => {
       return res.status(401).json({ error: 'Người dùng không tồn tại' });
     }
 
-    await NguoiDung.deleteRefreshToken(refreshToken); // Xóa refresh token cũ
-    const newTokens = await NguoiDung.generateToken(nguoiDung); // Tạo token mới
+    await NguoiDung.deleteRefreshToken(refreshToken);
+    const newTokens = await NguoiDung.generateToken(nguoiDung);
     res.status(200).json(newTokens);
   } catch (error) {
     res.status(500).json({ error: 'Lỗi khi làm mới token: ' + error.message });
@@ -170,6 +190,7 @@ export default {
   updateNguoiDung,
   deleteNguoiDung,
   getChucNang,
+  getAllChucNang,
   refreshToken,
   logout,
 };

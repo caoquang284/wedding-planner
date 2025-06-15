@@ -8,15 +8,15 @@ const router = Router();
 
 router.post(
   '/tao',
-  // auth,
-  // checkPermission('Quản lý loại sảnh'),
-  // validation.validateLoaiSanh,
+  auth,
+  checkPermission('Quản lý loại sảnh'),
+  validation.validateLoaiSanh,
   loaiSanhController.createLoaiSanh
 );
 router.get(
   '/danh-sach',
-  // auth,
-  // checkPermission('Quản lý loại sảnh'),
+  auth,
+  checkPermission('Quản lý loại sảnh'),
   loaiSanhController.getAllLoaiSanh
 );
 router.get(

@@ -11,8 +11,9 @@ export const login = async (tenDangNhap: string, matKhau: string) => {
       headers: { "Content-Type": "application/json" }
     });
     const { accessToken, refreshToken, user } = response.data;
-
-    // Giả sử backend trả về permissions trong user
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem("user", JSON.stringify(user)); // Lưu user vào localStorage
     return { accessToken, refreshToken, user };
   } catch (error: any) {
     if (error.response) {

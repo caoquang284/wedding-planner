@@ -67,12 +67,6 @@ const DatTiec = {
       .select('MaLoaiSanh');
     return maLoaiSanh;
   },
-  getDonGiaBanToiThieu: async (maLoaiSanh) => {
-    const donGiaBanToiThieu = await knex('LOAISANH')
-      .where({ MaLoaiSanh: maLoaiSanh })
-      .select('DonGiaBanToiThieu');
-    return donGiaBanToiThieu;
-  },
 };
 
 export default DatTiec;
