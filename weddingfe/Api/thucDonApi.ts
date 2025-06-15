@@ -4,7 +4,7 @@ import axios from "axios";
 const API_URL = "http://localhost:3000/api/thucdon";
 
 // Lấy token từ localStorage hoặc nơi bạn lưu trữ token
-const getToken = () => localStorage.getItem("token") || "";
+const getToken = () => localStorage.getItem("accessToken") || "";
 
 // Tạo instance axios với header mặc định
 const axiosInstance = axios.create({

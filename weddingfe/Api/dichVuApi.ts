@@ -5,7 +5,7 @@ const API_URL = "http://localhost:3000/api/dichvu";
 const LOAI_DICH_VU_URL = "http://localhost:3000/api/loaidichvu";
 
 // Lấy token từ localStorage hoặc nơi bạn lưu trữ token
-const getToken = () => localStorage.getItem("token") || "";
+const getToken = () => localStorage.getItem("accessToken") || "";
 
 // Tạo instance axios với header mặc định
 const axiosInstance = axios.create({

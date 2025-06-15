@@ -4,7 +4,7 @@ import axios from "axios";
 const CA_URL = "http://localhost:3000/api/ca";
 
 // Lấy token từ localStorage
-const getToken = () => localStorage.getItem("token") || "";
+const getToken = () => localStorage.getItem("accessToken") || "";
 
 // Tạo instance axios với header mặc định
 const axiosInstance = axios.create({

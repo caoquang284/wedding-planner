@@ -1,29 +1,22 @@
 import { useState } from "react";
 import { login } from "../../Api/authApi";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../src/contexts/AuthContext"; // Import AuthContext
+import { useAuth } from "../../src/contexts/AuthContext"; 
 
 function Login() {
   const [tenDangNhap, setTenDangNhap] = useState("");
   const [matKhau, setMatKhau] = useState("");
   const navigate = useNavigate();
-  const { setUser } = useAuth(); // Sử dụng setUser từ AuthContext
+  const { setUser } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const { accessToken, refreshToken, user } = await login(tenDangNhap, matKhau);
-      // Lưu token
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      // Lưu thông tin người dùng và quyền vào Context
-      setUser({
-        id: user.MaNguoiDung,
-        maNhom: user.MaNhom,
-        tenNguoiDung: user.TenNguoiDung,
-        permissions: user.permissions || [], // Giả sử backend trả về permissions
-      });
-      navigate("/admin/services");
+      setUser(user); // Cập nhật user vào context
+      navigate("/admin"); // Chuyển hướng đến trang quản lý
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || "Đăng nhập thất bại!";
       alert(errorMessage);
