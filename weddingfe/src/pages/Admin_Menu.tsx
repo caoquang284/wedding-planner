@@ -76,11 +76,22 @@ interface ConfirmationModal {
   onConfirm: () => void;
 }
 
+interface IDatTiec {
+  MaDatTiec: number;
+  TenChuRe: string;
+  TenCoDau: string;
+  DienThoai: string;
+  NgayDaiTiec: Date;
+  MaThucDon?: number;
+}
+
 function Menus() {
   // State cho danh sách thực đơn, món ăn và loại món ăn
   const [menus, setMenus] = useState<Menu[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [weddingBookings, setWeddingBookings] = useState<IDatTiec[]>([]);
+  const [expandedBooking, setExpandedBooking] = useState<number | null>(null);
 
   // Fetch initial data
   useEffect(() => {
@@ -122,6 +133,10 @@ function Menus() {
             name: cat.TenLoaiMonAn,
           }))
         );
+
+        // Fetch wedding bookings
+        const bookingsData = await getAllDatTiec();
+        setWeddingBookings(bookingsData);
       } catch (error) {
         console.error("Error fetching data:", error);
         alert("Có lỗi xảy ra khi tải dữ liệu!");
@@ -748,78 +763,157 @@ function Menus() {
               <thead className="bg-[#FAFAFA]">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                    Tên thực đơn
+                    Mã tiệc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                    Giá hiện tại (VNĐ)
+                    Tên cô dâu
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                    Giá tại thời điểm đặt (VNĐ)
+                    Tên chú rể
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                    Danh sách món ăn
+                    Ngày tiệc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                    Ghi chú
+                    Thực đơn
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMenus.slice(9).map((menu) => (
-                  <tr key={menu.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {menu.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatVND(menu.price)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatVND(menu.orderprice)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      <span className="line-clamp-2">
-                        {menu.dishNames?.join(", ") || "Chưa có món ăn"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {menu.note || "Không có ghi chú"}
-                    </td>
-                  </tr>
-                ))}
+                {weddingBookings.map((booking) => {
+                  const menu = menus.find((m) => m.id === booking.MaThucDon);
+                  return (
+                    <tr key={booking.MaDatTiec}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {booking.MaDatTiec}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.TenCoDau}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {booking.TenChuRe}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(booking.NgayDaiTiec).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        <button
+                          onClick={() =>
+                            setExpandedBooking(
+                              expandedBooking === booking.MaDatTiec
+                                ? null
+                                : booking.MaDatTiec
+                            )
+                          }
+                          className="text-[#B8860B] hover:text-[#8B6508] font-medium"
+                        >
+                          {expandedBooking === booking.MaDatTiec
+                            ? "Ẩn chi tiết"
+                            : "Xem chi tiết"}
+                        </button>
+                        {expandedBooking === booking.MaDatTiec && menu && (
+                          <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                            <h4 className="font-medium text-[#001F3F] mb-2">
+                              {menu.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Giá: {formatVND(menu.orderprice)}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                              Danh sách món:
+                            </p>
+                            <ul className="list-disc list-inside text-sm text-gray-600">
+                              {menu.dishNames?.map((dishName, index) => (
+                                <li key={index}>{dishName}</li>
+                              ))}
+                            </ul>
+                            {menu.note && (
+                              <p className="text-sm text-gray-600 mt-2">
+                                Ghi chú: {menu.note}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Hiển thị dạng card trên mobile cho thực đơn tiệc cưới */}
           <div className="block sm:hidden space-y-4">
-            {filteredMenus.slice(9).map((menu) => (
-              <div
-                key={menu.id}
-                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {menu.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Giá: {formatVND(menu.price)}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Giá đặt: {formatVND(menu.orderprice)}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                      Món ăn: {menu.dishNames?.join(", ") || "Chưa có món ăn"}
-                    </p>
-                    {menu.note && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Ghi chú: {menu.note}
-                      </p>
+            {weddingBookings.map((booking) => {
+              const menu = menus.find((m) => m.id === booking.MaThucDon);
+              return (
+                <div
+                  key={booking.MaDatTiec}
+                  className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          Tiệc #{booking.MaDatTiec}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Cô dâu: {booking.TenCoDau}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Chú rể: {booking.TenChuRe}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Ngày tiệc:{" "}
+                          {new Date(booking.NgayDaiTiec).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setExpandedBooking(
+                            expandedBooking === booking.MaDatTiec
+                              ? null
+                              : booking.MaDatTiec
+                          )
+                        }
+                        className="text-[#B8860B] hover:text-[#8B6508] font-medium"
+                      >
+                        {expandedBooking === booking.MaDatTiec
+                          ? "Ẩn chi tiết"
+                          : "Xem chi tiết"}
+                      </button>
+                    </div>
+                    {expandedBooking === booking.MaDatTiec && menu && (
+                      <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                        <h4 className="font-medium text-[#001F3F] mb-2">
+                          {menu.name}
+                        </h4>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Giá: {formatVND(menu.price)}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Danh sách món:
+                        </p>
+                        <ul className="list-disc list-inside text-sm text-gray-600">
+                          {menu.dishNames?.map((dishName, index) => (
+                            <li key={index}>{dishName}</li>
+                          ))}
+                        </ul>
+                        {menu.note && (
+                          <p className="text-sm text-gray-600 mt-2">
+                            Ghi chú: {menu.note}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

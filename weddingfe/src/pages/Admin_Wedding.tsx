@@ -36,12 +36,12 @@ interface IMonAn {
   GhiChu?: string;
   AnhURL?: string;
 }
-
 // Interface cho thực đơn
 interface IThucDon {
   MaThucDon: number;
   TenThucDon: string;
   DonGiaHienTai: number;
+  DonGiaThoiDiemDat: number;
   GhiChu?: string;
   Cover_Img?: string;
   MonAnList?: IMonAn[];
@@ -193,6 +193,7 @@ function Admin_Wedding() {
     MaThucDon: number;
     TenThucDon: string;
     DonGiaHienTai: number;
+    DonGiaThoiDiemDat: number;
     MonAnList: IMonAn[];
   } | null>(null);
 
@@ -240,7 +241,7 @@ function Admin_Wedding() {
         // Load menus
         setIsLoadingMenus(true);
         const menusData = await getAllThucDon();
-        const limitedMenusData = menusData.slice(0, 6); // Lấy 6 bản ghi đầu tiên
+        const limitedMenusData = menusData.slice(0, 9); // Lấy 6 bản ghi đầu tiên
         const menusWithDetails = await Promise.all(
           limitedMenusData.map(async (menu: IThucDon) => {
             const menuDetail = await getThucDonById(menu.MaThucDon);
@@ -376,6 +377,7 @@ function Admin_Wedding() {
           MaThucDon: menuDetail.MaThucDon,
           TenThucDon: menuDetail.TenThucDon,
           DonGiaHienTai: menuDetail.DonGiaHienTai,
+          DonGiaThoiDiemDat: menuDetail.DonGiaThoiDiemDat,
           MonAnList: menuDetail.MonAnList || [],
         });
       }
@@ -585,6 +587,7 @@ function Admin_Wedding() {
       MaThucDon: Date.now(), // Temporary ID
       TenThucDon: customMenuName,
       DonGiaHienTai: totalPrice,
+      DonGiaThoiDiemDat: totalPrice,
       MonAnList: selectedDishes.map((id) => {
         const dish = apiDishes.find((d) => d.MaMonAn === id);
         return {
@@ -1108,11 +1111,7 @@ function Admin_Wedding() {
 
     const menu = tempMenu || apiMenus.find((m) => m.MaThucDon === selectedMenu);
     if (!menu) return null;
-
-    const totalPrice = selectedDishes.reduce((total, dishId) => {
-      const dish = apiDishes.find((d) => d.MaMonAn === dishId);
-      return total + (dish ? Number(dish.DonGia) : 0);
-    }, 0);
+    const totalPrice = menu.DonGiaThoiDiemDat || 0;
 
     return (
       <div className="mb-8">
@@ -1120,78 +1119,36 @@ function Admin_Wedding() {
           Thực Đơn Hiện Tại
         </h4>
         <div className="grid grid-cols-1 gap-6">
+          {/* Chi tiết menu */}
           <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
             <h5 className="text-lg font-medium text-[#001F3F] mb-2">
               {menu.TenThucDon}
             </h5>
             <p className="text-sm text-[#001F3F] mb-2">
-              Tổng đơn giá hiện tại: {formatVND(totalPrice)}
+              Tổng đơn giá tại thời điểm đặt: {formatVND(totalPrice)}
             </p>
-            <div className="mt-6">
+            <div className="mt-4">
               <h5 className="text-sm font-medium text-[#001F3F] mb-3">
-                Danh sách món ăn
+                Danh sách món ăn trong thực đơn
               </h5>
-              <div className="border rounded-lg p-4 bg-white shadow-sm">
-                {apiDishTypes.map((category) => (
-                  <div key={category.MaLoaiMonAn} className="mb-4">
-                    <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
-                      {category.TenLoaiMonAn}
-                    </h6>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {apiDishes
-                        .filter(
-                          (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
-                        )
-                        .map((dish) => (
+              <div className="border rounded-lg p-4 bg-gray-50">
+                {apiDishTypes.map((category) => {
+                  const categoryDishes = menu.MonAnList?.filter(
+                    (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
+                  );
+                  if (!categoryDishes?.length) return null;
+
+                  return (
+                    <div key={category.MaLoaiMonAn} className="mb-4">
+                      <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
+                        {category.TenLoaiMonAn}
+                      </h6>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {categoryDishes.map((dish) => (
                           <div
                             key={dish.MaMonAn}
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                            className="flex items-start gap-3 p-3 border rounded-lg bg-white"
                           >
-                            <input
-                              type="checkbox"
-                              checked={selectedDishes.includes(dish.MaMonAn)}
-                              onChange={(e) => {
-                                const newSelectedDishes = e.target.checked
-                                  ? [...selectedDishes, dish.MaMonAn]
-                                  : selectedDishes.filter(
-                                      (id) => id !== dish.MaMonAn
-                                    );
-                                setSelectedDishes(newSelectedDishes);
-
-                                // Update temp menu
-                                if (tempMenu) {
-                                  const newTotalPrice =
-                                    newSelectedDishes.reduce(
-                                      (total, dishId) => {
-                                        const dish = apiDishes.find(
-                                          (d) => d.MaMonAn === dishId
-                                        );
-                                        return (
-                                          total +
-                                          (dish ? Number(dish.DonGia) : 0)
-                                        );
-                                      },
-                                      0
-                                    );
-
-                                  setTempMenu({
-                                    ...tempMenu,
-                                    DonGiaHienTai: newTotalPrice,
-                                    MonAnList: newSelectedDishes
-                                      .map((id) => {
-                                        const dish = apiDishes.find(
-                                          (d) => d.MaMonAn === id
-                                        );
-                                        return dish || null;
-                                      })
-                                      .filter(
-                                        (dish): dish is IMonAn => dish !== null
-                                      ),
-                                  });
-                                }
-                              }}
-                              className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
-                            />
                             <div className="flex-1">
                               <span className="text-sm font-medium text-[#001F3F]">
                                 {dish.TenMonAn}
@@ -1205,10 +1162,94 @@ function Admin_Wedding() {
                             </div>
                           </div>
                         ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+            </div>
+          </div>
+
+          {/* Danh sách món ăn để chọn */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+            <h5 className="text-lg font-medium text-[#001F3F] mb-4">
+              Chọn món ăn cho thực đơn
+            </h5>
+            <div className="border rounded-lg p-4 bg-white shadow-sm">
+              {apiDishTypes.map((category) => (
+                <div key={category.MaLoaiMonAn} className="mb-4">
+                  <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
+                    {category.TenLoaiMonAn}
+                  </h6>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {apiDishes
+                      .filter(
+                        (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
+                      )
+                      .map((dish) => (
+                        <div
+                          key={dish.MaMonAn}
+                          className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedDishes.includes(dish.MaMonAn)}
+                            onChange={(e) => {
+                              const newSelectedDishes = e.target.checked
+                                ? [...selectedDishes, dish.MaMonAn]
+                                : selectedDishes.filter(
+                                    (id) => id !== dish.MaMonAn
+                                  );
+                              setSelectedDishes(newSelectedDishes);
+
+                              // Update temp menu
+                              if (tempMenu) {
+                                const newTotalPrice = newSelectedDishes.reduce(
+                                  (total, dishId) => {
+                                    const dish = apiDishes.find(
+                                      (d) => d.MaMonAn === dishId
+                                    );
+                                    return (
+                                      total + (dish ? Number(dish.DonGia) : 0)
+                                    );
+                                  },
+                                  0
+                                );
+
+                                setTempMenu({
+                                  ...tempMenu,
+                                  DonGiaHienTai: newTotalPrice,
+                                  MonAnList: newSelectedDishes
+                                    .map((id) => {
+                                      const dish = apiDishes.find(
+                                        (d) => d.MaMonAn === id
+                                      );
+                                      return dish || null;
+                                    })
+                                    .filter(
+                                      (dish): dish is IMonAn => dish !== null
+                                    ),
+                                });
+                              }
+                            }}
+                            className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-[#001F3F]">
+                              {dish.TenMonAn}
+                            </span>
+                            <p className="text-xs text-gray-600">
+                              {dish.GhiChu || "Không có ghi chú"}
+                            </p>
+                            <p className="text-xs text-[#B8860B] mt-1">
+                              {formatVND(dish.DonGia)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1228,10 +1269,7 @@ function Admin_Wedding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {apiMenus
             .filter((menu) => {
-              const totalPrice = (menu.MonAnList || []).reduce(
-                (total, dish) => total + Number(dish.DonGia || 0),
-                0
-              );
+              const totalPrice = menu.DonGiaHienTai || 0;
               return totalPrice >= 1000000 && totalPrice <= 2000000;
             })
             .map((menu) => renderMenuCard(menu))}
@@ -1247,10 +1285,7 @@ function Admin_Wedding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {apiMenus
             .filter((menu) => {
-              const totalPrice = (menu.MonAnList || []).reduce(
-                (total, dish) => total + Number(dish.DonGia || 0),
-                0
-              );
+              const totalPrice = menu.DonGiaHienTai || 0;
               return totalPrice > 2000000 && totalPrice <= 4000000;
             })
             .map((menu) => renderMenuCard(menu))}
@@ -1266,10 +1301,7 @@ function Admin_Wedding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {apiMenus
             .filter((menu) => {
-              const totalPrice = (menu.MonAnList || []).reduce(
-                (total, dish) => total + Number(dish.DonGia || 0),
-                0
-              );
+              const totalPrice = menu.DonGiaHienTai || 0;
               return totalPrice > 4000000 && totalPrice <= 6000000;
             })
             .map((menu) => renderMenuCard(menu))}
@@ -1294,10 +1326,7 @@ function Admin_Wedding() {
   // Thêm hàm render menu card để tái sử dụng
   const renderMenuCard = (menu: IThucDon) => {
     const menuDishes = menu.MonAnList || [];
-    const totalPrice = menuDishes.reduce(
-      (total, dish) => total + Number(dish.DonGia || 0),
-      0
-    );
+    const totalPrice = menu.DonGiaHienTai || 0;
     const firstDish = menuDishes[0];
 
     return (
@@ -1865,7 +1894,7 @@ function Admin_Wedding() {
                     <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
                       {category.TenLoaiMonAn}
                     </h6>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {apiDishes
                         .filter(
                           (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
@@ -1873,7 +1902,7 @@ function Admin_Wedding() {
                         .map((dish) => (
                           <div
                             key={dish.MaMonAn}
-                            className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                            className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50"
                           >
                             <input
                               type="checkbox"
@@ -1924,15 +1953,26 @@ function Admin_Wedding() {
                               className="h-4 w-4 mt-1 text-[#B8860B] rounded"
                             />
                             <div className="flex-1">
-                              <span className="text-sm font-medium text-[#001F3F]">
-                                {dish.TenMonAn}
-                              </span>
-                              <p className="text-xs text-[#001F3F] mt-1">
-                                {dish.GhiChu || "Không có ghi chú"}
-                              </p>
-                              <p className="text-xs text-[#B8860B] mt-1">
-                                {formatVND(dish.DonGia)}
-                              </p>
+                              <div className="flex items-start gap-2">
+                                {dish.AnhURL && (
+                                  <img
+                                    src={dish.AnhURL}
+                                    alt={dish.TenMonAn}
+                                    className="w-12 h-12 object-cover rounded-lg"
+                                  />
+                                )}
+                                <div>
+                                  <span className="text-sm font-medium text-[#001F3F]">
+                                    {dish.TenMonAn}
+                                  </span>
+                                  <p className="text-xs text-[#001F3F] mt-0.5">
+                                    {dish.GhiChu || "Không có ghi chú"}
+                                  </p>
+                                  <p className="text-xs text-[#B8860B] mt-0.5">
+                                    {formatVND(dish.DonGia)}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}

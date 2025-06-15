@@ -500,59 +500,155 @@ export async function seed(knex) {
       MaLoaiMonAn: 1,
       DonGia: 95000,
       GhiChu: 'Giòn rụm, nhân đầy đặn',
+      AnhURL:
+        'https://cdn.tgdd.vn/2022/01/CookDish/2-cach-lam-cha-gio-hai-san-don-gian-gion-thom-beo-ngay-ai-avt-1200x676.jpg',
     },
     {
       TenMonAn: 'Nem nướng Nha Trang',
       MaLoaiMonAn: 1,
       DonGia: 120000,
       GhiChu: 'Ăn kèm rau sống, bánh tráng',
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/09/CookDish/cach-lam-nem-nuong-nha-trang-bang-noi-chien-khong-dau-thom-avt-1200x676.jpg',
     },
-    { TenMonAn: 'Bánh tôm Hồ Tây', MaLoaiMonAn: 1, DonGia: 85000 },
-    { TenMonAn: 'Phồng tôm chiên', MaLoaiMonAn: 1, DonGia: 45000 },
-    { TenMonAn: 'Đậu hũ chiên sả', MaLoaiMonAn: 1, DonGia: 65000 },
+    {
+      TenMonAn: 'Bánh tôm Hồ Tây',
+      MaLoaiMonAn: 1,
+      DonGia: 85000,
+      AnhURL: 'https://cdn.xanhsm.com/2024/12/dfdc574a-banh-tom-ho-tay-18.jpg',
+    },
+    {
+      TenMonAn: 'Phồng tôm chiên',
+      MaLoaiMonAn: 1,
+      DonGia: 45000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2017/03/03/956748/cach-chien-banh-phong-tom-gion-ngon-khong-bi-chay-xem-202201070726264628.jpeg',
+    },
+    {
+      TenMonAn: 'Đậu hũ chiên sả',
+      MaLoaiMonAn: 1,
+      DonGia: 65000,
+      AnhURL: 'https://i.ytimg.com/vi/cv2CfQjZoVY/maxresdefault.jpg',
+    },
     // Gỏi - Salad (MaLoaiMonAn: 2)
     {
       TenMonAn: 'Gỏi ngó sen tôm thịt',
       MaLoaiMonAn: 2,
       DonGia: 130000,
       GhiChu: 'Vị chua ngọt thanh mát',
+      AnhURL:
+        'https://www.unileverfoodsolutions.com.vn/dam/global-ufs/mcos/phvn/vietnam/calcmenu/recipes/VN-recipes/vegetables-&-vegetable-dishes/g%E1%BB%8Fi-ng%C3%B3-sen-t%C3%B4m-th%E1%BB%8Bt/Goi-Ngo-Sen_Web.jpg',
     },
-    { TenMonAn: 'Salad Caesar gà nướng', MaLoaiMonAn: 2, DonGia: 150000 },
-    { TenMonAn: 'Gỏi cuốn tôm thịt', MaLoaiMonAn: 2, DonGia: 80000 },
-    { TenMonAn: 'Nộm sứa dừa tươi', MaLoaiMonAn: 2, DonGia: 110000 },
-    { TenMonAn: 'Salad dầu giấm trứng', MaLoaiMonAn: 2, DonGia: 90000 },
+    {
+      TenMonAn: 'Salad Caesar gà nướng',
+      MaLoaiMonAn: 2,
+      DonGia: 150000,
+      AnhURL: 'https://emmaphamkitchen.com/wp-content/uploads/2020/10/queq.jpg',
+    },
+    {
+      TenMonAn: 'Gỏi cuốn tôm thịt',
+      MaLoaiMonAn: 2,
+      DonGia: 80000,
+      AnhURL:
+        'https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/2023_10_23_638336957766719361_cach-lam-goi-cuon.jpg',
+    },
+    {
+      TenMonAn: 'Nộm sứa dừa tươi',
+      MaLoaiMonAn: 2,
+      DonGia: 110000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/04/CookProduct/thumbbainomsua-1200x676.jpg',
+    },
+    {
+      TenMonAn: 'Salad dầu giấm trứng',
+      MaLoaiMonAn: 2,
+      DonGia: 90000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/06/CookProduct/Saladtrondaugiam1200-1200x676.jpg',
+    },
     // Súp (MaLoaiMonAn: 3)
     {
       TenMonAn: 'Súp cua tuyết nhĩ',
       MaLoaiMonAn: 3,
       DonGia: 75000,
       GhiChu: 'Bổ dưỡng, thơm ngon',
+      AnhURL: 'https://i.ytimg.com/vi/uyGYnjYR3GA/maxresdefault.jpg',
     },
-    { TenMonAn: 'Súp hải sản tóc tiên', MaLoaiMonAn: 3, DonGia: 85000 },
-    { TenMonAn: 'Súp gà ngô non', MaLoaiMonAn: 3, DonGia: 65000 },
-    { TenMonAn: 'Súp bí đỏ kem tươi', MaLoaiMonAn: 3, DonGia: 70000 },
-    { TenMonAn: 'Súp măng tây cua', MaLoaiMonAn: 3, DonGia: 90000 },
+    {
+      TenMonAn: 'Súp hải sản tóc tiên',
+      MaLoaiMonAn: 3,
+      DonGia: 85000,
+      AnhURL: 'https://i.ytimg.com/vi/Y0Kh8o6zUXU/maxresdefault.jpg',
+    },
+    {
+      TenMonAn: 'Súp gà ngô non',
+      MaLoaiMonAn: 3,
+      DonGia: 65000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2021/08/05/1373270/cach-nau-sup-ga-ngo-non-thom-ngon-bo-duong-202201141412125884.jpg',
+    },
+    {
+      TenMonAn: 'Súp bí đỏ kem tươi',
+      MaLoaiMonAn: 3,
+      DonGia: 70000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2019/11/28/1222896/cach-lam-sup-bi-do-kem-tuoi-beo-ngay-chuan-vi-au-tai-nha-202208251728476970.jpeg',
+    },
+    {
+      TenMonAn: 'Súp măng tây cua',
+      MaLoaiMonAn: 3,
+      DonGia: 90000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2021/08/17/1375776/cach-lam-sup-mang-tay-cua-thom-ngon-bo-duong-202108171509318383.jpg',
+    },
     // Món Gà (MaLoaiMonAn: 4)
     {
       TenMonAn: 'Gà hấp lá chanh',
       MaLoaiMonAn: 4,
       DonGia: 350000,
       GhiChu: 'Gà ta thả vườn',
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2021/08/03/1372825/cach-lam-ga-hap-la-chanh-thit-ngot-thom-tham-vi-202108032121176426.jpg',
     },
-    { TenMonAn: 'Gà nướng mật ong', MaLoaiMonAn: 4, DonGia: 380000 },
+    {
+      TenMonAn: 'Gà nướng mật ong',
+      MaLoaiMonAn: 4,
+      DonGia: 380000,
+      AnhURL:
+        'https://file.hstatic.net/200000700229/article/lam-dui-ga-nuong-mat-ong-bang-lo-nuong-1_e17f9ace600a40018ed4fd25b8d1f30f.jpg',
+    },
     {
       TenMonAn: 'Cà ri gà kiểu Thái',
       MaLoaiMonAn: 4,
       DonGia: 280000,
       GhiChu: 'Cay nồng đặc trưng',
+      AnhURL: 'https://cdn.tgdd.vn/2020/06/CookProduct/cn-1200x676-3.jpg',
     },
-    { TenMonAn: 'Gà rang muối Hồng Kông', MaLoaiMonAn: 4, DonGia: 360000 },
-    { TenMonAn: 'Lẩu gà nấm thiên nhiên', MaLoaiMonAn: 4, DonGia: 450000 },
-    { TenMonAn: 'Cánh gà chiên nước mắm', MaLoaiMonAn: 4, DonGia: 180000 },
+    {
+      TenMonAn: 'Gà rang muối Hồng Kông',
+      MaLoaiMonAn: 4,
+      DonGia: 360000,
+      AnhURL:
+        'https://basonbep.vn/wp-content/uploads/2022/03/83721337-C81D-4B29-B40F-086AFE652DAC.jpeg',
+    },
+    {
+      TenMonAn: 'Lẩu gà nấm thiên nhiên',
+      MaLoaiMonAn: 4,
+      DonGia: 450000,
+      AnhURL:
+        'https://paoquan.vn/wp-content/uploads/2020/10/l%E1%BA%A9u-g%C3%A0-qu%C3%AA-n%E1%BA%A5m-thi%C3%AAn-nhi%C3%AAn.jpg',
+    },
+    {
+      TenMonAn: 'Cánh gà chiên nước mắm',
+      MaLoaiMonAn: 4,
+      DonGia: 180000,
+      AnhURL: 'https://i.ytimg.com/vi/ozNNdCjKQzM/maxresdefault.jpg',
+    },
     {
       TenMonAn: 'Chân gà rút xương ngâm sả tắc',
       MaLoaiMonAn: 4,
       DonGia: 150000,
+      AnhURL: 'https://i.ytimg.com/vi/5tJ-uTCvFpw/maxresdefault.jpg',
     },
     // Món Bò (MaLoaiMonAn: 5)
     {
@@ -560,85 +656,309 @@ export async function seed(knex) {
       MaLoaiMonAn: 5,
       DonGia: 250000,
       GhiChu: 'Bò mềm, khoai giòn',
+      AnhURL:
+        'https://www.cet.edu.vn/wp-content/uploads/2018/03/bo-luc-lac-khoai-tay-chien.jpg',
     },
-    { TenMonAn: 'Bò bít tết sốt tiêu xanh', MaLoaiMonAn: 5, DonGia: 280000 },
-    { TenMonAn: 'Bò nhúng dấm', MaLoaiMonAn: 5, DonGia: 320000 },
-    { TenMonAn: 'Nạm bò xào sả ớt', MaLoaiMonAn: 5, DonGia: 220000 },
-    { TenMonAn: 'Bò cuộn nấm kim châm nướng', MaLoaiMonAn: 5, DonGia: 260000 },
-    { TenMonAn: 'Phở bò tái lăn', MaLoaiMonAn: 5, DonGia: 120000 },
+    {
+      TenMonAn: 'Bò bít tết sốt tiêu xanh',
+      MaLoaiMonAn: 5,
+      DonGia: 280000,
+      AnhURL:
+        'https://file.hstatic.net/200000605107/article/bo-bit-tet-xot-tieu-xanh_c09476e565824a5d8f39533417434e1a.jpg',
+    },
+    {
+      TenMonAn: 'Bò nhúng dấm',
+      MaLoaiMonAn: 5,
+      DonGia: 320000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/09/CookProduct/CachchebienBONHUNGMEsieungonhapdanBepCuaVo7-32screenshot-1200x676.jpg',
+    },
+    {
+      TenMonAn: 'Nạm bò xào sả ớt',
+      MaLoaiMonAn: 5,
+      DonGia: 220000,
+      AnhURL:
+        'https://fohlafood.vn/cdn/shop/articles/cach-lam-bo-xao-sa-ot.jpg?v=1712215237',
+    },
+    {
+      TenMonAn: 'Bò cuộn nấm kim châm nướng',
+      MaLoaiMonAn: 5,
+      DonGia: 260000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/09/CookProduct/CachchebienBONHUNGMEsieungonhapdanBepCuaVo7-32screenshot-1200x676.jpg',
+    },
+    {
+      TenMonAn: 'Phở bò tái lăn',
+      MaLoaiMonAn: 5,
+      DonGia: 120000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/09/CookProduct/CachchebienBONHUNGMEsieungonhapdanBepCuaVo7-32screenshot-1200x676.jpg',
+    },
     // Món Heo (MaLoaiMonAn: 6)
     {
       TenMonAn: 'Sườn non nướng BBQ',
       MaLoaiMonAn: 6,
       DonGia: 300000,
       GhiChu: 'Sốt đậm đà',
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2021/10/05/suon-1633402893-6121-1633403006.jpg',
     },
-    { TenMonAn: 'Ba chỉ rang cháy cạnh', MaLoaiMonAn: 6, DonGia: 180000 },
+    {
+      TenMonAn: 'Ba chỉ rang cháy cạnh',
+      MaLoaiMonAn: 6,
+      DonGia: 180000,
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2021/10/05/suon-1633402893-6121-1633403006.jpg',
+    },
     {
       TenMonAn: 'Thịt kho tàu trứng cút',
       MaLoaiMonAn: 6,
       DonGia: 220000,
       GhiChu: 'Truyền thống',
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2021/10/05/suon-1633402893-6121-1633403006.jpg',
     },
-    { TenMonAn: 'Tai heo ngâm giấm', MaLoaiMonAn: 6, DonGia: 150000 },
-    { TenMonAn: 'Giò heo muối chiên giòn', MaLoaiMonAn: 6, DonGia: 280000 },
+    {
+      TenMonAn: 'Tai heo ngâm giấm',
+      MaLoaiMonAn: 6,
+      DonGia: 150000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2018/06/28/1098091/3-cach-lam-tai-heo-ngam-chua-ngot-gion-ngon-don-gian-tai-nha-202205271014480973.jpg',
+    },
+    {
+      TenMonAn: 'Giò heo muối chiên giòn',
+      MaLoaiMonAn: 6,
+      DonGia: 280000,
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2021/10/05/suon-1633402893-6121-1633403006.jpg',
+    },
     // Món Hải Sản (MaLoaiMonAn: 7)
     {
       TenMonAn: 'Tôm hùm nướng bơ tỏi',
       MaLoaiMonAn: 7,
       DonGia: 1200000,
       GhiChu: 'Tôm hùm bông size lớn',
+      AnhURL: 'https://cdn.tgdd.vn/2020/07/CookProduct/30-1200x676-3.jpg',
     },
-    { TenMonAn: 'Cua rang me', MaLoaiMonAn: 7, DonGia: 750000 },
-    { TenMonAn: 'Mực nướng sa tế', MaLoaiMonAn: 7, DonGia: 320000 },
-    { TenMonAn: 'Cá diêu hồng hấp Hồng Kông', MaLoaiMonAn: 7, DonGia: 450000 },
+    {
+      TenMonAn: 'Cua rang me',
+      MaLoaiMonAn: 7,
+      DonGia: 750000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2022/02/CookDish/3-cach-lam-mon-cua-rang-me-ngot-tuyet-vi-chua-ngot-avt-1200x676.jpg',
+    },
+    {
+      TenMonAn: 'Mực nướng sa tế',
+      MaLoaiMonAn: 7,
+      DonGia: 320000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2019/12/05/1225185/2-cach-lam-mon-muc-nuong-voi-sa-te-muoi-ot-ngon-ba-chay-de-lam-tai-nha--9.jpg',
+    },
+    {
+      TenMonAn: 'Cá diêu hồng hấp Hồng Kông',
+      MaLoaiMonAn: 7,
+      DonGia: 450000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/02/CookRecipe/Avatar/ca-dieu-hong-hap-hong-konh-thumbnail-1.jpg',
+    },
     {
       TenMonAn: 'Hàu nướng mỡ hành',
       MaLoaiMonAn: 7,
       DonGia: 180000,
       GhiChu: '10 con',
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/02/CookRecipe/Avatar/ca-dieu-hong-hap-hong-konh-thumbnail-1.jpg',
     },
-    { TenMonAn: 'Ốc hương rang muối ớt', MaLoaiMonAn: 7, DonGia: 280000 },
-    { TenMonAn: 'Sò điệp nướng phô mai', MaLoaiMonAn: 7, DonGia: 250000 },
+    {
+      TenMonAn: 'Ốc hương rang muối ớt',
+      MaLoaiMonAn: 7,
+      DonGia: 280000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2020/07/24/1273414/cach-lam-oc-huong-rang-muoi-ngon-xieu-long-bao-thuc-khach-202007241759310149.jpg',
+    },
+    {
+      TenMonAn: 'Sò điệp nướng phô mai',
+      MaLoaiMonAn: 7,
+      DonGia: 250000,
+      AnhURL:
+        'https://cdn.tgdd.vn/Files/2021/08/11/1374493/cach-lam-so-diep-nuong-pho-mai-thom-ngon-beo-ngay-202108111354237919.jpg',
+    },
     // Món Rau - Củ (MaLoaiMonAn: 8)
-    { TenMonAn: 'Rau muống xào tỏi', MaLoaiMonAn: 8, DonGia: 70000 },
+    {
+      TenMonAn: 'Rau muống xào tỏi',
+      MaLoaiMonAn: 8,
+      DonGia: 70000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2021/04/CookRecipe/GalleryStep/thanh-pham-1347.jpg',
+    },
     {
       TenMonAn: 'Cải thìa sốt dầu hào nấm đông cô',
       MaLoaiMonAn: 8,
       DonGia: 95000,
+      AnhURL:
+        'https://pastaxi-manager.onepas.vn/content/uploads/articles/thanhmai/cai-thia-xao-nam/cai-chip-xao-nam%C4%83%C4%83.jpg',
     },
-    { TenMonAn: 'Bông thiên lý xào thịt bò', MaLoaiMonAn: 8, DonGia: 130000 },
-    { TenMonAn: 'Mướp đắng xào trứng', MaLoaiMonAn: 8, DonGia: 80000 },
-    { TenMonAn: 'Đậu que xào tôm', MaLoaiMonAn: 8, DonGia: 110000 },
+    {
+      TenMonAn: 'Bông thiên lý xào thịt bò',
+      MaLoaiMonAn: 8,
+      DonGia: 130000,
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2022/07/02/Thanh-pham-1-1-2768-1656750998.jpg',
+    },
+    {
+      TenMonAn: 'Mướp đắng xào trứng',
+      MaLoaiMonAn: 8,
+      DonGia: 80000,
+      AnhURL: 'https://i-giadinh.vnecdn.net/2022/09/10/-7548-1662797977.jpg',
+    },
+    {
+      TenMonAn: 'Đậu que xào tôm',
+      MaLoaiMonAn: 8,
+      DonGia: 110000,
+      AnhURL:
+        'https://haithuycatering.com/image/5c20d0f051046d1069c6bab5/original.jpg',
+    },
     // Cơm - Mì - Miến (MaLoaiMonAn: 9)
-    { TenMonAn: 'Cơm chiên Dương Châu', MaLoaiMonAn: 9, DonGia: 120000 },
-    { TenMonAn: 'Mì xào hải sản', MaLoaiMonAn: 9, DonGia: 150000 },
-    { TenMonAn: 'Miến xào cua bể', MaLoaiMonAn: 9, DonGia: 180000 },
-    { TenMonAn: 'Cơm niêu cá kho tộ', MaLoaiMonAn: 9, DonGia: 160000 },
-    { TenMonAn: 'Phở xào bò mềm', MaLoaiMonAn: 9, DonGia: 130000 },
+    {
+      TenMonAn: 'Cơm chiên Dương Châu',
+      MaLoaiMonAn: 9,
+      DonGia: 120000,
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2022/12/30/Buoc-4-4-4790-1672386702.jpg',
+    },
+    {
+      TenMonAn: 'Mì xào hải sản',
+      MaLoaiMonAn: 9,
+      DonGia: 150000,
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2023/03/22/Thanh-pham-1-3557-1679473358.jpg',
+    },
+    {
+      TenMonAn: 'Miến xào cua bể',
+      MaLoaiMonAn: 9,
+      DonGia: 180000,
+      AnhURL:
+        'https://cdn.pastaxi-manager.onepas.vn/content/uploads/articles/huyendt/mienxaocua/6.png',
+    },
+    {
+      TenMonAn: 'Cơm niêu cá kho tộ',
+      MaLoaiMonAn: 9,
+      DonGia: 160000,
+      AnhURL: 'https://i.ytimg.com/vi/D8UQywSuOBg/maxresdefault.jpg',
+    },
+    {
+      TenMonAn: 'Phở xào bò mềm',
+      MaLoaiMonAn: 9,
+      DonGia: 130000,
+      AnhURL:
+        'https://fujifoods.vn/wp-content/uploads/2021/04/pho-xao-thit-bo-1.png',
+    },
     // Lẩu (MaLoaiMonAn: 10)
     {
       TenMonAn: 'Lẩu Thái Tomyum hải sản',
       MaLoaiMonAn: 10,
       DonGia: 550000,
       GhiChu: 'Đủ vị chua cay',
+      AnhURL: 'https://nghebep.com/wp-content/uploads/2018/11/lau-tomyum.jpg',
     },
-    { TenMonAn: 'Lẩu riêu cua bắp bò', MaLoaiMonAn: 10, DonGia: 480000 },
-    { TenMonAn: 'Lẩu nấm thập cẩm chay', MaLoaiMonAn: 10, DonGia: 350000 },
-    { TenMonAn: 'Lẩu cá kèo lá giang', MaLoaiMonAn: 10, DonGia: 420000 },
-    { TenMonAn: 'Lẩu dê tiềm thuốc bắc', MaLoaiMonAn: 10, DonGia: 600000 },
+    {
+      TenMonAn: 'Lẩu riêu cua bắp bò',
+      MaLoaiMonAn: 10,
+      DonGia: 480000,
+      AnhURL: 'https://i.ytimg.com/vi/kNKrw1hR7Kc/maxresdefault.jpg',
+    },
+    {
+      TenMonAn: 'Lẩu nấm thập cẩm chay',
+      MaLoaiMonAn: 10,
+      DonGia: 350000,
+      AnhURL:
+        'https://www.huongnghiepaau.com/wp-content/uploads/2024/06/cach-nau-lau-thap-cam-chay.jpg',
+    },
+    {
+      TenMonAn: 'Lẩu cá kèo lá giang',
+      MaLoaiMonAn: 10,
+      DonGia: 420000,
+      AnhURL:
+        'https://www.nhahangquangon.com/wp-content/uploads/2013/11/lau-ca-keo-la-giang.jpg',
+    },
+    {
+      TenMonAn: 'Lẩu dê tiềm thuốc bắc',
+      MaLoaiMonAn: 10,
+      DonGia: 600000,
+      AnhURL:
+        'https://dvpmarket.com/resources/uploads/images/2018/04/Ninh-xuong-de-voi-thuoc-bac-cu-sen-khoai-mon.jpg',
+    },
     // Tráng miệng (MaLoaiMonAn: 11)
-    { TenMonAn: 'Chè khúc bạch', MaLoaiMonAn: 11, DonGia: 45000 },
-    { TenMonAn: 'Trái cây thập cẩm theo mùa', MaLoaiMonAn: 11, DonGia: 90000 },
-    { TenMonAn: 'Bánh flan caramen', MaLoaiMonAn: 11, DonGia: 35000 },
-    { TenMonAn: 'Rau câu dừa xiêm', MaLoaiMonAn: 11, DonGia: 40000 },
-    { TenMonAn: 'Panna cotta chanh dây', MaLoaiMonAn: 11, DonGia: 55000 },
+    {
+      TenMonAn: 'Chè khúc bạch',
+      MaLoaiMonAn: 11,
+      DonGia: 45000,
+      AnhURL: 'https://cdn.tgdd.vn/2021/07/CookProduct/1-1200x676-1.jpg',
+    },
+    {
+      TenMonAn: 'Trái cây thập cẩm theo mùa',
+      MaLoaiMonAn: 11,
+      DonGia: 90000,
+      AnhURL:
+        'https://sunsay.vn/wp-content/uploads/2021/10/trai-cay-say-thap-cam-2.jpeg',
+    },
+    {
+      TenMonAn: 'Bánh flan caramen',
+      MaLoaiMonAn: 11,
+      DonGia: 35000,
+      AnhURL:
+        'https://i-giadinh.vnecdn.net/2021/08/26/caramel-1629980617-1982-1629980622.png',
+    },
+    {
+      TenMonAn: 'Rau câu dừa xiêm',
+      MaLoaiMonAn: 11,
+      DonGia: 40000,
+      AnhURL:
+        'https://media.loveitopcdn.com/163/z4512611524913-76efc6a6dc651c18523820eab010438b.jpg',
+    },
+    {
+      TenMonAn: 'Panna cotta chanh dây',
+      MaLoaiMonAn: 11,
+      DonGia: 55000,
+      AnhURL:
+        'https://cdn.tgdd.vn/2022/01/CookRecipe/Avatar/panna-cotta-chanh-day-chanh-leo-thumbnail.jpg',
+    },
     // Đồ uống đặc biệt (MaLoaiMonAn: 12)
-    { TenMonAn: 'Nước ép dưa hấu', MaLoaiMonAn: 12, DonGia: 50000 },
-    { TenMonAn: 'Sinh tố bơ sáp', MaLoaiMonAn: 12, DonGia: 65000 },
-    { TenMonAn: 'Trà đào cam sả', MaLoaiMonAn: 12, DonGia: 55000 },
-    { TenMonAn: 'Mojito chanh bạc hà', MaLoaiMonAn: 12, DonGia: 70000 },
-    { TenMonAn: 'Cà phê trứng Hà Nội', MaLoaiMonAn: 12, DonGia: 60000 },
+    {
+      TenMonAn: 'Nước ép dưa hấu',
+      MaLoaiMonAn: 12,
+      DonGia: 50000,
+      AnhURL:
+        'https://www.huongnghiepaau.com/wp-content/uploads/2017/08/nuoc-ep-dua-hau-ngot-mat.jpg',
+    },
+    {
+      TenMonAn: 'Sinh tố bơ sáp',
+      MaLoaiMonAn: 12,
+      DonGia: 65000,
+      AnhURL:
+        'https://www.cet.edu.vn/wp-content/uploads/2021/05/cach-lam-sinh-to-bo.jpg',
+    },
+    {
+      TenMonAn: 'Trà đào cam sả',
+      MaLoaiMonAn: 12,
+      DonGia: 55000,
+      AnhURL:
+        'https://lypham.vn/wp-content/uploads/2024/09/cach-lam-tra-dao-cam-sa.jpg',
+    },
+    {
+      TenMonAn: 'Mojito chanh bạc hà',
+      MaLoaiMonAn: 12,
+      DonGia: 70000,
+      AnhURL:
+        'https://dayphache.edu.vn/wp-content/uploads/2019/05/mojito-bac-ha.jpg',
+    },
+    {
+      TenMonAn: 'Cà phê trứng Hà Nội',
+      MaLoaiMonAn: 12,
+      DonGia: 60000,
+      AnhURL:
+        'https://grandworld.vinhomes.vn/wp-content/uploads/2024/02/cafe-trung-doc-dao-hap-dan-tai-quan-cafe-nang.jpg',
+    },
   ];
 
   let maMonAnCounter = 1;
@@ -646,18 +966,9 @@ export async function seed(knex) {
     monAnData.push({
       MaMonAn: maMonAnCounter++,
       ...mon,
-      AnhURL: `k co`,
     });
   }
 
-  // Tạo thêm món ăn để đạt gần 100 món
-  const prefixes = [
-    'Đặc biệt',
-    'Siêu ngon',
-    'Hảo hạng',
-    'Truyền thống',
-    'Hiện đại',
-  ];
   const suffixes = [
     'kiểu mới',
     'sốt cay',
@@ -672,9 +983,9 @@ export async function seed(knex) {
   while (additionalDishesCount < 100) {
     const randomBaseDish =
       baseMonAn[Math.floor(Math.random() * baseMonAn.length)];
-    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+
     const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    let newTenMonAn = `${randomPrefix} ${randomBaseDish.TenMonAn.split(' ')[0]} ${randomSuffix}`;
+    let newTenMonAn = `${randomBaseDish.TenMonAn.split(' ')[0]} ${randomSuffix}`;
     if (monAnData.some((m) => m.TenMonAn === newTenMonAn)) {
       newTenMonAn = `${newTenMonAn} #${maMonAnCounter}`;
     }
@@ -687,8 +998,8 @@ export async function seed(knex) {
         Math.floor(
           (randomBaseDish.DonGia * (0.8 + Math.random() * 0.4)) / 1000
         ) * 1000,
-      GhiChu: `Biến tấu từ ${randomBaseDish.TenMonAn}`,
-      AnhURL: `k co`,
+      GhiChu: `Món ngon`,
+      AnhURL: randomBaseDish.AnhURL,
     });
     additionalDishesCount++;
   }
