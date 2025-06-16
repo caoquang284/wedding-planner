@@ -106,14 +106,11 @@ const BaoCaoDoanhSo = {
   try {
     console.log(`Tạo báo cáo cho tháng ${thang}, năm ${nam}`);
     const hoaDons = await knex('HOADON')
-      .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
-      .where('HOADON.NgayThanhToan', '>=', `${nam}-${thang}`)
-      .where('HOADON.NgayThanhToan', '<', `${nam}-${thang + 1}`)
-      .where('HOADON.TrangThai', 1)
-      .select(
-        'HOADON.TongTienHoaDon',
-        'HOADON.NgayThanhToan'
-      );
+    .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+    .where('HOADON.NgayThanhToan', '>=', `${nam}-${thang}-01`)
+    .where('HOADON.NgayThanhToan', '<', `${nam}-${thang + 1}-01`)
+    .where('HOADON.TrangThai', 1)
+    .select('HOADON.TongTienHoaDon', 'HOADON.NgayThanhToan');
 
     console.log('Hóa đơn tìm thấy:', hoaDons);
     const chiTietMap = {};
