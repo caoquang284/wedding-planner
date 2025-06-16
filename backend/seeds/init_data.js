@@ -1831,7 +1831,7 @@ export async function seed(knex) {
     },
   ]);
   // Đặt lại sequence sau khi chèn dữ liệu
-  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 31)'); // Sau MaChucNang: 11
+  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 37)'); // Sau MaChucNang: 11
   await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 5)'); // Sau MaNhom: 1
   await knex.raw('SELECT setval(\'"NGUOIDUNG_MaNguoiDung_seq"\', 5)'); // Sau MaNguoiDung: 1
   await knex.raw('SELECT setval(\'"LOAISANH_MaLoaiSanh_seq"\', 3)'); // Sau MaLoaiSanh: 5

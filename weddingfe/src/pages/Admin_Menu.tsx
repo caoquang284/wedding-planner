@@ -83,6 +83,7 @@ interface IDatTiec {
   DienThoai: string;
   NgayDaiTiec: Date;
   MaThucDon?: number;
+  DaHuy: boolean;
 }
 
 function Menus() {
@@ -610,6 +611,13 @@ function Menus() {
       (categoryFilter === "" || dish.MaLoaiMonAn === Number(categoryFilter))
   );
 
+  // Thêm hàm kiểm tra ngày đã qua
+  const isDatePassed = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset thời gian về 00:00:00
+    return date < today;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -779,67 +787,89 @@ function Menus() {
                   </th>
                 </tr>
               </thead>
+              {/* Neu booking.DaHuy == 1 thi dong do mau */}
               <tbody className="bg-white divide-y divide-gray-200">
-                {weddingBookings.map((booking) => {
-                  const menu = menus.find((m) => m.id === booking.MaThucDon);
-                  return (
-                    <tr key={booking.MaDatTiec}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {booking.MaDatTiec}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {booking.TenCoDau}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {booking.TenChuRe}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(booking.NgayDaiTiec).toLocaleDateString(
-                          "vi-VN"
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        <button
-                          onClick={() =>
-                            setExpandedBooking(
-                              expandedBooking === booking.MaDatTiec
-                                ? null
-                                : booking.MaDatTiec
-                            )
-                          }
-                          className="text-[#B8860B] hover:text-[#8B6508] font-medium"
-                        >
-                          {expandedBooking === booking.MaDatTiec
-                            ? "Ẩn chi tiết"
-                            : "Xem chi tiết"}
-                        </button>
-                        {expandedBooking === booking.MaDatTiec && menu && (
-                          <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                            <h4 className="font-medium text-[#001F3F] mb-2">
-                              {menu.name}
-                            </h4>
-                            <p className="text-sm text-gray-600 mb-2">
-                              Giá: {formatVND(menu.orderprice)}
-                            </p>
-                            <p className="text-sm text-gray-600 mb-2">
-                              Danh sách món:
-                            </p>
-                            <ul className="list-disc list-inside text-sm text-gray-600">
-                              {menu.dishNames?.map((dishName, index) => (
-                                <li key={index}>{dishName}</li>
-                              ))}
-                            </ul>
-                            {menu.note && (
-                              <p className="text-sm text-gray-600 mt-2">
-                                Ghi chú: {menu.note}
+                {weddingBookings
+                  .sort((a, b) => {
+                    // Sắp xếp theo ngày đặt tiệc
+                    return (
+                      new Date(a.NgayDaiTiec).getTime() -
+                      new Date(b.NgayDaiTiec).getTime()
+                    );
+                  })
+                  .map((booking) => {
+                    const menu = menus.find((m) => m.id === booking.MaThucDon);
+                    const isPassed = isDatePassed(
+                      new Date(booking.NgayDaiTiec)
+                    );
+
+                    return (
+                      <tr
+                        key={booking.MaDatTiec}
+                        className={`${
+                          booking.DaHuy
+                            ? "bg-red-100"
+                            : isPassed
+                            ? "bg-yellow-100"
+                            : "bg-white"
+                        } border-b border-gray-200 hover:bg-opacity-80 transition-colors duration-200`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {booking.MaDatTiec}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {booking.TenCoDau}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {booking.TenChuRe}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(booking.NgayDaiTiec).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          <button
+                            onClick={() =>
+                              setExpandedBooking(
+                                expandedBooking === booking.MaDatTiec
+                                  ? null
+                                  : booking.MaDatTiec
+                              )
+                            }
+                            className="text-[#B8860B] hover:text-[#8B6508] font-medium"
+                          >
+                            {expandedBooking === booking.MaDatTiec
+                              ? "Ẩn chi tiết"
+                              : "Xem chi tiết"}
+                          </button>
+                          {expandedBooking === booking.MaDatTiec && menu && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                              <h4 className="font-medium text-[#001F3F] mb-2">
+                                {menu.name}
+                              </h4>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Giá: {formatVND(menu.orderprice)}
                               </p>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                              <p className="text-sm text-gray-600 mb-2">
+                                Danh sách món:
+                              </p>
+                              <ul className="list-disc list-inside text-sm text-gray-600">
+                                {menu.dishNames?.map((dishName, index) => (
+                                  <li key={index}>{dishName}</li>
+                                ))}
+                              </ul>
+                              {menu.note && (
+                                <p className="text-sm text-gray-600 mt-2">
+                                  Ghi chú: {menu.note}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>

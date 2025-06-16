@@ -628,6 +628,16 @@ function Admin_Wedding() {
         return;
       }
 
+      if (
+        formData.NgayDaiTiec <
+        new Date(new Date().setDate(new Date().getDate() + 7))
+          .toISOString()
+          .split("T")[0]
+      ) {
+        alert("Ngày đặt tiệc phải cách ngày hiện tại ít nhất 1 tuần");
+        return;
+      }
+
       // Validate menu selection
       if (!selectedMenu) {
         alert("Vui lòng chọn thực đơn");
@@ -1234,15 +1244,26 @@ function Admin_Wedding() {
                             className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
                           />
                           <div className="flex-1">
-                            <span className="text-sm font-medium text-[#001F3F]">
-                              {dish.TenMonAn}
-                            </span>
-                            <p className="text-xs text-gray-600">
-                              {dish.GhiChu || "Không có ghi chú"}
-                            </p>
-                            <p className="text-xs text-[#B8860B] mt-1">
-                              {formatVND(dish.DonGia)}
-                            </p>
+                            <div className="flex items-start gap-2">
+                              {dish.AnhURL && (
+                                <img
+                                  src={dish.AnhURL}
+                                  alt={dish.TenMonAn}
+                                  className="w-12 h-12 object-cover rounded-lg"
+                                />
+                              )}
+                              <div>
+                                <span className="text-sm font-medium text-[#001F3F]">
+                                  {dish.TenMonAn}
+                                </span>
+                                <p className="text-xs text-[#001F3F] mt-0.5">
+                                  {dish.GhiChu || "Không có ghi chú"}
+                                </p>
+                                <p className="text-xs text-[#B8860B] mt-0.5">
+                                  {formatVND(dish.DonGia)}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1405,7 +1426,7 @@ function Admin_Wedding() {
                     .map((dish) => (
                       <div
                         key={dish.MaMonAn}
-                        className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50"
+                        className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 h-32"
                       >
                         <input
                           type="checkbox"
@@ -1416,15 +1437,26 @@ function Admin_Wedding() {
                           className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
                         />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-[#001F3F]">
-                            {dish.TenMonAn}
-                          </span>
-                          <p className="text-xs text-gray-600">
-                            {dish.GhiChu || "Không có ghi chú"}
-                          </p>
-                          <p className="text-xs text-[#B8860B] mt-1">
-                            {formatVND(dish.DonGia)}
-                          </p>
+                          <div className="flex items-start gap-2">
+                            {dish.AnhURL && (
+                              <img
+                                src={dish.AnhURL}
+                                alt={dish.TenMonAn}
+                                className="w-24 h-24 object-cover rounded-lg"
+                              />
+                            )}
+                            <div>
+                              <span className="text-sm font-medium text-[#001F3F]">
+                                {dish.TenMonAn}
+                              </span>
+                              <p className="text-xs text-[#001F3F] mt-0.5">
+                                {dish.GhiChu || "Không có ghi chú"}
+                              </p>
+                              <p className="text-xs text-[#B8860B] mt-0.5">
+                                {formatVND(dish.DonGia)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1883,7 +1915,7 @@ function Admin_Wedding() {
               {isEditMode ? renderEditModeMenu() : renderMenuSection()}
             </div>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <h5 className="text-sm font-medium text-[#001F3F] mb-3">
                 Tùy Chỉnh Thực Đơn
               </h5>
@@ -1979,7 +2011,7 @@ function Admin_Wedding() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-[#001F3F] mb-4">
