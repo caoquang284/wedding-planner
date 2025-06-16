@@ -71,88 +71,90 @@ export async function seed(knex) {
 
   // Seed bảng NHOMNGUOIDUNG
   await knex('NHOMNGUOIDUNG').insert([
-    { MaNhom: 1, TenNhom: 'Super Admin' },
-    { MaNhom: 2, TenNhom: 'Admin' },
-    { MaNhom: 3, TenNhom: 'Nhân viên Kinh doanh' },
-    { MaNhom: 4, TenNhom: 'Nhân viên Kế toán' },
-    { MaNhom: 5, TenNhom: 'Người dùng thông thường' },
+    { MaNhom: 1, TenNhom: 'Quản trị viên hệ thống (Admin)' },
+    { MaNhom: 2, TenNhom: 'Nhân viên thực đơn (Bộ phận bếp)' },
+    { MaNhom: 3, TenNhom: 'Nhân viên dịch vụ (Sự kiện)' },
+    { MaNhom: 4, TenNhom: 'Nhân viên lễ tân / Đặt tiệc' },
+    { MaNhom: 5, TenNhom: 'Nhân viên kế toán' },
   ]);
 
   // Seed bảng PHANQUYEN
   await knex('PHANQUYEN').insert([
-    // Super Admin (MaNhom = 1): Toàn quyền
-    { MaNhom: 1, MaChucNang: 1 },
-    { MaNhom: 1, MaChucNang: 2 },
-    { MaNhom: 1, MaChucNang: 3 },
-    { MaNhom: 1, MaChucNang: 4 },
-    { MaNhom: 1, MaChucNang: 5 },
-    { MaNhom: 1, MaChucNang: 6 },
-    { MaNhom: 1, MaChucNang: 7 },
-    { MaNhom: 1, MaChucNang: 8 },
-    { MaNhom: 1, MaChucNang: 9 },
-    { MaNhom: 1, MaChucNang: 10 },
-    { MaNhom: 1, MaChucNang: 11 },
-    { MaNhom: 1, MaChucNang: 12 },
-    { MaNhom: 1, MaChucNang: 13 },
-    { MaNhom: 1, MaChucNang: 14 },
-    { MaNhom: 1, MaChucNang: 15 },
-    // Admin (MaNhom = 2): Quản lý sảnh, thực đơn, dịch vụ, đặt tiệc, hóa đơn
-    { MaNhom: 2, MaChucNang: 4 },
-    { MaNhom: 2, MaChucNang: 5 },
-    { MaNhom: 2, MaChucNang: 6 },
-    { MaNhom: 2, MaChucNang: 7 },
-    { MaNhom: 2, MaChucNang: 8 },
-    { MaNhom: 2, MaChucNang: 9 },
-    { MaNhom: 2, MaChucNang: 10 },
-    { MaNhom: 2, MaChucNang: 12 },
-    { MaNhom: 2, MaChucNang: 13 },
-    // Nhân viên Kinh doanh (MaNhom = 3): Quản lý đặt tiệc
-    { MaNhom: 3, MaChucNang: 12 },
-    // Nhân viên Kế toán (MaNhom = 4): Quản lý hóa đơn và báo cáo doanh thu
-    { MaNhom: 4, MaChucNang: 13 },
-    { MaNhom: 4, MaChucNang: 14 },
-    // Người dùng thông thường (MaNhom = 5): Chỉ xem sảnh, thực đơn, dịch vụ
-    { MaNhom: 5, MaChucNang: 5 },
-    { MaNhom: 5, MaChucNang: 8 },
-    { MaNhom: 5, MaChucNang: 10 },
+    // 1. Quản trị viên hệ thống (Admin): Toàn quyền
+    { MaNhom: 1, MaChucNang: 1 },  // Quản lý người dùng
+    { MaNhom: 1, MaChucNang: 2 },  // Quản lý nhóm người dùng
+    { MaNhom: 1, MaChucNang: 3 },  // Quản lý phân quyền
+    { MaNhom: 1, MaChucNang: 4 },  // Quản lý loại sảnh
+    { MaNhom: 1, MaChucNang: 5 },  // Quản lý sảnh
+    { MaNhom: 1, MaChucNang: 6 },  // Quản lý loại món ăn
+    { MaNhom: 1, MaChucNang: 7 },  // Quản lý món ăn
+    { MaNhom: 1, MaChucNang: 8 },  // Quản lý thực đơn
+    { MaNhom: 1, MaChucNang: 9 },  // Quản lý loại dịch vụ
+    { MaNhom: 1, MaChucNang: 10 }, // Quản lý dịch vụ
+    { MaNhom: 1, MaChucNang: 11 }, // Quản lý ca
+    { MaNhom: 1, MaChucNang: 12 }, // Quản lý đặt tiệc
+    { MaNhom: 1, MaChucNang: 13 }, // Quản lý hóa đơn
+    { MaNhom: 1, MaChucNang: 14 }, // Quản lý báo cáo doanh thu
+    { MaNhom: 1, MaChucNang: 15 }, // Quản lý tham số
+
+    // 2. Nhân viên thực đơn (Bộ phận bếp): Chỉ thao tác với thực đơn, món ăn
+    { MaNhom: 2, MaChucNang: 6 },  // Quản lý loại món ăn
+    { MaNhom: 2, MaChucNang: 7 },  // Quản lý món ăn
+    { MaNhom: 2, MaChucNang: 8 },  // Quản lý thực đơn
+
+    // 3. Nhân viên dịch vụ (Sự kiện): Dịch vụ, loại dịch vụ, ca làm
+    { MaNhom: 3, MaChucNang: 9 },  // Quản lý loại dịch vụ
+    { MaNhom: 3, MaChucNang: 10 }, // Quản lý dịch vụ
+    { MaNhom: 3, MaChucNang: 11 }, // Quản lý ca
+
+    // 4. Nhân viên lễ tân / Đặt tiệc: Đặt tiệc và xem thông tin sảnh, thực đơn, dịch vụ
+    { MaNhom: 4, MaChucNang: 5 },  // Xem sảnh
+    { MaNhom: 4, MaChucNang: 8 },  // Xem thực đơn
+    { MaNhom: 4, MaChucNang: 10 }, // Xem dịch vụ
+    { MaNhom: 4, MaChucNang: 12 }, // Quản lý đặt tiệc
+
+    // 5. Nhân viên kế toán: Hóa đơn, báo cáo doanh thu
+    { MaNhom: 5, MaChucNang: 13 }, // Quản lý hóa đơn
+    { MaNhom: 5, MaChucNang: 14 }, // Quản lý báo cáo doanh thu
   ]);
 
+
   // Seed bảng NGUOIDUNG
-  const hashedPassword = await hash('admin123', 10); // Mã hóa mật khẩu
+  const hashedPassword = await hash('admin123', 10);
   await knex('NGUOIDUNG').insert([
     {
       MaNguoiDung: 1,
-      TenDangNhap: 'superadmin',
+      TenDangNhap: 'admin',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Super Administrator',
+      TenNguoiDung: 'Quản trị viên hệ thống',
       MaNhom: 1,
     },
     {
       MaNguoiDung: 2,
-      TenDangNhap: 'admin1',
+      TenDangNhap: 'bep1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Admin 1',
+      TenNguoiDung: 'Nhân viên bếp 1',
       MaNhom: 2,
     },
     {
       MaNguoiDung: 3,
-      TenDangNhap: 'kinhdoanh1',
+      TenDangNhap: 'dichvu1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Kinh doanh 1',
+      TenNguoiDung: 'Nhân viên sự kiện 1',
       MaNhom: 3,
     },
     {
       MaNguoiDung: 4,
-      TenDangNhap: 'ketoan1',
+      TenDangNhap: 'letan1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Kế toán 1',
+      TenNguoiDung: 'Lễ tân 1',
       MaNhom: 4,
     },
     {
       MaNguoiDung: 5,
-      TenDangNhap: 'user1',
+      TenDangNhap: 'ketoan1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Người dùng 1',
+      TenNguoiDung: 'Nhân viên kế toán 1',
       MaNhom: 5,
     },
   ]);
