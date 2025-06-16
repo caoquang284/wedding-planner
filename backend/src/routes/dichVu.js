@@ -16,22 +16,25 @@ router.post(
 router.get(
   '/danh-sach',
   auth,
-  checkPermission('Quản lý dịch vụ'),
+  checkPermission('Lấy danh sách dịch vụ'),
   dichVuController.getAllDichVu
 );
 router.get(
   '/chi-tiet/:id',
-  // auth,
-  // checkPermission('Quản lý dịch vụ'),
-  // validation.validateIdParam,
+  auth,
+  (req, res, next) => {
+    console.log('🛤 Route: /chi-tiet/:id được gọi');
+    next();
+  },
+  checkPermission('Lấy chi tiết dịch vụ'),
   dichVuController.getDichVu
 );
 router.put(
   '/cap-nhat/:id',
-  // auth,
-  // checkPermission('Quản lý dịch vụ'),
-  // validation.validateIdParam,
-  // validation.validateDichVu,
+  auth,
+  checkPermission('Quản lý dịch vụ'),
+  validation.validateIdParam,
+  validation.validateDichVu,
   dichVuController.updateDichVu
 );
 router.delete(
@@ -43,6 +46,8 @@ router.delete(
 );
 router.get(
   '/theo-ma-dat-tiec/:maDatTiec',
+  auth,
+  checkPermission('Lấy dịch vụ theo mã đặt tiệc'),
   dichVuController.getDichVuByMaDatTiec
 );
 export default router;

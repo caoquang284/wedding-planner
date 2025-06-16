@@ -54,41 +54,16 @@ app.use(
   checkPermission('Quản lý phân quyền'),
   phanQuyenRoutes
 );
-app.use(
-  '/api/loaiSanh',
-  auth,
-  checkPermission('Quản lý loại sảnh'),
-  loaiSanhRoutes
-);
-app.use('/api/sanh', auth, checkPermission('Quản lý sảnh'), sanhRoutes);
-app.use(
-  '/api/loaiMonAn',
-  auth,
-  checkPermission('Quản lý loại món ăn'),
-  loaiMonAnRoutes
-);
-app.use('/api/monAn', auth, checkPermission('Quản lý món ăn'), monAnRoutes);
-app.use(
-  '/api/thucDon',
-  auth,
-  checkPermission('Quản lý thực đơn'),
-  thucDonRoutes
-);
-app.use(
-  '/api/loaiDichVu',
-  auth,
-  checkPermission('Quản lý loại dịch vụ'),
-  loaiDichVuRoutes
-);
-app.use('/api/dichVu', auth, checkPermission('Quản lý dịch vụ'), dichVuRoutes);
-app.use('/api/ca', auth, checkPermission('Quản lý ca'), caRoutes);
-app.use(
-  '/api/datTiec',
-  auth,
-  checkPermission('Quản lý đặt tiệc'),
-  datTiecRoutes
-);
-app.use('/api/hoaDon', auth, checkPermission('Quản lý hóa đơn'), hoaDonRoutes);
+app.use('/api/loaiSanh', auth, loaiSanhRoutes);
+app.use('/api/sanh', auth, sanhRoutes);
+app.use('/api/loaiMonAn', auth, loaiMonAnRoutes);
+app.use('/api/monAn', auth, monAnRoutes);
+app.use('/api/thucDon', auth, thucDonRoutes);
+app.use('/api/loaiDichVu', auth, loaiDichVuRoutes);
+app.use('/api/dichVu', auth, dichVuRoutes);
+app.use('/api/ca', auth, caRoutes);
+app.use('/api/datTiec', auth, datTiecRoutes);
+app.use('/api/hoaDon', auth, hoaDonRoutes);
 app.use(
   '/api/baoCaoDoanhSo',
   auth,

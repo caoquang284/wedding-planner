@@ -6,7 +6,6 @@ import {
   deleteHoaDon,
 } from "../../Api/hoaDonApi";
 import { getAllDatTiec, getDatTiecById } from "../../Api/datTiecApi";
-import { getThucDonById } from "../../Api/thucDonApi";
 import { getSanhById } from "../../Api/sanhApi";
 import { getCaById } from "../../Api/caApi";
 import { getDichVuById } from "../../Api/dichVuApi";

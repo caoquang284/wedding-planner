@@ -36,6 +36,7 @@ interface OrderedService {
   GhiChu?: string;
   NgayDatTiec?: Date;
   TenKhachHang?: string;
+  DaHuy?: boolean;
 }
 
 const formatVND = (value: number | string) => {
@@ -139,6 +140,7 @@ function Services() {
                 GhiChu: serviceDetails?.GhiChu,
                 NgayDatTiec: new Date(booking.NgayDaiTiec),
                 TenKhachHang: booking.TenChuRe + " + " + booking.TenCoDau,
+                DaHuy: booking.DaHuy,
               };
             })
           );
@@ -396,6 +398,13 @@ function Services() {
     });
   };
 
+  // Thêm hàm kiểm tra ngày đã qua
+  const isDatePassed = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset thời gian về 00:00:00
+    return date < today;
+  };
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
@@ -624,146 +633,178 @@ function Services() {
                 <tbody className="bg-white divide-y divide-gray-100">
                   {Array.from(
                     new Set(orderedServices.map((service) => service.MaDatTiec))
-                  ).map((maDatTiec) => {
-                    const bookingServices = orderedServices.filter(
-                      (service) => service.MaDatTiec === maDatTiec
-                    );
-                    const firstService = bookingServices[0];
-                    const isExpanded = expandedBookings.has(maDatTiec);
+                  )
+                    .map((maDatTiec) => {
+                      const bookingServices = orderedServices.filter(
+                        (service) => service.MaDatTiec === maDatTiec
+                      );
+                      return bookingServices[0];
+                    })
+                    .sort((a, b) => {
+                      // Sắp xếp theo ngày đặt tiệc
+                      const dateA = a.NgayDatTiec
+                        ? new Date(a.NgayDatTiec)
+                        : new Date(0);
+                      const dateB = b.NgayDatTiec
+                        ? new Date(b.NgayDatTiec)
+                        : new Date(0);
+                      return dateA.getTime() - dateB.getTime();
+                    })
+                    .map((firstService) => {
+                      const maDatTiec = firstService.MaDatTiec;
+                      const bookingServices = orderedServices.filter(
+                        (service) => service.MaDatTiec === maDatTiec
+                      );
+                      const isExpanded = expandedBookings.has(maDatTiec);
+                      const isPassed = firstService.NgayDatTiec
+                        ? isDatePassed(new Date(firstService.NgayDatTiec))
+                        : false;
 
-                    return (
-                      <React.Fragment key={maDatTiec}>
-                        <tr className="hover:bg-[#F8F9FA] transition-colors duration-200">
-                          <td className="px-6 py-4 text-sm font-medium text-[#001F3F]">
-                            {maDatTiec}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            {firstService.TenKhachHang}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {firstService.NgayDatTiec
-                              ? new Date(
-                                  firstService.NgayDatTiec
-                                ).toLocaleDateString("vi-VN")
-                              : "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            <button
-                              onClick={() => toggleBookingExpansion(maDatTiec)}
-                              className="flex items-center text-[#001F3F] hover:text-[#003366] transition-colors duration-300"
-                            >
-                              {isExpanded ? (
-                                <>
-                                  <span>Ẩn chi tiết</span>
-                                  <svg
-                                    className="w-4 h-4 ml-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 15l7-7 7 7"
-                                    />
-                                  </svg>
-                                </>
-                              ) : (
-                                <>
-                                  <span>Xem chi tiết</span>
-                                  <svg
-                                    className="w-4 h-4 ml-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 9l-7 7-7-7"
-                                    />
-                                  </svg>
-                                </>
-                              )}
-                            </button>
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-4 bg-gray-50">
-                              <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                  <thead className="bg-[#001F3F]/5">
-                                    <tr>
-                                      <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                                        Tên dịch vụ
-                                      </th>
-                                      <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                                        Số lượng
-                                      </th>
-                                      <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                                        Giá đặt (VNĐ)
-                                      </th>
-                                      <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                                        Thành tiền (VNĐ)
-                                      </th>
-                                      <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                                        Loại dịch vụ
-                                      </th>
-                                      <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                                        Ảnh
-                                      </th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="bg-white divide-y divide-gray-100">
-                                    {bookingServices.map((service) => (
-                                      <tr
-                                        key={`${service.MaDatTiec}-${service.MaDichVu}`}
-                                        className="hover:bg-[#F8F9FA] transition-colors duration-200"
-                                      >
-                                        <td className="px-4 py-2 text-sm font-medium text-[#001F3F]">
-                                          {service.TenDichVu}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-500">
-                                          {service.SoLuong}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-500">
-                                          {formatVND(
-                                            Number(service.DonGiaThoiDiemDat)
-                                          )}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-500">
-                                          {formatVND(Number(service.ThanhTien))}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-500">
-                                          {service.TenLoaiDichVu}
-                                        </td>
-                                        <td className="px-4 py-2">
-                                          {service.AnhURL ? (
-                                            <img
-                                              src={service.AnhURL}
-                                              alt={service.TenDichVu}
-                                              className="w-16 h-16 object-cover rounded-lg mx-auto"
-                                            />
-                                          ) : (
-                                            <span className="text-gray-500">
-                                              Không có ảnh
-                                            </span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
+                      return (
+                        <React.Fragment key={maDatTiec}>
+                          <tr
+                            className={`${
+                              firstService.DaHuy
+                                ? "bg-red-100"
+                                : isPassed
+                                ? "bg-yellow-100"
+                                : "bg-white"
+                            } border-b border-gray-200 hover:bg-opacity-80 transition-colors duration-200`}
+                          >
+                            <td className="px-6 py-4 text-sm font-medium text-[#001F3F]">
+                              {maDatTiec}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              {firstService.TenKhachHang}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {firstService.NgayDatTiec
+                                ? new Date(
+                                    firstService.NgayDatTiec
+                                  ).toLocaleDateString("vi-VN")
+                                : "N/A"}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              <button
+                                onClick={() =>
+                                  toggleBookingExpansion(maDatTiec)
+                                }
+                                className="flex items-center text-[#001F3F] hover:text-[#003366] transition-colors duration-300"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    <span>Ẩn chi tiết</span>
+                                    <svg
+                                      className="w-4 h-4 ml-2"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 15l7-7 7 7"
+                                      />
+                                    </svg>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span>Xem chi tiết</span>
+                                    <svg
+                                      className="w-4 h-4 ml-2"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                      />
+                                    </svg>
+                                  </>
+                                )}
+                              </button>
                             </td>
                           </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={4} className="px-6 py-4 bg-gray-50">
+                                <div className="overflow-x-auto">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-[#001F3F]/5">
+                                      <tr>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                                          Tên dịch vụ
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                                          Số lượng
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                                          Giá đặt (VNĐ)
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                                          Thành tiền (VNĐ)
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                                          Loại dịch vụ
+                                        </th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                                          Ảnh
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-100">
+                                      {bookingServices.map((service) => (
+                                        <tr
+                                          key={`${service.MaDatTiec}-${service.MaDichVu}`}
+                                          className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                                        >
+                                          <td className="px-4 py-2 text-sm font-medium text-[#001F3F]">
+                                            {service.TenDichVu}
+                                          </td>
+                                          <td className="px-4 py-2 text-sm text-gray-500">
+                                            {service.SoLuong}
+                                          </td>
+                                          <td className="px-4 py-2 text-sm text-gray-500">
+                                            {formatVND(
+                                              Number(service.DonGiaThoiDiemDat)
+                                            )}
+                                          </td>
+                                          <td className="px-4 py-2 text-sm text-gray-500">
+                                            {formatVND(
+                                              Number(service.ThanhTien)
+                                            )}
+                                          </td>
+                                          <td className="px-4 py-2 text-sm text-gray-500">
+                                            {service.TenLoaiDichVu}
+                                          </td>
+                                          <td className="px-4 py-2">
+                                            {service.AnhURL ? (
+                                              <img
+                                                src={service.AnhURL}
+                                                alt={service.TenDichVu}
+                                                className="w-16 h-16 object-cover rounded-lg mx-auto"
+                                              />
+                                            ) : (
+                                              <span className="text-gray-500">
+                                                Không có ảnh
+                                              </span>
+                                            )}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>

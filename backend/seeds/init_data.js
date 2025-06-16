@@ -44,80 +44,245 @@ export async function seed(knex) {
       TenChucNang: 'Quản lý loại sảnh',
       TenManHinh: 'loai-sanh',
     },
-    { MaChucNang: 5, TenChucNang: 'Quản lý sảnh', TenManHinh: 'sanh' },
+    {
+      MaChucNang: 5,
+      TenChucNang: 'Lấy danh sách loại sảnh',
+      TenManHinh: 'null',
+    },
     {
       MaChucNang: 6,
+      TenChucNang: 'Lấy chi tiết loại sảnh',
+      TenManHinh: 'null',
+    },
+
+    { MaChucNang: 7, TenChucNang: 'Quản lý sảnh', TenManHinh: 'sanh' },
+    { MaChucNang: 8, TenChucNang: 'Lấy danh sách sảnh', TenManHinh: 'null' },
+    { MaChucNang: 9, TenChucNang: 'Lấy chi tiết sảnh', TenManHinh: 'null' },
+    {
+      MaChucNang: 10,
+      TenChucNang: 'Lấy đơn giá bàn tối thiểu',
+      TenManHinh: 'null',
+    },
+
+    {
+      MaChucNang: 11,
       TenChucNang: 'Quản lý loại món ăn',
       TenManHinh: 'loai-mon-an',
     },
-    { MaChucNang: 7, TenChucNang: 'Quản lý món ăn', TenManHinh: 'mon-an' },
-    { MaChucNang: 8, TenChucNang: 'Quản lý thực đơn', TenManHinh: 'thuc-don' },
     {
-      MaChucNang: 9,
+      MaChucNang: 12,
+      TenChucNang: 'Lấy danh sách loại món ăn',
+      TenManHinh: 'null',
+    },
+    {
+      MaChucNang: 13,
+      TenChucNang: 'Lấy chi tiết loại món ăn',
+      TenManHinh: 'null',
+    },
+    { MaChucNang: 14, TenChucNang: 'Quản lý món ăn', TenManHinh: 'mon-an' },
+    { MaChucNang: 15, TenChucNang: 'Lấy danh sách món ăn', TenManHinh: 'null' },
+    { MaChucNang: 16, TenChucNang: 'Lấy chi tiết món ăn', TenManHinh: 'null' },
+    { MaChucNang: 17, TenChucNang: 'Quản lý thực đơn', TenManHinh: 'thuc-don' },
+    {
+      MaChucNang: 34,
+      TenChucNang: 'Lấy danh sách thực đơn',
+      TenManHinh: 'null',
+    },
+    {
+      MaChucNang: 35,
+      TenChucNang: 'Lấy chi tiết thực đơn',
+      TenManHinh: 'null',
+    },
+    { MaChucNang: 36, TenChucNang: 'Tạo thực đơn', TenManHinh: 'null' },
+    { MaChucNang: 37, TenChucNang: 'Cập nhật thực đơn', TenManHinh: 'null' },
+    {
+      MaChucNang: 18,
       TenChucNang: 'Quản lý loại dịch vụ',
       TenManHinh: 'loai-dich-vu',
     },
-    { MaChucNang: 10, TenChucNang: 'Quản lý dịch vụ', TenManHinh: 'dich-vu' },
-    { MaChucNang: 11, TenChucNang: 'Quản lý ca', TenManHinh: 'ca' },
-    { MaChucNang: 12, TenChucNang: 'Quản lý đặt tiệc', TenManHinh: 'dat-tiec' },
-    { MaChucNang: 13, TenChucNang: 'Quản lý hóa đơn', TenManHinh: 'hoa-don' },
     {
-      MaChucNang: 14,
+      MaChucNang: 19,
+      TenChucNang: 'Lấy danh sách loại dịch vụ',
+      TenManHinh: 'null',
+    },
+    {
+      MaChucNang: 20,
+      TenChucNang: 'Lấy chi tiết loại dịch vụ',
+      TenManHinh: 'null',
+    },
+    { MaChucNang: 21, TenChucNang: 'Quản lý dịch vụ', TenManHinh: 'dich-vu' },
+    {
+      MaChucNang: 22,
+      TenChucNang: 'Lấy danh sách dịch vụ',
+      TenManHinh: 'null',
+    },
+    { MaChucNang: 23, TenChucNang: 'Lấy chi tiết dịch vụ', TenManHinh: 'null' },
+    {
+      MaChucNang: 24,
+      TenChucNang: 'Lấy dịch vụ theo mã đặt tiệc',
+      TenManHinh: 'null',
+    },
+    { MaChucNang: 25, TenChucNang: 'Quản lý ca', TenManHinh: 'ca' },
+    { MaChucNang: 26, TenChucNang: 'Lấy danh sách ca', TenManHinh: 'null' },
+    { MaChucNang: 27, TenChucNang: 'Lấy chi tiết ca', TenManHinh: 'null' },
+    { MaChucNang: 28, TenChucNang: 'Quản lý đặt tiệc', TenManHinh: 'dat-tiec' },
+    {
+      MaChucNang: 29,
+      TenChucNang: 'Lấy danh sách đặt tiệc',
+      TenManHinh: 'null',
+    },
+    {
+      MaChucNang: 30,
+      TenChucNang: 'Lấy chi tiết đặt tiệc',
+      TenManHinh: 'null',
+    },
+    { MaChucNang: 31, TenChucNang: 'Quản lý hóa đơn', TenManHinh: 'hoa-don' },
+    {
+      MaChucNang: 32,
       TenChucNang: 'Quản lý báo cáo doanh thu',
       TenManHinh: 'bao-cao-doanh-so',
     },
-    { MaChucNang: 15, TenChucNang: 'Quản lý tham số', TenManHinh: 'tham-so' },
+    { MaChucNang: 33, TenChucNang: 'Quản lý tham số', TenManHinh: 'null' },
   ]);
 
   // Seed bảng NHOMNGUOIDUNG
   await knex('NHOMNGUOIDUNG').insert([
-    { MaNhom: 1, TenNhom: 'Quản trị viên hệ thống (Admin)' },
-    { MaNhom: 2, TenNhom: 'Nhân viên thực đơn (Bộ phận bếp)' },
-    { MaNhom: 3, TenNhom: 'Nhân viên dịch vụ (Sự kiện)' },
-    { MaNhom: 4, TenNhom: 'Nhân viên lễ tân / Đặt tiệc' },
+    { MaNhom: 1, TenNhom: 'Super Admin' },
+    { MaNhom: 2, TenNhom: 'Nhân viên Thực Đơn' },
+    { MaNhom: 3, TenNhom: 'Nhân viên dịch vụ' },
+    { MaNhom: 4, TenNhom: 'Nhân viên lễ tân' },
     { MaNhom: 5, TenNhom: 'Nhân viên kế toán' },
   ]);
 
   // Seed bảng PHANQUYEN
   await knex('PHANQUYEN').insert([
-    // 1. Quản trị viên hệ thống (Admin): Toàn quyền
-    { MaNhom: 1, MaChucNang: 1 },  // Quản lý người dùng
-    { MaNhom: 1, MaChucNang: 2 },  // Quản lý nhóm người dùng
-    { MaNhom: 1, MaChucNang: 3 },  // Quản lý phân quyền
-    { MaNhom: 1, MaChucNang: 4 },  // Quản lý loại sảnh
-    { MaNhom: 1, MaChucNang: 5 },  // Quản lý sảnh
-    { MaNhom: 1, MaChucNang: 6 },  // Quản lý loại món ăn
-    { MaNhom: 1, MaChucNang: 7 },  // Quản lý món ăn
-    { MaNhom: 1, MaChucNang: 8 },  // Quản lý thực đơn
-    { MaNhom: 1, MaChucNang: 9 },  // Quản lý loại dịch vụ
-    { MaNhom: 1, MaChucNang: 10 }, // Quản lý dịch vụ
-    { MaNhom: 1, MaChucNang: 11 }, // Quản lý ca
-    { MaNhom: 1, MaChucNang: 12 }, // Quản lý đặt tiệc
-    { MaNhom: 1, MaChucNang: 13 }, // Quản lý hóa đơn
-    { MaNhom: 1, MaChucNang: 14 }, // Quản lý báo cáo doanh thu
-    { MaNhom: 1, MaChucNang: 15 }, // Quản lý tham số
-
-    // 2. Nhân viên thực đơn (Bộ phận bếp): Chỉ thao tác với thực đơn, món ăn
-    { MaNhom: 2, MaChucNang: 6 },  // Quản lý loại món ăn
-    { MaNhom: 2, MaChucNang: 7 },  // Quản lý món ăn
-    { MaNhom: 2, MaChucNang: 8 },  // Quản lý thực đơn
-
-    // 3. Nhân viên dịch vụ (Sự kiện): Dịch vụ, loại dịch vụ, ca làm
-    { MaNhom: 3, MaChucNang: 9 },  // Quản lý loại dịch vụ
-    { MaNhom: 3, MaChucNang: 10 }, // Quản lý dịch vụ
-    { MaNhom: 3, MaChucNang: 11 }, // Quản lý ca
-
-    // 4. Nhân viên lễ tân / Đặt tiệc: Đặt tiệc và xem thông tin sảnh, thực đơn, dịch vụ
-    { MaNhom: 4, MaChucNang: 5 },  // Xem sảnh
-    { MaNhom: 4, MaChucNang: 8 },  // Xem thực đơn
-    { MaNhom: 4, MaChucNang: 10 }, // Xem dịch vụ
-    { MaNhom: 4, MaChucNang: 12 }, // Quản lý đặt tiệc
-
-    // 5. Nhân viên kế toán: Hóa đơn, báo cáo doanh thu
-    { MaNhom: 5, MaChucNang: 13 }, // Quản lý hóa đơn
-    { MaNhom: 5, MaChucNang: 14 }, // Quản lý báo cáo doanh thu
+    // Super Admin (MaNhom = 1): Toàn quyền
+    { MaNhom: 1, MaChucNang: 1 },
+    { MaNhom: 1, MaChucNang: 2 },
+    { MaNhom: 1, MaChucNang: 3 },
+    { MaNhom: 1, MaChucNang: 4 },
+    { MaNhom: 1, MaChucNang: 5 },
+    { MaNhom: 1, MaChucNang: 6 },
+    { MaNhom: 1, MaChucNang: 7 },
+    { MaNhom: 1, MaChucNang: 8 },
+    { MaNhom: 1, MaChucNang: 9 },
+    { MaNhom: 1, MaChucNang: 10 },
+    { MaNhom: 1, MaChucNang: 11 },
+    { MaNhom: 1, MaChucNang: 12 },
+    { MaNhom: 1, MaChucNang: 13 },
+    { MaNhom: 1, MaChucNang: 14 },
+    { MaNhom: 1, MaChucNang: 15 },
+    { MaNhom: 1, MaChucNang: 16 },
+    { MaNhom: 1, MaChucNang: 17 },
+    { MaNhom: 1, MaChucNang: 18 },
+    { MaNhom: 1, MaChucNang: 19 },
+    { MaNhom: 1, MaChucNang: 20 },
+    { MaNhom: 1, MaChucNang: 21 },
+    { MaNhom: 1, MaChucNang: 22 },
+    { MaNhom: 1, MaChucNang: 23 },
+    { MaNhom: 1, MaChucNang: 24 },
+    { MaNhom: 1, MaChucNang: 25 },
+    { MaNhom: 1, MaChucNang: 26 },
+    { MaNhom: 1, MaChucNang: 27 },
+    { MaNhom: 1, MaChucNang: 28 },
+    { MaNhom: 1, MaChucNang: 29 },
+    { MaNhom: 1, MaChucNang: 30 },
+    { MaNhom: 1, MaChucNang: 31 },
+    { MaNhom: 1, MaChucNang: 32 },
+    { MaNhom: 1, MaChucNang: 33 },
+    { MaNhom: 1, MaChucNang: 34 },
+    { MaNhom: 1, MaChucNang: 35 },
+    { MaNhom: 1, MaChucNang: 36 },
+    { MaNhom: 1, MaChucNang: 37 },
+    // Nhân viên Thực Đơn
+    //Ma Chuc Nang can them 11 12 13 14 15 16 17 29 30
+    { MaNhom: 2, MaChucNang: 11 },
+    { MaNhom: 2, MaChucNang: 12 },
+    { MaNhom: 2, MaChucNang: 13 },
+    { MaNhom: 2, MaChucNang: 14 },
+    { MaNhom: 2, MaChucNang: 15 },
+    { MaNhom: 2, MaChucNang: 16 },
+    { MaNhom: 2, MaChucNang: 17 },
+    { MaNhom: 2, MaChucNang: 29 },
+    { MaNhom: 2, MaChucNang: 30 },
+    { MaNhom: 2, MaChucNang: 33 },
+    { MaNhom: 2, MaChucNang: 34 },
+    { MaNhom: 2, MaChucNang: 35 },
+    { MaNhom: 2, MaChucNang: 36 },
+    { MaNhom: 2, MaChucNang: 37 },
+    //Nhân viên dịch vụ
+    //Ma Chuc nang can them 4 5 6 7 8 9 10 18 19 20 21 22 23 24 25 26 27 29 30
+    { MaNhom: 3, MaChucNang: 4 },
+    { MaNhom: 3, MaChucNang: 5 },
+    { MaNhom: 3, MaChucNang: 6 },
+    { MaNhom: 3, MaChucNang: 7 },
+    { MaNhom: 3, MaChucNang: 8 },
+    { MaNhom: 3, MaChucNang: 9 },
+    { MaNhom: 3, MaChucNang: 10 },
+    { MaNhom: 3, MaChucNang: 18 },
+    { MaNhom: 3, MaChucNang: 19 },
+    { MaNhom: 3, MaChucNang: 20 },
+    { MaNhom: 3, MaChucNang: 21 },
+    { MaNhom: 3, MaChucNang: 22 },
+    { MaNhom: 3, MaChucNang: 23 },
+    { MaNhom: 3, MaChucNang: 24 },
+    { MaNhom: 3, MaChucNang: 25 },
+    { MaNhom: 3, MaChucNang: 26 },
+    { MaNhom: 3, MaChucNang: 27 },
+    { MaNhom: 3, MaChucNang: 29 },
+    { MaNhom: 3, MaChucNang: 30 },
+    { MaNhom: 3, MaChucNang: 33 },
+    // Nhân viên lễ tân (MaNhom = 4)
+    //Ma Chuc Nang can them 5 6 8 9 10 12 13 15 16 17 19 20 22 23 24 26 27 28 29 30 31
+    { MaNhom: 4, MaChucNang: 5 },
+    { MaNhom: 4, MaChucNang: 6 },
+    { MaNhom: 4, MaChucNang: 8 },
+    { MaNhom: 4, MaChucNang: 9 },
+    { MaNhom: 4, MaChucNang: 10 },
+    { MaNhom: 4, MaChucNang: 12 },
+    { MaNhom: 4, MaChucNang: 13 },
+    { MaNhom: 4, MaChucNang: 15 },
+    { MaNhom: 4, MaChucNang: 16 },
+    { MaNhom: 4, MaChucNang: 19 },
+    { MaNhom: 4, MaChucNang: 20 },
+    { MaNhom: 4, MaChucNang: 22 },
+    { MaNhom: 4, MaChucNang: 23 },
+    { MaNhom: 4, MaChucNang: 24 },
+    { MaNhom: 4, MaChucNang: 26 },
+    { MaNhom: 4, MaChucNang: 27 },
+    { MaNhom: 4, MaChucNang: 28 },
+    { MaNhom: 4, MaChucNang: 29 },
+    { MaNhom: 4, MaChucNang: 30 },
+    { MaNhom: 4, MaChucNang: 31 },
+    { MaNhom: 4, MaChucNang: 33 },
+    { MaNhom: 4, MaChucNang: 34 },
+    { MaNhom: 4, MaChucNang: 35 },
+    { MaNhom: 4, MaChucNang: 36 },
+    { MaNhom: 4, MaChucNang: 37 },
+    // Nhân viên kế toán (MaNhom = 5): Quản lý hóa đơn và báo cáo doanh thu
+    //Ma chuc nang can them 5 6 8 9 10 12 13 15 16 17 19 20 22 23 24 26 27 29 30 31 32
+    { MaNhom: 5, MaChucNang: 5 },
+    { MaNhom: 5, MaChucNang: 6 },
+    { MaNhom: 5, MaChucNang: 8 },
+    { MaNhom: 5, MaChucNang: 9 },
+    { MaNhom: 5, MaChucNang: 10 },
+    { MaNhom: 5, MaChucNang: 12 },
+    { MaNhom: 5, MaChucNang: 13 },
+    { MaNhom: 5, MaChucNang: 15 },
+    { MaNhom: 5, MaChucNang: 16 },
+    { MaNhom: 5, MaChucNang: 19 },
+    { MaNhom: 5, MaChucNang: 20 },
+    { MaNhom: 5, MaChucNang: 22 },
+    { MaNhom: 5, MaChucNang: 23 },
+    { MaNhom: 5, MaChucNang: 24 },
+    { MaNhom: 5, MaChucNang: 26 },
+    { MaNhom: 5, MaChucNang: 27 },
+    { MaNhom: 5, MaChucNang: 29 },
+    { MaNhom: 5, MaChucNang: 30 },
+    { MaNhom: 5, MaChucNang: 31 },
+    { MaNhom: 5, MaChucNang: 32 },
+    { MaNhom: 5, MaChucNang: 33 },
   ]);
-
 
   // Seed bảng NGUOIDUNG
   const hashedPassword = await hash('admin123', 10);
@@ -131,16 +296,16 @@ export async function seed(knex) {
     },
     {
       MaNguoiDung: 2,
-      TenDangNhap: 'bep1',
+      TenDangNhap: 'daubep1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Nhân viên bếp 1',
+      TenNguoiDung: 'Dau bep 1',
       MaNhom: 2,
     },
     {
       MaNguoiDung: 3,
       TenDangNhap: 'dichvu1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Nhân viên sự kiện 1',
+      TenNguoiDung: 'Dich vu 1',
       MaNhom: 3,
     },
     {
@@ -154,7 +319,7 @@ export async function seed(knex) {
       MaNguoiDung: 5,
       TenDangNhap: 'ketoan1',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Nhân viên kế toán 1',
+      TenNguoiDung: 'Kế toán 1',
       MaNhom: 5,
     },
   ]);
@@ -1669,29 +1834,86 @@ export async function seed(knex) {
   ]);
 
   await knex('BAOCAODOANHSO').insert([
-  { MaBaoCaoDoanhSo: 2, Thang: 5, Nam: 2025, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 3, Thang: 4, Nam: 2025, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 4, Thang: 3, Nam: 2025, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 5, Thang: 2, Nam: 2025, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 6, Thang: 1, Nam: 2025, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 7, Thang: 12, Nam: 2024, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 8, Thang: 11, Nam: 2024, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 9, Thang: 10, Nam: 2024, TongDoanhThu: 0 },
-  { MaBaoCaoDoanhSo: 10, Thang: 9, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 2, Thang: 5, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 3, Thang: 4, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 4, Thang: 3, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 5, Thang: 2, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 6, Thang: 1, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 7, Thang: 12, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 8, Thang: 11, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 9, Thang: 10, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 10, Thang: 9, Nam: 2024, TongDoanhThu: 0 },
   ]);
 
   await knex('CHITIET_BAOCAODOANHSO').insert([
-  { MaBaoCaoDoanhSo: 2, Ngay: '2025-05-20', SoLuongTiec: 3, DoanhThu: 96000000, TiLe: 95.50 },
-  { MaBaoCaoDoanhSo: 2, Ngay: '2025-05-18', SoLuongTiec: 2, DoanhThu: 64000000, TiLe: 98.00 },
-  { MaBaoCaoDoanhSo: 3, Ngay: '2025-04-10', SoLuongTiec: 1, DoanhThu: 32000000, TiLe: 90.00 },
-  { MaBaoCaoDoanhSo: 4, Ngay: '2025-03-15', SoLuongTiec: 4, DoanhThu: 128000000, TiLe: 99.50 },
-  { MaBaoCaoDoanhSo: 5, Ngay: '2025-02-25', SoLuongTiec: 2, DoanhThu: 64000000, TiLe: 97.00 },
-  { MaBaoCaoDoanhSo: 6, Ngay: '2025-01-30', SoLuongTiec: 3, DoanhThu: 96000000, TiLe: 96.50 },
-  { MaBaoCaoDoanhSo: 7, Ngay: '2024-12-15', SoLuongTiec: 1, DoanhThu: 32000000, TiLe: 92.00 },
-  { MaBaoCaoDoanhSo: 8, Ngay: '2024-11-20', SoLuongTiec: 2, DoanhThu: 64000000, TiLe: 94.00 },
+    {
+      MaBaoCaoDoanhSo: 2,
+      Ngay: '2025-05-20',
+      SoLuongTiec: 3,
+      DoanhThu: 96000000,
+      TiLe: 95.5,
+    },
+    {
+      MaBaoCaoDoanhSo: 2,
+      Ngay: '2025-05-18',
+      SoLuongTiec: 2,
+      DoanhThu: 64000000,
+      TiLe: 98.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 3,
+      Ngay: '2025-04-10',
+      SoLuongTiec: 1,
+      DoanhThu: 32000000,
+      TiLe: 90.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 4,
+      Ngay: '2025-03-15',
+      SoLuongTiec: 4,
+      DoanhThu: 128000000,
+      TiLe: 99.5,
+    },
+    {
+      MaBaoCaoDoanhSo: 5,
+      Ngay: '2025-02-25',
+      SoLuongTiec: 2,
+      DoanhThu: 64000000,
+      TiLe: 97.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 6,
+      Ngay: '2025-01-30',
+      SoLuongTiec: 3,
+      DoanhThu: 96000000,
+      TiLe: 96.5,
+    },
+    {
+      MaBaoCaoDoanhSo: 7,
+      Ngay: '2024-12-15',
+      SoLuongTiec: 1,
+      DoanhThu: 32000000,
+      TiLe: 92.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 8,
+      Ngay: '2024-11-20',
+      SoLuongTiec: 2,
+      DoanhThu: 64000000,
+      TiLe: 94.0,
+    },
   ]);
 
   // Đặt lại sequence sau khi chèn dữ liệu
+  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 37)'); // Sau MaChucNang: 11
+  await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 5)'); // Sau MaNhom: 1
+  await knex.raw('SELECT setval(\'"NGUOIDUNG_MaNguoiDung_seq"\', 5)'); // Sau MaNguoiDung: 1
+  await knex.raw('SELECT setval(\'"LOAISANH_MaLoaiSanh_seq"\', 3)'); // Sau MaLoaiSanh: 5
+  await knex.raw('SELECT setval(\'"CA_MaCa_seq"\', 5)'); // Sau MaCa: 2
+  await knex.raw('SELECT setval(\'"LOAIDICHVU_MaLoaiDichVu_seq"\', 5)'); // Sau MaLoaiDichVu: 5
+  await knex.raw('SELECT setval(\'"DICHVU_MaDichVu_seq"\', 20)'); // Sau MaDichVu: 20
+  await knex.raw('SELECT setval(\'"HOADON_MaHoaDon_seq"\', 10)'); // Sau MaHoaDon: 11
+  // Đặt lại sequence cho các bảng
   await knex.raw(
     `SELECT setval('"CHUCNANG_MaChucNang_seq"', (SELECT COALESCE(MAX("MaChucNang"), 0) FROM "CHUCNANG"))`
   );
@@ -1712,7 +1934,7 @@ export async function seed(knex) {
   );
   await knex.raw(
     `SELECT setval('"DICHVU_MaDichVu_seq"', (SELECT COALESCE(MAX("MaDichVu"), 0) FROM "DICHVU"))`
-  );  
+  );
   await knex.raw(
     `SELECT setval('"HOADON_MaHoaDon_seq"', (SELECT COALESCE(MAX("MaHoaDon"), 0) FROM "HOADON"))`
   );

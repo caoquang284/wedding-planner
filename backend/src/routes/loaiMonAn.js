@@ -16,13 +16,13 @@ router.post(
 router.get(
   '/danh-sach',
   auth,
-  checkPermission('Quản lý loại món ăn'),
+  checkPermission('Lấy danh sách loại món ăn'),
   loaiMonAnController.getAllLoaiMonAn
 );
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission('Quản lý loại món ăn'),
+  checkPermission('Lấy chi tiết loại món ăn'),
   validation.validateIdParam,
   loaiMonAnController.getLoaiMonAn
 );
