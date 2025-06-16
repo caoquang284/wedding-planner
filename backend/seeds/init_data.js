@@ -19,6 +19,8 @@ export async function seed(knex) {
   await knex('THAMSO').del();
   await knex('DICHVU').del();
   await knex('LOAIDICHVU').del();
+  await knex('CHITIET_BAOCAODOANHSO').del();
+  await knex('BAOCAODOANHSO').del();
 
   // Seed bảng CHUCNANG
   await knex('CHUCNANG').insert([
@@ -1663,6 +1665,30 @@ export async function seed(knex) {
       TrangThai: 0,
     },
   ]);
+
+  await knex('BAOCAODOANHSO').insert([
+  { MaBaoCaoDoanhSo: 2, Thang: 5, Nam: 2025, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 3, Thang: 4, Nam: 2025, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 4, Thang: 3, Nam: 2025, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 5, Thang: 2, Nam: 2025, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 6, Thang: 1, Nam: 2025, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 7, Thang: 12, Nam: 2024, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 8, Thang: 11, Nam: 2024, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 9, Thang: 10, Nam: 2024, TongDoanhThu: 0 },
+  { MaBaoCaoDoanhSo: 10, Thang: 9, Nam: 2024, TongDoanhThu: 0 },
+  ]);
+
+  await knex('CHITIET_BAOCAODOANHSO').insert([
+  { MaBaoCaoDoanhSo: 2, Ngay: '2025-05-20', SoLuongTiec: 3, DoanhThu: 96000000, TiLe: 95.50 },
+  { MaBaoCaoDoanhSo: 2, Ngay: '2025-05-18', SoLuongTiec: 2, DoanhThu: 64000000, TiLe: 98.00 },
+  { MaBaoCaoDoanhSo: 3, Ngay: '2025-04-10', SoLuongTiec: 1, DoanhThu: 32000000, TiLe: 90.00 },
+  { MaBaoCaoDoanhSo: 4, Ngay: '2025-03-15', SoLuongTiec: 4, DoanhThu: 128000000, TiLe: 99.50 },
+  { MaBaoCaoDoanhSo: 5, Ngay: '2025-02-25', SoLuongTiec: 2, DoanhThu: 64000000, TiLe: 97.00 },
+  { MaBaoCaoDoanhSo: 6, Ngay: '2025-01-30', SoLuongTiec: 3, DoanhThu: 96000000, TiLe: 96.50 },
+  { MaBaoCaoDoanhSo: 7, Ngay: '2024-12-15', SoLuongTiec: 1, DoanhThu: 32000000, TiLe: 92.00 },
+  { MaBaoCaoDoanhSo: 8, Ngay: '2024-11-20', SoLuongTiec: 2, DoanhThu: 64000000, TiLe: 94.00 },
+  ]);
+
   // Đặt lại sequence sau khi chèn dữ liệu
   await knex.raw(
     `SELECT setval('"CHUCNANG_MaChucNang_seq"', (SELECT COALESCE(MAX("MaChucNang"), 0) FROM "CHUCNANG"))`
@@ -1699,5 +1725,8 @@ export async function seed(knex) {
   );
   await knex.raw(
     `SELECT setval('"DATTIEC_MaDatTiec_seq"', (SELECT COALESCE(MAX("MaDatTiec"), 0) FROM "DATTIEC"))`
+  );
+  await knex.raw(
+    `SELECT setval('"BAOCAODOANHSO_MaBaoCaoDoanhSo_seq"', (SELECT COALESCE(MAX("MaBaoCaoDoanhSo"), 0) FROM "BAOCAODOANHSO"))`
   );
 }

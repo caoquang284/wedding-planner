@@ -351,9 +351,6 @@ const validateBaoCaoDoanhSo = [
   body('nam')
     .isInt({ min: 2000 })
     .withMessage('Năm phải lớn hơn hoặc bằng 2000'),
-  body('tongDoanhThu')
-    .isFloat({ min: 0 })
-    .withMessage('Tổng doanh thu phải là số không âm'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
