@@ -35,6 +35,17 @@ interface IMonAn {
   GhiChu?: string;
   AnhURL?: string;
 }
+
+interface IMonAnThucDon {
+  MaMonAn: number;
+  TenMonAn: string;
+  MaLoaiMonAn: number;
+  TenLoaiMonAn: string;
+  DonGiaThoiDiemDat: number;
+  GhiChu?: string;
+  AnhURL?: string;
+}
+
 // Interface cho thực đơn
 interface IThucDon {
   MaThucDon: number;
@@ -44,6 +55,7 @@ interface IThucDon {
   GhiChu?: string;
   Cover_Img?: string;
   MonAnList?: IMonAn[];
+  MonAnTrongThucDon?: { MaMonAn: number; DonGiaThoiDiemDat: number }[];
 }
 
 // Interface cho ca
@@ -122,6 +134,22 @@ interface IModalXacNhan {
   onConfirm: () => void;
 }
 
+// Hàm chuyển đổi từ IMonAn sang IMonAnThucDon
+const convertToMonAnThucDon = (
+  monAn: IMonAn,
+  donGiaThoiDiemDat: number
+): IMonAnThucDon => {
+  return {
+    MaMonAn: monAn.MaMonAn,
+    TenMonAn: monAn.TenMonAn,
+    MaLoaiMonAn: monAn.MaLoaiMonAn,
+    TenLoaiMonAn: monAn.TenLoaiMonAn,
+    DonGiaThoiDiemDat: donGiaThoiDiemDat,
+    GhiChu: monAn.GhiChu,
+    AnhURL: monAn.AnhURL,
+  };
+};
+
 function Admin_Wedding() {
   // API loading states
   const [isLoadingMenus, setIsLoadingMenus] = useState(true);
@@ -194,6 +222,7 @@ function Admin_Wedding() {
     DonGiaHienTai: number;
     DonGiaThoiDiemDat: number;
     MonAnList: IMonAn[];
+    MonAnTrongThucDon: { MaMonAn: number; DonGiaThoiDiemDat: number }[];
   } | null>(null);
 
   // Add new state for detail modal
@@ -244,14 +273,21 @@ function Admin_Wedding() {
         const menusWithDetails = await Promise.all(
           limitedMenusData.map(async (menu: IThucDon) => {
             const menuDetail = await getThucDonById(menu.MaThucDon);
+            const monAnTrongThucDon = menuDetail.MonAnList?.map(
+              (monAn: IMonAnThucDon) => ({
+                MaMonAn: monAn.MaMonAn,
+                DonGiaThoiDiemDat: monAn.DonGiaThoiDiemDat,
+              })
+            );
+            //console.log(monAnTrongThucDon);
             return {
               ...menu,
               MonAnList: menuDetail.MonAnList || [],
+              MonAnTrongThucDon: monAnTrongThucDon || [],
             };
           })
         );
-        setApiMenus(menusWithDetails);
-        setIsLoadingMenus(false);
+
         setApiMenus(menusWithDetails);
         setIsLoadingMenus(false);
 
@@ -278,7 +314,6 @@ function Admin_Wedding() {
         // Load bookings
         setIsLoadingBookings(true);
         const bookingsData = await getAllDatTiec();
-        console.log(bookingsData);
         setBookings(bookingsData);
         setIsLoadingBookings(false);
 
@@ -378,6 +413,7 @@ function Admin_Wedding() {
           DonGiaHienTai: menuDetail.DonGiaHienTai,
           DonGiaThoiDiemDat: menuDetail.DonGiaThoiDiemDat,
           MonAnList: menuDetail.MonAnList || [],
+          MonAnTrongThucDon: menuDetail.MonAnList || [],
         });
       }
 
@@ -599,6 +635,13 @@ function Admin_Wedding() {
           AnhURL: dish?.AnhURL,
         };
       }),
+      MonAnTrongThucDon: selectedDishes.map((id) => {
+        const dish = apiDishes.find((d) => d.MaMonAn === id);
+        return {
+          MaMonAn: id,
+          DonGiaThoiDiemDat: dish?.DonGia || 0,
+        };
+      }),
     };
 
     setTempMenu(newTempMenu);
@@ -664,7 +707,7 @@ function Admin_Wedding() {
         });
       } else {
         const donGiaBanToiThieu = await getDonGiaBanToiThieu(selectedHall);
-        console.log(donGiaBanToiThieu);
+
         if (menuPrice < donGiaBanToiThieu) {
           alert("Đơn giá thực đơn phải lớn hơn đơn giá bàn tối thiểu");
           return;
@@ -735,7 +778,6 @@ function Admin_Wedding() {
               const existingInvoice = await getHoaDonByMaDatTiec(
                 formData.MaDatTiec
               );
-              console.log(existingInvoice.data[0]);
               if (existingInvoice.data[0]) {
                 const invoice = existingInvoice.data[0]; // Lấy hóa đơn đầu tiên
                 const maHoaDon = invoice.MaHoaDon;
@@ -763,7 +805,6 @@ function Admin_Wedding() {
                   );
                   updateData.TrangThai = 3;
                 }
-                console.log(updateData);
                 await updateHoaDon(maHoaDon, updateData);
               }
             } else {
@@ -834,7 +875,6 @@ function Admin_Wedding() {
             const updateData: any = {
               TrangThai: 2,
             };
-            console.log(updateData);
             await updateHoaDon(maHoaDon, updateData);
           }
           // setBookings((prev) =>
@@ -1025,7 +1065,6 @@ function Admin_Wedding() {
     const loadMenuDetails = async () => {
       if (selectedBookingDetail?.MaThucDon) {
         const details = await getMenuDetails(selectedBookingDetail.MaThucDon);
-        console.log("Menu Details:", details); // Thêm log để debug
         setMenuDetails(details);
       }
     };
@@ -1147,13 +1186,22 @@ function Admin_Wedding() {
                   );
                   if (!categoryDishes?.length) return null;
 
+                  const convertedDishes = categoryDishes.map((dish) =>
+                    convertToMonAnThucDon(
+                      dish,
+                      menu.MonAnTrongThucDon?.find(
+                        (m) => m.MaMonAn === dish.MaMonAn
+                      )?.DonGiaThoiDiemDat || 0
+                    )
+                  );
+                  //console.log(convertedDishes);
                   return (
                     <div key={category.MaLoaiMonAn} className="mb-4">
                       <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
                         {category.TenLoaiMonAn}
                       </h6>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {categoryDishes.map((dish) => (
+                        {convertedDishes.map((dish) => (
                           <div
                             key={dish.MaMonAn}
                             className="flex items-start gap-3 p-3 border rounded-lg bg-white"
@@ -1166,7 +1214,7 @@ function Admin_Wedding() {
                                 {dish.GhiChu || "Không có ghi chú"}
                               </p>
                               <p className="text-xs text-[#B8860B] mt-1">
-                                {formatVND(dish.DonGia)}
+                                {formatVND(dish.DonGiaThoiDiemDat)}
                               </p>
                             </div>
                           </div>
@@ -1914,104 +1962,6 @@ function Admin_Wedding() {
 
               {isEditMode ? renderEditModeMenu() : renderMenuSection()}
             </div>
-
-            {/* <div className="mb-6">
-              <h5 className="text-sm font-medium text-[#001F3F] mb-3">
-                Tùy Chỉnh Thực Đơn
-              </h5>
-              <div className="border rounded-lg p-4 bg-white shadow-sm">
-                {apiDishTypes.map((category) => (
-                  <div key={category.MaLoaiMonAn} className="mb-4">
-                    <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
-                      {category.TenLoaiMonAn}
-                    </h6>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {apiDishes
-                        .filter(
-                          (dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn
-                        )
-                        .map((dish) => (
-                          <div
-                            key={dish.MaMonAn}
-                            className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedDishes.includes(dish.MaMonAn)}
-                              onChange={(e) => {
-                                const newSelectedDishes = e.target.checked
-                                  ? [...selectedDishes, dish.MaMonAn]
-                                  : selectedDishes.filter(
-                                      (id) => id !== dish.MaMonAn
-                                    );
-                                setSelectedDishes(newSelectedDishes);
-                                checkIfCustomMenu(newSelectedDishes);
-
-                                // Update temp menu if exists
-                                if (tempMenu) {
-                                  const totalPrice = newSelectedDishes.reduce(
-                                    (total, dishId) => {
-                                      const dish = apiDishes.find(
-                                        (d) => d.MaMonAn === dishId
-                                      );
-                                      return (
-                                        total + (dish ? Number(dish.DonGia) : 0)
-                                      );
-                                    },
-                                    0
-                                  );
-
-                                  setTempMenu({
-                                    ...tempMenu,
-                                    DonGiaHienTai: totalPrice,
-                                    MonAnList: newSelectedDishes.map((id) => {
-                                      const dish = apiDishes.find(
-                                        (d) => d.MaMonAn === id
-                                      );
-                                      return {
-                                        MaMonAn: id,
-                                        TenMonAn: dish?.TenMonAn || "",
-                                        MaLoaiMonAn: dish?.MaLoaiMonAn || 0,
-                                        TenLoaiMonAn: dish?.TenLoaiMonAn || "",
-                                        DonGia: dish?.DonGia || 0,
-                                        GhiChu: dish?.GhiChu,
-                                        AnhURL: dish?.AnhURL,
-                                      };
-                                    }),
-                                  });
-                                }
-                              }}
-                              className="h-4 w-4 mt-1 text-[#B8860B] rounded"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-start gap-2">
-                                {dish.AnhURL && (
-                                  <img
-                                    src={dish.AnhURL}
-                                    alt={dish.TenMonAn}
-                                    className="w-12 h-12 object-cover rounded-lg"
-                                  />
-                                )}
-                                <div>
-                                  <span className="text-sm font-medium text-[#001F3F]">
-                                    {dish.TenMonAn}
-                                  </span>
-                                  <p className="text-xs text-[#001F3F] mt-0.5">
-                                    {dish.GhiChu || "Không có ghi chú"}
-                                  </p>
-                                  <p className="text-xs text-[#B8860B] mt-0.5">
-                                    {formatVND(dish.DonGia)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div> */}
 
             <div className="mb-8">
               <h4 className="text-lg font-semibold text-[#001F3F] mb-4">

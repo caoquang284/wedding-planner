@@ -93,8 +93,6 @@ const Navbar = () => {
     },
   ];
 
-  console.log("User:", user);
-
   // Lọc navItems dựa trên permissions và maNhom
   const navItems: NavItem[] =
     user?.maNhom === 1
@@ -145,14 +143,6 @@ const Navbar = () => {
             }
             return true;
           });
-
-  console.log(
-    "💥 NAV ITEMS cuối cùng:",
-    navItems.map((i) => ({
-      label: i.label,
-      items: i.items ? i.items.map((sub) => sub.label) : undefined,
-    }))
-  );
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
