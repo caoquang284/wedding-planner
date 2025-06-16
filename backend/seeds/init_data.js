@@ -1664,23 +1664,40 @@ export async function seed(knex) {
     },
   ]);
   // Đặt lại sequence sau khi chèn dữ liệu
-  await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 15)'); // Sau MaChucNang: 11
-  await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 5)'); // Sau MaNhom: 1
-  await knex.raw('SELECT setval(\'"NGUOIDUNG_MaNguoiDung_seq"\', 5)'); // Sau MaNguoiDung: 1
-  await knex.raw('SELECT setval(\'"LOAISANH_MaLoaiSanh_seq"\', 3)'); // Sau MaLoaiSanh: 5
-  await knex.raw('SELECT setval(\'"CA_MaCa_seq"\', 5)'); // Sau MaCa: 2
-  await knex.raw('SELECT setval(\'"LOAIDICHVU_MaLoaiDichVu_seq"\', 5)'); // Sau MaLoaiDichVu: 5
-  await knex.raw('SELECT setval(\'"DICHVU_MaDichVu_seq"\', 20)'); // Sau MaDichVu: 20
-  await knex.raw('SELECT setval(\'"HOADON_MaHoaDon_seq"\', 10)'); // Sau MaHoaDon: 11
-  // Đặt lại sequence cho các bảng
   await knex.raw(
-    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT MAX("MaLoaiMonAn") FROM "LOAIMONAN"))`
+    `SELECT setval('"CHUCNANG_MaChucNang_seq"', (SELECT COALESCE(MAX("MaChucNang"), 0) + 1 FROM "CHUCNANG"))`
   );
   await knex.raw(
-    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT MAX("MaMonAn") FROM "MONAN"))`
+    `SELECT setval('"NHOMNGUOIDUNG_MaNhom_seq"', (SELECT COALESCE(MAX("MaNhom"), 0) + 1 FROM "NHOMNGUOIDUNG"))`
   );
   await knex.raw(
-    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT MAX("MaThucDon") FROM "THUCDON"))`
+    `SELECT setval('"NGUOIDUNG_MaNguoiDung_seq"', (SELECT COALESCE(MAX("MaNguoiDung"), 0) + 1 FROM "NGUOIDUNG"))`
   );
-  await knex.raw('SELECT setval(\'"DATTIEC_MaDatTiec_seq"\', 10)'); // Sau MaDatTiec: 11
+  await knex.raw(
+    `SELECT setval('"LOAISANH_MaLoaiSanh_seq"', (SELECT COALESCE(MAX("MaLoaiSanh"), 0) + 1 FROM "LOAISANH"))`
+  );
+  await knex.raw(
+    `SELECT setval('"CA_MaCa_seq"', (SELECT COALESCE(MAX("MaCa"), 0) + 1 FROM "CA"))`
+  );
+  await knex.raw(
+    `SELECT setval('"LOAIDICHVU_MaLoaiDichVu_seq"', (SELECT COALESCE(MAX("MaLoaiDichVu"), 0) + 1 FROM "LOAIDICHVU"))`
+  );
+  await knex.raw(
+    `SELECT setval('"DICHVU_MaDichVu_seq"', (SELECT COALESCE(MAX("MaDichVu"), 0) + 1 FROM "DICHVU"))`
+  );  
+  await knex.raw(
+    `SELECT setval('"HOADON_MaHoaDon_seq"', (SELECT COALESCE(MAX("MaHoaDon"), 0) + 1 FROM "HOADON"))`
+  );
+  await knex.raw(
+    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT COALESCE(MAX("MaLoaiMonAn"), 0) + 1 FROM "LOAIMONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT COALESCE(MAX("MaMonAn"), 0) + 1 FROM "MONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT COALESCE(MAX("MaThucDon"), 0) + 1 FROM "THUCDON"))`
+  );
+  await knex.raw(
+    `SELECT setval('"DATTIEC_MaDatTiec_seq"', (SELECT COALESCE(MAX("MaDatTiec"), 0) + 1 FROM "DATTIEC"))`
+  );
 }
