@@ -16,36 +16,35 @@ router.post(
 router.get(
   '/danh-sach',
   auth,
-  checkPermission('Quản lý sảnh'),
+  checkPermission('Lấy danh sách sảnh'),
   sanhController.getAllSanh
 );
 router.get(
   '/chi-tiet/:id',
-  // auth,
-  // checkPermission('Quản lý sảnh'),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Lấy chi tiết sảnh'),
+  validation.validateIdParam,
   sanhController.getSanh
 );
 router.put(
   '/cap-nhat/:id',
-  // auth,
-  // checkPermission('Quản lý sảnh'),
-  // validation.validateIdParam,
-  // validation.validateSanh,
+  auth,
+  checkPermission('Quản lý sảnh'),
+  validation.validateIdParam,
+  validation.validateSanh,
   sanhController.updateSanh
 );
 router.delete(
   '/xoa/:id',
-  // auth,
-  // checkPermission('Quản lý sảnh'),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Quản lý sảnh'),
+  validation.validateIdParam,
   sanhController.deleteSanh
 );
 router.get(
   '/don-gia-ban-toi-thieu/:maSanh',
-  // auth,
-  // checkPermission('Quản lý sảnh'),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Lấy đơn giá bàn tối thiểu'),
   sanhController.getDonGiaBanToiThieuTuMaSanh
 );
 

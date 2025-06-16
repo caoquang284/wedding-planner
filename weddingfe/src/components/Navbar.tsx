@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../src/contexts/AuthContext";
 
@@ -36,6 +36,7 @@ const Navbar = () => {
         "Quản lý loại dịch vụ",
         "Quản lý dịch vụ",
         "Quản lý ca",
+        "Quản lý hóa đơn", // Thêm quyền để dropdown có thể hiển thị
       ],
       items: [
         {
@@ -46,20 +47,27 @@ const Navbar = () => {
         {
           path: "/admin/menus",
           label: "Quản lý thực đơn",
-          permissions: ["Quản lý loại món ăn", "Quản lý món ăn", "Quản lý thực đơn"],
+          permissions: [
+            "Quản lý loại món ăn",
+            "Quản lý món ăn",
+            "Quản lý thực đơn",
+          ],
         },
         {
           path: "/admin/services",
           label: "Quản lý dịch vụ",
-          permissions: ["Quản lý loại dịch vụ", "Quản lý dịch vụ", "Quản lý ca"],
+          permissions: [
+            "Quản lý loại dịch vụ",
+            "Quản lý dịch vụ",
+            "Quản lý ca",
+          ],
+        },
+        {
+          path: "/admin/invoices",
+          label: "Quản lý hóa đơn",
+          permissions: ["Quản lý hóa đơn"],
         },
       ],
-    },
-    {
-      type: "link",
-      path: "/admin/invoices",
-      label: "Quản lý hóa đơn",
-      permissions: ["Quản lý hóa đơn"],
     },
     {
       type: "link",
@@ -77,34 +85,74 @@ const Navbar = () => {
       type: "link",
       path: "/admin/permissions",
       label: "Phân quyền",
-      permissions: ["Quản lý người dùng", "Quản lý nhóm người dùng", "Quản lý phân quyền"],
+      permissions: [
+        "Quản lý người dùng",
+        "Quản lý nhóm người dùng",
+        "Quản lý phân quyền",
+      ],
     },
   ];
 
-  // Nếu user là Super Admin (MaNhom: 1), hiển thị tất cả navItems
-  // Nếu không, lọc theo permissions
-  const navItems = user?.maNhom === 1
-    ? allNavItems
-    : allNavItems
-        .filter((item) => {
-          if (!item.permissions || (user && item.permissions.some((perm) => user.permissions.includes(perm)))) {
+  console.log("User:", user);
+
+  // Lọc navItems dựa trên permissions và maNhom
+  const navItems: NavItem[] =
+    user?.maNhom === 1
+      ? allNavItems
+      : allNavItems
+          .filter((item) => {
+            // Loại bỏ các mục không có quyền
+            if (
+              !item.permissions ||
+              item.permissions.some((perm) => user?.permissions.includes(perm))
+            ) {
+              return true;
+            }
+
+            // Đặc biệt cho dropdown "Quản lý"
+            if (item.type === "dropdown" && item.items) {
+              return item.items.some((subItem) =>
+                subItem.permissions.some((perm) =>
+                  user?.permissions.includes(perm)
+                )
+              );
+            }
+
+            return false;
+          })
+          .map((item) => {
+            if (item.type === "dropdown" && item.items) {
+              // Lọc sub-items dựa trên permissions
+              item.items = item.items.filter((subItem) => {
+                // Loại bỏ "Quản lý hóa đơn" cho maNhom = 4
+                if (
+                  user?.maNhom === 4 &&
+                  subItem.label.toLowerCase().trim() === "quản lý hóa đơn"
+                ) {
+                  return false;
+                }
+                return subItem.permissions.some((perm) =>
+                  user?.permissions.includes(perm)
+                );
+              });
+            }
+            return item;
+          })
+          .filter((item) => {
+            // Loại bỏ dropdown nếu không có sub-items
+            if (item.type === "dropdown") {
+              return item.items && item.items.length > 0;
+            }
             return true;
-          }
-          if (item.type === "dropdown" && item.items) {
-            return item.items.some((subItem) =>
-              user && subItem.permissions.some((perm) => user.permissions.includes(perm))
-            );
-          }
-          return false;
-        })
-        .map((item) => {
-          if (item.type === "dropdown" && item.items) {
-            item.items = item.items.filter((subItem) =>
-              user && subItem.permissions.some((perm) => user.permissions.includes(perm))
-            );
-          }
-          return item;
-        });
+          });
+
+  console.log(
+    "💥 NAV ITEMS cuối cùng:",
+    navItems.map((i) => ({
+      label: i.label,
+      items: i.items ? i.items.map((sub) => sub.label) : undefined,
+    }))
+  );
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -122,13 +170,19 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`hover:text-gray-600 transition-colors ${
-                    location.pathname === item.path ? "font-bold text-blue-600" : ""
+                    location.pathname === item.path
+                      ? "font-bold text-blue-600"
+                      : ""
                   }`}
                 >
                   {item.label}
                 </Link>
               );
-            } else if (item.type === "dropdown" && item.items && item.items.length > 0) {
+            } else if (
+              item.type === "dropdown" &&
+              item.items &&
+              item.items.length > 0
+            ) {
               return (
                 <div key={index} className="relative">
                   <button
@@ -136,14 +190,17 @@ const Navbar = () => {
                     className={`flex items-center gap-1 hover:text-gray-600 transition-colors ${
                       location.pathname.startsWith("/admin/halls") ||
                       location.pathname.startsWith("/admin/menus") ||
-                      location.pathname.startsWith("/admin/services")
+                      location.pathname.startsWith("/admin/services") ||
+                      location.pathname.startsWith("/admin/invoices")
                         ? "font-bold text-blue-600"
                         : ""
                     }`}
                   >
                     {item.label}
                     <svg
-                      className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 transition-transform ${
+                        isDropdownOpen ? "rotate-180" : ""
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -165,7 +222,9 @@ const Navbar = () => {
                           to={subItem.path}
                           onClick={() => setIsDropdownOpen(false)}
                           className={`block px-4 py-2 text-sm font-medium hover:bg-gray-200 rounded-md transition-colors ${
-                            location.pathname === subItem.path ? "font-bold text-blue-600" : ""
+                            location.pathname === subItem.path
+                              ? "font-bold text-blue-600"
+                              : ""
                           }`}
                         >
                           {subItem.label}
@@ -217,7 +276,11 @@ const Navbar = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+                d={
+                  isMobileMenuOpen
+                    ? "M6 18L18 6M6 6l12 12"
+                    : "M4 6h16M4 12h16M4 18h16"
+                }
               />
             </svg>
           </button>
@@ -234,13 +297,19 @@ const Navbar = () => {
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`py-2 px-4 text-sm font-medium hover:bg-gray-100 rounded-md transition-colors ${
-                      location.pathname === item.path ? "font-bold text-blue-600" : ""
+                      location.pathname === item.path
+                        ? "font-bold text-blue-600"
+                        : ""
                     }`}
                   >
                     {item.label}
                   </Link>
                 );
-              } else if (item.type === "dropdown" && item.items && item.items.length > 0) {
+              } else if (
+                item.type === "dropdown" &&
+                item.items &&
+                item.items.length > 0
+              ) {
                 return (
                   <div key={index} className="flex flex-col">
                     <button
@@ -248,14 +317,17 @@ const Navbar = () => {
                       className={`py-2 px-4 text-sm font-medium text-left flex items-center gap-1 hover:bg-gray-100 rounded-md transition-colors ${
                         location.pathname.startsWith("/admin/halls") ||
                         location.pathname.startsWith("/admin/menus") ||
-                        location.pathname.startsWith("/admin/services")
+                        location.pathname.startsWith("/admin/services") ||
+                        location.pathname.startsWith("/admin/invoices")
                           ? "font-bold text-blue-600"
                           : ""
                       }`}
                     >
                       {item.label}
                       <svg
-                        className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                        className={`w-4 h-4 transition-transform ${
+                          isDropdownOpen ? "rotate-180" : ""
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -280,7 +352,9 @@ const Navbar = () => {
                               setIsDropdownOpen(false);
                             }}
                             className={`py-2 px-4 text-sm font-medium hover:bg-gray-200 rounded-md transition-colors ${
-                              location.pathname === subItem.path ? "font-bold text-blue-600" : ""
+                              location.pathname === subItem.path
+                                ? "font-bold text-blue-600"
+                                : ""
                             }`}
                           >
                             {subItem.label}

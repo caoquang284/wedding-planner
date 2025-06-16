@@ -64,33 +64,3 @@ export const deleteThucDon = async (id: number) => {
   return response.data;
 };
 
-// Quản lý món ăn trong thực đơn
-export const addMonAnToThucDon = async (
-  thucDonId: number, 
-  data: {
-    maMonAn: number;
-    donGiaThoiDiemDat: number;
-  }
-) => {
-  const response = await axiosInstance.post(`/${thucDonId}/them-mon-an`, data);
-  return response.data;
-};
-
-export const removeMonAnFromThucDon = async (
-  thucDonId: number, 
-  maMonAn: number
-) => {
-  const response = await axiosInstance.delete(`/${thucDonId}/xoa-mon-an/${maMonAn}`);
-  return response.data;
-};
-
-export const updateMonAnInThucDon = async (
-  thucDonId: number, 
-  maMonAn: number, 
-  data: {
-    donGiaThoiDiemDat: number;
-  }
-) => {
-  const response = await axiosInstance.put(`/${thucDonId}/cap-nhat-mon-an/${maMonAn}`, data);
-  return response.data;
-};

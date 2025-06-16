@@ -16,14 +16,13 @@ router.post(
 router.get(
   '/danh-sach',
   auth,
-  checkPermission('Quản lý loại dịch vụ'),
+  checkPermission('Lấy danh sách loại dịch vụ'),
   loaiDichVuController.getAllLoaiDichVu
 );
 router.get(
   '/chi-tiet/:id',
   auth,
-  checkPermission('Quản lý loại dịch vụ'),
-  validation.validateIdParam,
+  checkPermission('Lấy chi tiết loại dịch vụ'),
   loaiDichVuController.getLoaiDichVu
 );
 router.put(

@@ -17,7 +17,6 @@ import {
   createDatTiec,
   getAllDatTiec,
   updateDatTiec,
-  deleteDatTiec,
   cancelDatTiec,
 } from "../../Api/datTiecApi";
 import {

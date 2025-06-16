@@ -120,22 +120,3 @@ export const cancelDatTiec = async (id: number) => {
   }
 };
 
-// Thêm dịch vụ
-export const themDichVu = async (id: number, data: DichVu) => {
-  try {
-    const response = await axiosInstance.post(`/them-dich-vu/${id}`, data);
-    return response.data;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
-
-// Xóa dịch vụ
-export const xoaDichVu = async (id: number, maDichVu: number) => {
-  try {
-    const response = await axiosInstance.delete(`/xoa-dich-vu/${id}/${maDichVu}`);
-    return response.data;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};

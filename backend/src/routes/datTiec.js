@@ -19,7 +19,7 @@ router.post(
 router.get(
   '/danh-sach',
   auth,
-  checkPermission('Quản lý đặt tiệc'),
+  checkPermission('Lấy danh sách đặt tiệc'),
   validation.validateDatTiecFilters,
   datTiecController.getAllDatTiec
 );
@@ -27,9 +27,9 @@ router.get(
 // Lấy chi tiết đặt tiệc
 router.get(
   '/chi-tiet/:id',
-  // auth,
-  // checkPermission(18),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Lấy chi tiết đặt tiệc'),
+  validation.validateIdParam,
   datTiecController.getDatTiecById
 );
 
@@ -55,50 +55,10 @@ router.delete(
 // Hủy đặt tiệc
 router.put(
   '/huy/:id',
-  // auth,
-  // checkPermission(17),
-  // validation.validateIdParam,
+  auth,
+  checkPermission('Quản lý đặt tiệc'),
+  validation.validateIdParam,
   datTiecController.cancelDatTiec
-);
-
-// Thêm món ăn vào thực đơn
-router.post(
-  '/them-mon-an/:id',
-  auth,
-  checkPermission('Quản lý đặt tiệc'),
-  validation.validateIdParam,
-  validation.validateThemMonAn,
-  datTiecController.themMonAn
-);
-
-// Xóa món ăn khỏi thực đơn
-router.delete(
-  '/xoa-mon-an/:id/:maMonAn',
-  auth,
-  checkPermission('Quản lý đặt tiệc'),
-  validation.validateIdParam,
-  validation.validateMaMonAnParam,
-  datTiecController.xoaMonAn
-);
-
-// Thêm dịch vụ vào đặt tiệc
-router.post(
-  '/them-dich-vu/:id',
-  auth,
-  checkPermission('Quản lý đặt tiệc'),
-  validation.validateIdParam,
-  validation.validateThemDichVu,
-  datTiecController.themDichVu
-);
-
-// Xóa dịch vụ khỏi đặt tiệc
-router.delete(
-  '/xoa-dich-vu/:id/:maDichVu',
-  auth,
-  checkPermission('Quản lý đặt tiệc'),
-  validation.validateIdParam,
-  validation.validateMaDichVuParam,
-  datTiecController.xoaDichVu
 );
 
 export default router;
