@@ -19,6 +19,8 @@ export async function seed(knex) {
   await knex('THAMSO').del();
   await knex('DICHVU').del();
   await knex('LOAIDICHVU').del();
+  await knex('CHITIET_BAOCAODOANHSO').del();
+  await knex('BAOCAODOANHSO').del();
 
   // Seed bảng CHUCNANG
   await knex('CHUCNANG').insert([
@@ -283,13 +285,13 @@ export async function seed(knex) {
   ]);
 
   // Seed bảng NGUOIDUNG
-  const hashedPassword = await hash('admin123', 10); // Mã hóa mật khẩu
+  const hashedPassword = await hash('admin123', 10);
   await knex('NGUOIDUNG').insert([
     {
       MaNguoiDung: 1,
-      TenDangNhap: 'superadmin',
+      TenDangNhap: 'admin',
       MatKhau: hashedPassword,
-      TenNguoiDung: 'Super Administrator',
+      TenNguoiDung: 'Quản trị viên hệ thống',
       MaNhom: 1,
     },
     {
@@ -1850,6 +1852,78 @@ export async function seed(knex) {
       TrangThai: 0,
     },
   ]);
+
+  await knex('BAOCAODOANHSO').insert([
+    { MaBaoCaoDoanhSo: 2, Thang: 5, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 3, Thang: 4, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 4, Thang: 3, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 5, Thang: 2, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 6, Thang: 1, Nam: 2025, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 7, Thang: 12, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 8, Thang: 11, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 9, Thang: 10, Nam: 2024, TongDoanhThu: 0 },
+    { MaBaoCaoDoanhSo: 10, Thang: 9, Nam: 2024, TongDoanhThu: 0 },
+  ]);
+
+  await knex('CHITIET_BAOCAODOANHSO').insert([
+    {
+      MaBaoCaoDoanhSo: 2,
+      Ngay: '2025-05-20',
+      SoLuongTiec: 3,
+      DoanhThu: 96000000,
+      TiLe: 95.5,
+    },
+    {
+      MaBaoCaoDoanhSo: 2,
+      Ngay: '2025-05-18',
+      SoLuongTiec: 2,
+      DoanhThu: 64000000,
+      TiLe: 98.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 3,
+      Ngay: '2025-04-10',
+      SoLuongTiec: 1,
+      DoanhThu: 32000000,
+      TiLe: 90.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 4,
+      Ngay: '2025-03-15',
+      SoLuongTiec: 4,
+      DoanhThu: 128000000,
+      TiLe: 99.5,
+    },
+    {
+      MaBaoCaoDoanhSo: 5,
+      Ngay: '2025-02-25',
+      SoLuongTiec: 2,
+      DoanhThu: 64000000,
+      TiLe: 97.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 6,
+      Ngay: '2025-01-30',
+      SoLuongTiec: 3,
+      DoanhThu: 96000000,
+      TiLe: 96.5,
+    },
+    {
+      MaBaoCaoDoanhSo: 7,
+      Ngay: '2024-12-15',
+      SoLuongTiec: 1,
+      DoanhThu: 32000000,
+      TiLe: 92.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 8,
+      Ngay: '2024-11-20',
+      SoLuongTiec: 2,
+      DoanhThu: 64000000,
+      TiLe: 94.0,
+    },
+  ]);
+
   // Đặt lại sequence sau khi chèn dữ liệu
   await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 37)'); // Sau MaChucNang: 11
   await knex.raw('SELECT setval(\'"NHOMNGUOIDUNG_MaNhom_seq"\', 5)'); // Sau MaNhom: 1
@@ -1861,13 +1935,42 @@ export async function seed(knex) {
   await knex.raw('SELECT setval(\'"HOADON_MaHoaDon_seq"\', 10)'); // Sau MaHoaDon: 11
   // Đặt lại sequence cho các bảng
   await knex.raw(
-    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT MAX("MaLoaiMonAn") FROM "LOAIMONAN"))`
+    `SELECT setval('"CHUCNANG_MaChucNang_seq"', (SELECT COALESCE(MAX("MaChucNang"), 0) FROM "CHUCNANG"))`
   );
   await knex.raw(
-    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT MAX("MaMonAn") FROM "MONAN"))`
+    `SELECT setval('"NHOMNGUOIDUNG_MaNhom_seq"', (SELECT COALESCE(MAX("MaNhom"), 0) FROM "NHOMNGUOIDUNG"))`
   );
   await knex.raw(
-    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT MAX("MaThucDon") FROM "THUCDON"))`
+    `SELECT setval('"NGUOIDUNG_MaNguoiDung_seq"', (SELECT COALESCE(MAX("MaNguoiDung"), 0) FROM "NGUOIDUNG"))`
   );
-  await knex.raw('SELECT setval(\'"DATTIEC_MaDatTiec_seq"\', 10)'); // Sau MaDatTiec: 11
+  await knex.raw(
+    `SELECT setval('"LOAISANH_MaLoaiSanh_seq"', (SELECT COALESCE(MAX("MaLoaiSanh"), 0) FROM "LOAISANH"))`
+  );
+  await knex.raw(
+    `SELECT setval('"CA_MaCa_seq"', (SELECT COALESCE(MAX("MaCa"), 0) FROM "CA"))`
+  );
+  await knex.raw(
+    `SELECT setval('"LOAIDICHVU_MaLoaiDichVu_seq"', (SELECT COALESCE(MAX("MaLoaiDichVu"), 0) FROM "LOAIDICHVU"))`
+  );
+  await knex.raw(
+    `SELECT setval('"DICHVU_MaDichVu_seq"', (SELECT COALESCE(MAX("MaDichVu"), 0) FROM "DICHVU"))`
+  );
+  await knex.raw(
+    `SELECT setval('"HOADON_MaHoaDon_seq"', (SELECT COALESCE(MAX("MaHoaDon"), 0) FROM "HOADON"))`
+  );
+  await knex.raw(
+    `SELECT setval('"LOAIMONAN_MaLoaiMonAn_seq"', (SELECT COALESCE(MAX("MaLoaiMonAn"), 0) FROM "LOAIMONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"MONAN_MaMonAn_seq"', (SELECT COALESCE(MAX("MaMonAn"), 0) FROM "MONAN"))`
+  );
+  await knex.raw(
+    `SELECT setval('"THUCDON_MaThucDon_seq"', (SELECT COALESCE(MAX("MaThucDon"), 0) FROM "THUCDON"))`
+  );
+  await knex.raw(
+    `SELECT setval('"DATTIEC_MaDatTiec_seq"', (SELECT COALESCE(MAX("MaDatTiec"), 0) FROM "DATTIEC"))`
+  );
+  await knex.raw(
+    `SELECT setval('"BAOCAODOANHSO_MaBaoCaoDoanhSo_seq"', (SELECT COALESCE(MAX("MaBaoCaoDoanhSo"), 0) FROM "BAOCAODOANHSO"))`
+  );
 }
