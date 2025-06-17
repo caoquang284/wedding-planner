@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   getAllBaoCaoDoanhSo,
   getBaoCaoDoanhSoById,
-  createBaoCaoDoanhSo,
   getRevenueStatsByDateRange,
 } from '../../Api/baoCaoDoanhSoApi';
-import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -44,10 +42,9 @@ interface DateRange {
 }
 
 interface StatsData {
-  thang: number;
-  nam: number;
-  soluongtiec: number;
-  doanhthu: number;
+  label: string;
+  SoLuongTiec: number;
+  DoanhThu: number;
 }
 
 const formatVND = (value: number | string) => {
@@ -59,54 +56,53 @@ const formatVND = (value: number | string) => {
 const AdminReport: React.FC = () => {
   const [reports, setReports] = useState<BaoCaoDoanhSo[]>([]);
   const [selectedReport, setSelectedReport] = useState<BaoCaoDoanhSo | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormData>({ thang: '', nam: '' });
   const [searchFilters, setSearchFilters] = useState<{ thang?: number; nam?: number }>({});
   const [dateRange, setDateRange] = useState<DateRange>({ startDate: '', endDate: '' });
   const [statsData, setStatsData] = useState<StatsData[]>([]);
+  const [formData, setFormData] = useState<FormData>({ thang: '', nam: '' });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer);
+  const fetchReports = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getAllBaoCaoDoanhSo(searchFilters);
+      setReports(response.data || []);
+    } catch (err: any) {
+      setError('Lỗi khi lấy dữ liệu báo cáo: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
     }
-  }, [successMessage]);
+  };
 
   useEffect(() => {
-    const fetchReports = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await getAllBaoCaoDoanhSo(searchFilters);
-        console.log('Reports response:', response);
-        setReports(response.data || []);
-      } catch (err: any) {
-        setError('Lỗi khi lấy dữ liệu báo cáo: ' + (err.response?.data?.error || err.message));
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchReports();
   }, [searchFilters]);
 
-    useEffect(() => {
-      const fetchStats = async () => {
-        if (dateRange.startDate && dateRange.endDate) {
-          try {
-            const response = await getRevenueStatsByDateRange(dateRange.startDate, dateRange.endDate);
-            console.log('Stats data in frontend:', response.data); // Debug
-            setStatsData(response.data || []);
-          } catch (err: any) {
-            setError('Lỗi khi lấy dữ liệu thống kê: ' + (err.response?.data?.error || err.message));
-          }
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (dateRange.startDate && dateRange.endDate) {
+        try {
+          const response = await getRevenueStatsByDateRange(dateRange.startDate, dateRange.endDate);
+          setStatsData(response.data || []);
+        } catch (err: any) {
+          setError('Lỗi khi lấy dữ liệu thống kê: ' + (err.response?.data?.error || err.message));
         }
-      };
-      fetchStats();
-    }, [dateRange]);
+      }
+    };
+    fetchStats();
+  }, [dateRange]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchReports, 30000);
+    return () => clearInterval(interval);
+  }, [searchFilters]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value } as FormData));
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,37 +114,12 @@ const AdminReport: React.FC = () => {
 
   const handleDateRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setDateRange((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCreateReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const thang = Number(formData.thang);
-    const nam = Number(formData.nam);
-    if (!thang || !nam || thang < 1 || thang > 12 || nam < 2000) {
-      alert('Vui lòng nhập tháng (1-12) và năm hợp lệ (>= 2000)');
-      return;
-    }
-    try {
-      const response = await createBaoCaoDoanhSo({ thang, nam });
-      setReports((prev) => [...prev, response.data]);
-      setSuccessMessage('Tạo báo cáo thành công!');
-      setFormData({ thang: '', nam: '' });
-      setIsModalOpen(false);
-    } catch (error: any) {
-      alert('Lỗi khi tạo báo cáo: ' + (error.response?.data?.error || error.message));
-    }
+    setDateRange((prev) => ({ ...prev, [name]: value } as DateRange));
   };
 
   const handleViewDetail = async (id: number) => {
     try {
       const response = await getBaoCaoDoanhSoById(id);
-      console.log('Detail response:', response);
       setSelectedReport(response.data || null);
     } catch (error: any) {
       alert('Lỗi khi lấy chi tiết báo cáo: ' + (error.response?.data?.error || error.message));
@@ -236,35 +207,54 @@ const AdminReport: React.FC = () => {
     }
   };
 
-  // Dữ liệu cho biểu đồ
   const chartData = {
-  labels: statsData.map((item) => `${item.thang}/${item.nam}`), // Chú ý chữ thường 'thang' và 'nam'
-  datasets: [
-    {
-      label: 'Doanh Thu (VNĐ)',
-      data: statsData.map((item) => Number(item.doanhthu) || 0), // Chuyển đổi thành số
-      borderColor: '#001F3F',
-      backgroundColor: 'rgba(0, 31, 63, 0.2)',
-      fill: true,
-    },
-    {
-      label: 'Số Lượng Tiệc Cưới',
-      data: statsData.map((item) => Number(item.soluongtiec) || 0), // Chuyển đổi thành số
-      borderColor: '#B8860B',
-      backgroundColor: 'rgba(184, 134, 11, 0.2)',
-      fill: true,
-      yAxisID: 'y1',
-    },
-  ],
-};
+    labels: statsData.map((item) => item.label),
+    datasets: [
+      {
+        label: 'Doanh Thu (VNĐ)',
+        data: statsData.map((item) => Number(item.DoanhThu) || 0),
+        borderColor: '#001F3F',
+        backgroundColor: 'rgba(0, 31, 63, 0.2)',
+        fill: true,
+      },
+      {
+        label: 'Số Lượng Tiệc Cưới',
+        data: statsData.map((item) => Number(item.SoLuongTiec) || 0),
+        borderColor: '#B8860B',
+        backgroundColor: 'rgba(184, 134, 11, 0.2)',
+        fill: true,
+        yAxisID: 'y1',
+      },
+    ],
+  };
 
   const chartOptions = {
     responsive: true,
     plugins: {
       legend: { position: 'top' as const },
-      title: { display: true, text: 'Thống Kê Doanh Thu và Số Lượng Tiệc Cưới' },
+      title: {
+        display: true,
+        text:
+          dateRange.startDate && dateRange.endDate
+            ? `Thống Kê Doanh Thu và Số Lượng Tiệc Cưới từ ${new Date(
+                dateRange.startDate
+              ).toLocaleDateString('vi-VN')} đến ${new Date(dateRange.endDate).toLocaleDateString(
+                'vi-VN'
+              )}`
+            : 'Thống Kê Doanh Thu và Số Lượng Tiệc Cưới',
+      },
     },
     scales: {
+      x: {
+        title: {
+          display: true,
+          text: statsData.some((item) => item.label.includes('/'))
+            ? statsData.some((item) => item.label.includes('/20'))
+              ? 'Tháng/Năm'
+              : 'Ngày/Tháng/Năm'
+            : 'Năm',
+        },
+      },
       y: {
         type: 'linear' as const,
         display: true,
@@ -303,11 +293,6 @@ const AdminReport: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {successMessage && (
-          <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
-            {successMessage}
-          </div>
-        )}
         <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
           Quản lý báo cáo doanh thu
         </h2>
@@ -371,14 +356,6 @@ const AdminReport: React.FC = () => {
 
         {/* Danh sách báo cáo */}
         <div className="mb-6">
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
-            >
-              Tạo báo cáo
-            </button>
-          </div>
           <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-[#001F3F]/10">
@@ -429,80 +406,6 @@ const AdminReport: React.FC = () => {
             </table>
           </div>
         </div>
-
-        {/* Modal tạo báo cáo */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-            <div className="bg-white shadow-xl rounded-lg w-full max-w-lg p-6 relative">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-              <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
-                Tạo báo cáo doanh thu
-              </h3>
-              <form onSubmit={handleCreateReport}>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium">Tháng</label>
-                  <input
-                    type="number"
-                    name="thang"
-                    value={formData.thang}
-                    onChange={handleInputChange}
-                    placeholder="Nhập tháng (1-12)"
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    required
-                    min="1"
-                    max="12"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium">Năm</label>
-                  <input
-                    type="number"
-                    name="nam"
-                    value={formData.nam}
-                    onChange={handleInputChange}
-                    placeholder="Nhập năm (>= 2000)"
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    required
-                    min="2000"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-gray-100 text-[#001F3F] rounded hover:bg-gray-200 transition-colors duration-300"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366] transition-colors duration-300"
-                  >
-                    Tạo
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {/* Modal chi tiết báo cáo */}
         {selectedReport && (

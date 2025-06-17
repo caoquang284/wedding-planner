@@ -9,8 +9,19 @@ import {
   updateLoaiSanh,
   deleteLoaiSanh,
 } from "../../Api/sanhApi";
+import {
+  getAllCa,
+  createCa,
+  updateCa,
+  deleteCa,
+} from "../../Api/caApi";
 
 // Định nghĩa interface
+interface Ca {
+  MaCa: number;
+  TenCa: string;
+}
+
 interface Sanh {
   MaSanh: number;
   TenSanh: string;
@@ -26,6 +37,11 @@ interface LoaiSanh {
   MaLoaiSanh: number;
   TenLoaiSanh: string;
   DonGiaBanToiThieu: number;
+}
+
+interface CaFormData {
+  id?: number;
+  tenCa: string;
 }
 
 interface SanhFormData {
@@ -50,6 +66,15 @@ interface ConfirmationModal {
 }
 
 function AdminHall() {
+  // State cho ca
+  const [cas, setCas] = useState<Ca[]>([]);
+  const [caSearchTerm, setCaSearchTerm] = useState<string>("");
+  const [isCaModalOpen, setIsCaModalOpen] = useState<boolean>(false);
+  const [isCaEditMode, setIsCaEditMode] = useState<boolean>(false);
+  const [caFormData, setCaFormData] = useState<CaFormData>({
+    tenCa: "",
+  });
+
   // State cho sảnh
   const [sanhs, setSanhs] = useState<Sanh[]>([]);
   const [sanhSearchTerm, setSanhSearchTerm] = useState<string>("");
@@ -80,13 +105,28 @@ function AdminHall() {
     onConfirm: () => {},
   });
 
-  // Lấy dữ liệu sảnh và loại sảnh khi component mount
+  // Lấy dữ liệu ca, sảnh và loại sảnh khi component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Lấy danh sách ca
+        const caData = await getAllCa();
+        setCas(caData);
+        // Nếu không có ca nào, thêm các ca mặc định
+        if (caData.length === 0) {
+          const defaultCas = ["Sáng", "Trưa", "Chiều", "Tối", "Đêm"];
+          for (const tenCa of defaultCas) {
+            await createCa({ tenCa });
+          }
+          const updatedCaData = await getAllCa();
+          setCas(updatedCaData);
+        }
+
+        // Lấy danh sách sảnh
         const sanhData = await getAllSanh();
         setSanhs(sanhData);
 
+        // Lấy danh sách loại sảnh
         const loaiSanhData = await getAllLoaiSanh();
         setLoaiSanhs(loaiSanhData);
         if (loaiSanhData.length > 0 && !sanhFormData.maLoaiSanh) {
@@ -103,6 +143,94 @@ function AdminHall() {
 
     fetchData();
   }, []);
+
+  // Hàm xử lý ca
+  const openAddCaModal = () => {
+    setCaFormData({ tenCa: "" });
+    setIsCaEditMode(false);
+    setIsCaModalOpen(true);
+  };
+
+  const openEditCaModal = (ca: Ca) => {
+    setCaFormData({
+      id: ca.MaCa,
+      tenCa: ca.TenCa,
+    });
+    setIsCaEditMode(true);
+    setIsCaModalOpen(true);
+  };
+
+  const closeCaModal = () => setIsCaModalOpen(false);
+
+  const handleCaInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setCaFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!caFormData.tenCa || caFormData.tenCa.length < 2) {
+      alert("Tên ca không được để trống và phải có ít nhất 2 ký tự");
+      return;
+    }
+
+    const dataToSend = {
+      tenCa: caFormData.tenCa,
+    };
+
+    const action = async () => {
+      try {
+        if (isCaEditMode && caFormData.id) {
+          const updatedCa = await updateCa(caFormData.id, dataToSend);
+          setCas((prev) =>
+            prev.map((ca) =>
+              ca.MaCa === caFormData.id ? updatedCa : ca
+            )
+          );
+        } else {
+          const newCa = await createCa(dataToSend);
+          setCas((prev) => [...prev, newCa]);
+        }
+        closeCaModal();
+      } catch (error: any) {
+        console.error("Error saving ca:", error.response?.data || error);
+        alert(
+          `Lỗi khi lưu ca: ${error.response?.data?.error || error.message}`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: `Bạn có chắc chắn muốn ${isCaEditMode ? "sửa" : "thêm"} ca này không?`,
+      onConfirm: action,
+    });
+  };
+
+  const handleDeleteCa = (id: number) => {
+    const action = async () => {
+      try {
+        await deleteCa(id);
+        setCas((prev) => prev.filter((ca) => ca.MaCa !== id));
+      } catch (error: any) {
+        console.error("Error deleting ca:", error.response?.data || error);
+        alert(
+          `Lỗi khi xóa ca: ${error.response?.data?.error || error.message}`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: "Bạn có chắc chắn muốn xóa ca này không?",
+      onConfirm: action,
+    });
+  };
 
   // Hàm xử lý sảnh
   const openAddSanhModal = () => {
@@ -360,6 +488,10 @@ function AdminHall() {
     closeConfirmationModal();
   };
 
+  const filteredCas = cas.filter((ca) =>
+    ca.TenCa.toLowerCase().includes(caSearchTerm.toLowerCase())
+  );
+
   const filteredSanhs = sanhs.filter(
     (sanh) =>
       sanh.TenSanh.toLowerCase().includes(sanhSearchTerm.toLowerCase()) ||
@@ -373,6 +505,99 @@ function AdminHall() {
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Phần quản lý ca */}
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Quản lý ca
+          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <input
+              type="text"
+              placeholder="Tìm kiếm ca..."
+              value={caSearchTerm}
+              onChange={(e) => setCaSearchTerm(e.target.value)}
+              className="w-full sm:w-64 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
+            />
+            <button
+              onClick={openAddCaModal}
+              className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#00152A]"
+            >
+              Thêm ca
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-[#FAFAFA]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Tên ca
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCas.map((ca) => (
+                  <tr key={ca.MaCa}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {ca.TenCa}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => openEditCaModal(ca)}
+                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCa(ca.MaCa)}
+                        className="text-[#D4B2B2] hover:text-[#B89999]"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="block sm:hidden space-y-4">
+            {filteredCas.map((ca) => (
+              <div
+                key={ca.MaCa}
+                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {ca.TenCa}
+                    </h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditCaModal(ca)}
+                      className="text-[#B8860B] hover:text-[#8B6508] text-sm"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCa(ca.MaCa)}
+                      className="text-[#D4B2B2] hover:text-[#B89999] text-sm"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Phần quản lý sảnh */}
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
@@ -615,6 +840,45 @@ function AdminHall() {
             ))}
           </div>
         </div>
+
+        {/* Modal thêm/sửa ca */}
+        {isCaModalOpen && (
+          <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md bg-white rounded-lg p-6 shadow-lg border border-[#D4B2B2] transform -translate-x-1/2 -translate-y-1/2">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
+              {isCaEditMode ? "Sửa ca" : "Thêm ca"}
+            </h3>
+            <form onSubmit={handleCaSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Tên ca
+                </label>
+                <input
+                  type="text"
+                  name="tenCa"
+                  value={caFormData.tenCa}
+                  onChange={handleCaInputChange}
+                  className="py-2 px-3 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={closeCaModal}
+                  className="bg-[#FAFAFA] text-[#001F3F] py-2 px-4 rounded hover:bg-gray-200"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#00152A]"
+                >
+                  {isCaEditMode ? "Cập nhật" : "Thêm"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Modal thêm/sửa sảnh */}
         {isSanhModalOpen && (

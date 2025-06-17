@@ -15,10 +15,11 @@ const createHoaDon = async (req, res) => {
       TongTienConLai,
       TrangThai,
     } = req.body;
-
+    const ngayLapHoaDon = new Date();
     const hoaDonData = {
       MaDatTiec,
       NgayThanhToan,
+      NgayLapHoaDon: ngayLapHoaDon,
       TongTienBan,
       TongTienDichVu,
       TongTienHoaDon,
@@ -30,12 +31,6 @@ const createHoaDon = async (req, res) => {
     };
 
     const newHoaDon = await HoaDon.create(hoaDonData);
-    // Nếu trạng thái là 1 (đã thanh toán), cập nhật báo cáo doanh thu
-    if (TrangThai === 1 && NgayThanhToan) {
-      const thang = new Date(NgayThanhToan).getMonth() + 1;
-      const nam = new Date(NgayThanhToan).getFullYear();
-      await updateBaoCaoDoanhSoForHoaDon(thang, nam, newHoaDon);
-    }
     return res
       .status(201)
       .json({ message: 'Tạo hóa đơn thành công', data: newHoaDon });
@@ -131,12 +126,6 @@ const updateHoaDon = async (req, res) => {
     }
 
     const updatedHoaDon = await HoaDon.update(id, updateData);
-    // Nếu trạng thái là 1 (đã thanh toán), cập nhật báo cáo doanh thu
-    if (TrangThai === 1 && NgayThanhToan) {
-      const thang = new Date(NgayThanhToan).getMonth() + 1;
-      const nam = new Date(NgayThanhToan).getFullYear();
-      await updateBaoCaoDoanhSoForHoaDon(thang, nam, updatedHoaDon);
-    }
     return res
       .status(200)
       .json({ message: 'Cập nhật hóa đơn thành công', data: updatedHoaDon });
@@ -181,69 +170,6 @@ const deleteHoaDon = async (req, res) => {
   }
 };
 
-  // Hàm cập nhật hoặc tạo báo cáo doanh thu dựa trên hóa đơn
-  const updateBaoCaoDoanhSoForHoaDon = async (thang, nam, hoaDon) => {
-    try {
-      let baoCao = await BaoCaoDoanhSo.findByMonthYear(thang, nam);
-
-      // Tính tổng doanh thu cho tháng
-      const tongDoanhThu = await knex('HOADON')
-        .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
-        .whereRaw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan") = ?', [thang])
-        .whereRaw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan") = ?', [nam])
-        .where('HOADON.TrangThai', 1)
-        .sum('HOADON.TongTienHoaDon as total')
-        .first();
-
-      const baoCaoData = {
-        Thang: thang,
-        Nam: nam,
-        TongDoanhThu: tongDoanhThu.total || 0,
-      };
-
-      if (!baoCao) {
-        // Tạo báo cáo mới
-        baoCao = await BaoCaoDoanhSo.create(baoCaoData);
-      } else {
-        // Cập nhật tổng doanh thu
-        await BaoCaoDoanhSo.update(baoCao.MaBaoCaoDoanhSo, { TongDoanhThu: tongDoanhThu.total || 0 });
-      }
-
-      // Cập nhật chi tiết báo cáo cho ngày của hóa đơn
-      const ngay = new Date(hoaDon.NgayThanhToan).toISOString().split('T')[0];
-      const chiTietData = await knex('HOADON')
-        .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
-        .where('HOADON.NgayThanhToan', ngay)
-        .where('HOADON.TrangThai', 1)
-        .select(
-          knex.raw('COUNT(*) as SoLuongTiec'),
-          knex.raw('SUM("HOADON"."TongTienHoaDon") as DoanhThu')
-        )
-        .first();
-
-      const chiTiet = {
-        MaBaoCaoDoanhSo: baoCao.MaBaoCaoDoanhSo,
-        Ngay: ngay,
-        SoLuongTiec: chiTietData.SoLuongTiec || 0,
-        DoanhThu: chiTietData.DoanhThu || 0,
-        TiLe: tongDoanhThu.total > 0 ? ((chiTietData.DoanhThu || 0) / tongDoanhThu.total * 100) : 0,
-      };
-
-      const existingChiTiet = await knex('CHITIET_BAOCAODOANHSO')
-        .where({ MaBaoCaoDoanhSo: baoCao.MaBaoCaoDoanhSo, Ngay: ngay })
-        .first();
-
-      if (existingChiTiet) {
-        await BaoCaoDoanhSo.updateChiTiet(baoCao.MaBaoCaoDoanhSo, ngay, chiTiet);
-      } else {
-        await BaoCaoDoanhSo.createChiTiet(chiTiet);
-      }
-    } catch (error) {
-      console.error('Lỗi khi cập nhật báo cáo doanh thu:', error.message);
-      throw new Error('Lỗi khi cập nhật báo cáo doanh thu');
-    }
-  };
-
 export default {
   createHoaDon,
   getAllHoaDon,
@@ -251,5 +177,4 @@ export default {
   updateHoaDon,
   deleteHoaDon,
   getHoaDonByMaDatTiec,
-  updateBaoCaoDoanhSoForHoaDon
 };
