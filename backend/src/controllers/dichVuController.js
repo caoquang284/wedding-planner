@@ -91,7 +91,7 @@ const deleteDichVu = async (req, res) => {
         error: 'Không thể xóa dịch vụ đang được sử dụng trong một đặt tiệc',
       });
     }
-    await DichVu.delete(id);
+    await DichVu.temDelete(id);
     return res.status(200).json({ message: 'Xóa dịch vụ thành công' });
   } catch (error) {
     return res

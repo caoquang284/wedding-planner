@@ -22,6 +22,7 @@ interface Service {
   GhiChu?: string;
   AnhURL?: string;
   TenLoaiDichVu?: string;
+  DaXoa?: boolean;
 }
 
 interface OrderedService {
@@ -326,9 +327,9 @@ function Services() {
     const action = async () => {
       try {
         await deleteDichVu(id!);
-        setServices((prev) =>
-          prev.filter((service) => service.MaDichVu !== id)
-        );
+        // setServices((prev) =>
+        //   prev.filter((service) => service.MaDichVu === id)
+        // );
       } catch (error) {
         alert(
           "Lỗi khi xóa dịch vụ: " + (error as any).response?.data?.error ||
@@ -485,6 +486,7 @@ function Services() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Loại dịch vụ
                   </th>
+                  {/* Tang chieu dai va chieu rong cua cot anh */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-#001F3F] uppercase tracking-wider align-middle">
                     Ảnh
                   </th>
@@ -498,9 +500,12 @@ function Services() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {filteredServices.map((service) => (
+                  // Neu service.DaXoa == true thi dong do mau
                   <tr
                     key={service.MaDichVu}
-                    className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                    className={`${
+                      service.DaXoa ? "bg-red-100" : "bg-white"
+                    } hover:bg-[#F8F9FA] transition-colors duration-200`}
                   >
                     <td className="px-6 py-4 text-sm font-medium text-[#001F3F] align-middle">
                       {service.TenDichVu}
@@ -519,7 +524,7 @@ function Services() {
                         <img
                           src={service.AnhURL}
                           alt={service.TenDichVu}
-                          className="w-16 h-16 object-cover rounded-lg mx-auto"
+                          className="w-24 h-24 object-cover rounded-lg mx-auto"
                         />
                       ) : (
                         <span className="text-gray-500">Không có ảnh</span>
@@ -529,18 +534,24 @@ function Services() {
                       {service.GhiChu || "Không có ghi chú"}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-right align-middle">
-                      <button
-                        onClick={() => openEditModal(service)}
-                        className="text-[#B8860B] hover:text-[#8B6914] mr-4 transition-colors duration-300"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(service.MaDichVu)}
-                        className="text-[#D4B2B2] hover:text-[#C49898] transition-colors duration-300"
-                      >
-                        Xóa
-                      </button>
+                      {/* Neu service.DaXoa == true thi button sua khong hien thi */}
+                      {!service.DaXoa ? (
+                        <button
+                          onClick={() => openEditModal(service)}
+                          className="text-[#B8860B] hover:text-[#8B6914] mr-4 transition-colors duration-300"
+                        >
+                          Sửa
+                        </button>
+                      ) : null}
+                      {/* Neu service.DaXoa == true thi button xoa khong hien thi */}
+                      {!service.DaXoa ? (
+                        <button
+                          onClick={() => handleDelete(service.MaDichVu)}
+                          className="text-[#D4B2B2] hover:text-[#C49898] transition-colors duration-300"
+                        >
+                          Xóa
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -586,6 +597,96 @@ function Services() {
                     </button>
                     <button
                       onClick={() => handleDelete(service.MaDichVu)}
+                      className="text-[#D4B2B2] hover:text-[#C49898] text-sm transition-colors duration-300"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Quản lý loại dịch vụ
+          </h2>
+
+          <div className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-[#001F3F]/10">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Mã loại dịch vụ
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                    Tên loại dịch vụ
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider text-right">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {categories.map((category) => (
+                  <tr
+                    key={category.MaLoaiDichVu}
+                    className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4 text-sm font-medium text-[#001F3F]">
+                      {category.MaLoaiDichVu}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {category.TenLoaiDichVu}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-right">
+                      <button
+                        onClick={() => openEditCategoryModal(category)}
+                        className="text-[#B8860B] hover:text-[#8B6914] mr-4 transition-colors duration-300"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDeleteCategory(category.MaLoaiDichVu)
+                        }
+                        className="text-[#D4B2B2] hover:text-[#C49898] transition-colors duration-300"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile view for categories */}
+          <div className="block sm:hidden space-y-4 mt-4">
+            {categories.map((category) => (
+              <div
+                key={category.MaLoaiDichVu}
+                className="bg-white shadow-md rounded-lg p-4 border border-gray-100"
+              >
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-lg font-medium text-[#001F3F]">
+                    {category.TenLoaiDichVu}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Mã: {category.MaLoaiDichVu}
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => openEditCategoryModal(category)}
+                      className="text-[#B8860B] hover:text-[#8B6914] text-sm transition-colors duration-300"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDeleteCategory(category.MaLoaiDichVu)
+                      }
                       className="text-[#D4B2B2] hover:text-[#C49898] text-sm transition-colors duration-300"
                     >
                       Xóa
@@ -874,6 +975,7 @@ function Services() {
                   Loại dịch vụ
                 </label>
                 <select
+                  //disabled={true}
                   name="categoryId"
                   value={formData.categoryId || ""}
                   onChange={handleSelectChange}

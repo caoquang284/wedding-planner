@@ -103,13 +103,14 @@ const createDatTiec = async (req, res) => {
         }
       }
     }
-
+    const ngayDatTiec = new Date();
     // Tạo bản ghi đặt tiệc
     const datTiecData = {
       TenChuRe: tenChuRe,
       TenCoDau: tenCoDau,
       DienThoai: dienThoai,
       NgayDaiTiec: new Date(ngayDaiTiec),
+      NgayDatTiec: ngayDatTiec,
       MaCa: maCa,
       MaSanh: maSanh,
       MaThucDon: maThucDon,
@@ -323,6 +324,7 @@ const updateDatTiec = async (req, res) => {
       TenCoDau: tenCoDau,
       DienThoai: dienThoai,
       NgayDaiTiec: new Date(ngayDaiTiec),
+      NgayDatTiec: new Date(),
       MaCa: maCa,
       MaSanh: maSanh,
       MaThucDon: maThucDon,

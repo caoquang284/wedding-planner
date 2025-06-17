@@ -4,6 +4,7 @@ import {
   getThucDonById,
   createThucDon,
   updateThucDon,
+  getMonAnInThucDon,
 } from "../../Api/thucDonApi";
 import { getAllDichVu, getAllLoaiDichVu } from "../../Api/dichVuApi";
 import { getAllMonAn, getAllLoaiMonAn } from "../../Api/monAnApi";
@@ -34,6 +35,7 @@ interface IMonAn {
   DonGia: number;
   GhiChu?: string;
   AnhURL?: string;
+  DaXoa?: boolean;
 }
 
 interface IMonAnThucDon {
@@ -71,6 +73,7 @@ interface IDatTiec {
   TenCoDau: string;
   DienThoai: string;
   NgayDaiTiec: Date;
+  NgayDatTiec: Date;
   TienDatCoc: number;
   SoLuongBan: number;
   SoBanDuTru: number;
@@ -113,6 +116,7 @@ interface IDichVu {
   DonGia: number;
   GhiChu?: string;
   AnhURL?: string;
+  DaXoa?: boolean;
 }
 
 // Interface cho form dữ liệu
@@ -122,6 +126,7 @@ interface IFormData {
   TenCoDau: string;
   DienThoai: string;
   NgayDaiTiec: string;
+  NgayDatTiec: string;
   SoLuongBan: string;
   SoBanDuTru: string;
   TienDatCoc: string;
@@ -188,6 +193,7 @@ function Admin_Wedding() {
     TenCoDau: "",
     DienThoai: "",
     NgayDaiTiec: "",
+    NgayDatTiec: "",
     SoLuongBan: "",
     SoBanDuTru: "",
     TienDatCoc: "",
@@ -204,6 +210,7 @@ function Admin_Wedding() {
     }).format(numValue);
   };
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchDate, setSearchDate] = useState<string>("");
   const [selectedServiceType, setSelectedServiceType] = useState<number | null>(
     null
   );
@@ -230,6 +237,9 @@ function Admin_Wedding() {
     useState<IDatTiec | null>(null);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
   const [menuDetails, setMenuDetails] = useState<IThucDon | null>(null);
+
+  // Thêm state mới để kiểm soát việc lọc theo ngày
+  const [isDateFiltered, setIsDateFiltered] = useState(false);
 
   useEffect(() => {
     const calculateCosts = () => {
@@ -369,6 +379,7 @@ function Admin_Wedding() {
     DonGia: service.DonGia,
     GhiChu: service.GhiChu || "",
     AnhURL: service.AnhURL,
+    DaXoa: service.DaXoa,
   }));
 
   // Handlers
@@ -379,6 +390,7 @@ function Admin_Wedding() {
       TenCoDau: "",
       DienThoai: "",
       NgayDaiTiec: "",
+      NgayDatTiec: "",
       SoLuongBan: "",
       SoBanDuTru: "",
       TienDatCoc: "",
@@ -423,6 +435,7 @@ function Admin_Wedding() {
         TenCoDau: booking.TenCoDau,
         DienThoai: booking.DienThoai,
         NgayDaiTiec: new Date(booking.NgayDaiTiec).toISOString().split("T")[0],
+        NgayDatTiec: new Date(booking.NgayDatTiec).toISOString().split("T")[0],
         SoLuongBan: booking.SoLuongBan.toString(),
         SoBanDuTru: booking.SoBanDuTru.toString(),
         TienDatCoc: booking.TienDatCoc.toString(),
@@ -757,13 +770,22 @@ function Admin_Wedding() {
               const newBooking = await createDatTiec(datTiecData);
               newBookingId = newBooking.MaDatTiec;
             }
+            //Toi muon lay tong tien mon an bang tong tien don gia hien tai cua cac mon trong danh sach mon an in thuc don
+            const monAnInThucDon = await getMonAnInThucDon(menuId);
+            console.log("monAnInThucDon", monAnInThucDon);
+            //mon an in thuc don se tra ve don gia hien tai cua mon an, chi can cong tat ca cac don gia hien tai cua cac gia tri trong mang nay thoi
+            const tongTienMonAn = monAnInThucDon.reduce(
+              (total: number, dish: any) =>
+                total +
+                (dish && dish.DonGiaThoiDiemDat
+                  ? Number(dish.DonGiaThoiDiemDat)
+                  : 0),
+              0
+            );
 
             // Calculate totals for invoice
             const tongTienBan =
-              selectedDishes.reduce((total, dishId) => {
-                const dish = apiDishes.find((d) => d.MaMonAn === dishId);
-                return total + (dish && dish.DonGia ? Number(dish.DonGia) : 0);
-              }, 0) *
+              tongTienMonAn *
               ((Number(formData.SoLuongBan) || 0) +
                 (Number(formData.SoBanDuTru) || 0));
 
@@ -791,7 +813,8 @@ function Admin_Wedding() {
                   TongTienDichVu: tongTienDichVu,
                   TongTienHoaDon: tongTienHoaDon,
                 };
-
+                console.log("tongTienBan", tongTienBan);
+                console.log(existingInvoice.data[0].TongTienBan);
                 if (existingInvoice.data[0].TrangThai === 1) {
                   // If invoice is paid, calculate remaining amount
                   const diffTienBan = Number(
@@ -847,6 +870,7 @@ function Admin_Wedding() {
               TenCoDau: "",
               DienThoai: "",
               NgayDaiTiec: "",
+              NgayDatTiec: "",
               SoLuongBan: "",
               SoBanDuTru: "",
               TienDatCoc: "",
@@ -887,12 +911,26 @@ function Admin_Wedding() {
     });
   };
 
-  const filteredBookings = bookings.filter(
-    (booking) =>
+  // Sửa lại hàm filteredBookings
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch =
       booking.TenChuRe.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.TenCoDau.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.DienThoai.includes(searchTerm)
-  );
+      booking.DienThoai.includes(searchTerm);
+
+    // Nếu đang trong chế độ lọc theo ngày và có ngày được chọn
+    if (isDateFiltered && searchDate) {
+      const bookingDate = new Date(booking.NgayDatTiec)
+        .toISOString()
+        .split("T")[0];
+      console.log("booking", booking.NgayDatTiec);
+      console.log("bookingDate", bookingDate);
+      console.log("searchDate", searchDate);
+      return matchesSearch && bookingDate === searchDate;
+    }
+
+    return matchesSearch;
+  });
 
   // Add function to get hall name
   const getHallName = (maSanh: number) => {
@@ -1301,13 +1339,13 @@ function Admin_Wedding() {
                                 />
                               )}
                               <div>
-                                <span className="text-sm font-medium text-[#001F3F]">
+                                <span className="text-base font-medium text-[#001F3F]">
                                   {dish.TenMonAn}
                                 </span>
-                                <p className="text-xs text-[#001F3F] mt-0.5">
+                                <p className="text-sm text-[#001F3F] mt-0.5">
                                   {dish.GhiChu || "Không có ghi chú"}
                                 </p>
-                                <p className="text-xs text-[#B8860B] mt-0.5">
+                                <p className="text-sm text-[#B8860B] mt-0.5">
                                   {formatVND(dish.DonGia)}
                                 </p>
                               </div>
@@ -1470,7 +1508,10 @@ function Admin_Wedding() {
                 </h6>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {apiDishes
-                    .filter((dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn)
+                    .filter(
+                      (dish) =>
+                        dish.MaLoaiMonAn === category.MaLoaiMonAn && !dish.DaXoa
+                    )
                     .map((dish) => (
                       <div
                         key={dish.MaMonAn}
@@ -1494,10 +1535,10 @@ function Admin_Wedding() {
                               />
                             )}
                             <div>
-                              <span className="text-sm font-medium text-[#001F3F]">
+                              <span className="text-lg font-medium text-[#001F3F]">
                                 {dish.TenMonAn}
                               </span>
-                              <p className="text-xs text-[#001F3F] mt-0.5">
+                              <p className="text-base text-[#001F3F] mt-0.5">
                                 {dish.GhiChu || "Không có ghi chú"}
                               </p>
                               <p className="text-xs text-[#B8860B] mt-0.5">
@@ -1526,20 +1567,48 @@ function Admin_Wedding() {
               <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
                 Quản Lý Đặt Tiệc Cưới
               </h2>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm theo tên chú rể, cô dâu hoặc số điện thoại..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
-                />
-                <button
-                  onClick={openAddModal}
-                  className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
-                >
-                  Thêm Đặt Tiệc
-                </button>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm theo tên chú rể, cô dâu hoặc số điện thoại..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+                  />
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="date"
+                      placeholder="Tìm kiếm theo ngày đặt tiệc..."
+                      value={searchDate}
+                      onChange={(e) => setSearchDate(e.target.value)}
+                      className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+                    />
+                    <button
+                      onClick={() => {
+                        setIsDateFiltered(!isDateFiltered);
+                        if (!isDateFiltered && !searchDate) {
+                          // Nếu đang bật lọc nhưng chưa có ngày được chọn, hiển thị thông báo
+                          alert("Vui lòng chọn ngày để lọc");
+                          setIsDateFiltered(false);
+                        }
+                      }}
+                      className={`${
+                        isDateFiltered
+                          ? "bg-[#001F3F] text-white"
+                          : "bg-[#E6C3C3] text-[#001F3F]"
+                      } py-2 px-4 rounded hover:bg-[#d4b3b3] transition-colors duration-300 whitespace-nowrap`}
+                    >
+                      {isDateFiltered ? "Bỏ lọc" : "Lọc"}
+                    </button>
+                  </div>
+                  <button
+                    onClick={openAddModal}
+                    className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300 whitespace-nowrap"
+                  >
+                    Thêm Đặt Tiệc
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1564,14 +1633,15 @@ function Admin_Wedding() {
                         Ngày Đặt Tiệc
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                        Ngày Đãi Tiệc
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tiền Đặt Cọc (VNĐ)
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Số Lượng Bàn
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                        Bàn Dự Trữ
-                      </th>
+
                       <th className="px-6 py-3 text-right text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Hành Động
                       </th>
@@ -1598,18 +1668,24 @@ function Admin_Wedding() {
                           {booking.DienThoai}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {new Date(booking.NgayDaiTiec).toLocaleDateString(
-                            "vi-VN"
-                          )}
+                          {
+                            new Date(booking.NgayDatTiec)
+                              .toISOString()
+                              .split("T")[0]
+                          }
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
+                          {
+                            new Date(booking.NgayDaiTiec)
+                              .toISOString()
+                              .split("T")[0]
+                          }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {formatVND(booking.TienDatCoc)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {booking.SoLuongBan}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {booking.SoBanDuTru}
+                          {booking.SoLuongBan + booking.SoBanDuTru}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
@@ -1671,9 +1747,11 @@ function Admin_Wedding() {
                       </p>
                       <p className="text-sm text-[#001F3F]">
                         Ngày đặt tiệc:{" "}
-                        {new Date(booking.NgayDaiTiec).toLocaleDateString(
-                          "vi-VN"
-                        )}
+                        {
+                          new Date(booking.NgayDaiTiec)
+                            .toISOString()
+                            .split("T")[0]
+                        }
                       </p>
                       <p className="text-sm text-[#001F3F]">
                         Tiền đặt cọc: {formatVND(booking.TienDatCoc)}
@@ -2009,7 +2087,8 @@ function Admin_Wedding() {
                     {services
                       .filter(
                         (service) =>
-                          service.MaLoaiDichVu === selectedServiceType
+                          service.MaLoaiDichVu === selectedServiceType &&
+                          !service.DaXoa
                       )
                       .map((service) => (
                         <div
@@ -2091,8 +2170,7 @@ function Admin_Wedding() {
                             Số lượng: {service.SoLuong}
                           </p>
                           <p className="text-xs text-[#B8860B]">
-                            {service.DonGiaThoiDiemDat.toLocaleString("vi-VN")}{" "}
-                            VNĐ
+                            {formatVND(service.DonGiaThoiDiemDat)}
                           </p>
                         </div>
                       );
@@ -2301,9 +2379,11 @@ function Admin_Wedding() {
                       </p>
                       <p>
                         <span className="font-medium">Ngày đặt tiệc:</span>{" "}
-                        {new Date(
-                          selectedBookingDetail.NgayDaiTiec
-                        ).toLocaleDateString("vi-VN")}
+                        {
+                          new Date(selectedBookingDetail.NgayDaiTiec)
+                            .toISOString()
+                            .split("T")[0]
+                        }
                       </p>
                       <p>
                         <span className="font-medium">Ca:</span>{" "}

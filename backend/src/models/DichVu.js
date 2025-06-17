@@ -31,6 +31,9 @@ const DichVu = {
   delete: async (id) => {
     return await knex('DICHVU').where({ MaDichVu: id }).delete();
   },
+  temDelete: async (id) => {
+    return await knex('DICHVU').where({ MaDichVu: id }).update({ DaXoa: true });
+  },
   isLoaiDichVuExists: async (maLoaiDichVu) => {
     const loaiDichVu = await knex('LOAIDICHVU')
       .where({ MaLoaiDichVu: maLoaiDichVu })

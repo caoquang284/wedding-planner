@@ -46,6 +46,7 @@ export const up = async (knex) => {
     table.increments('MaLoaiSanh').primary();
     table.string('TenLoaiSanh', 50).notNullable();
     table.decimal('DonGiaBanToiThieu', 15, 2).notNullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
   });
   await knex.raw(
     'ALTER TABLE "LOAISANH" ADD CONSTRAINT "chk_dongia_bantoithieu" CHECK ("DonGiaBanToiThieu" >= 0)'
@@ -58,6 +59,7 @@ export const up = async (knex) => {
     table.integer('SoLuongBanToiDa').notNullable();
     table.text('GhiChu').nullable();
     table.text('AnhURL').nullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
     table.foreign('MaLoaiSanh').references('MaLoaiSanh').inTable('LOAISANH');
   });
   await knex.raw(
@@ -68,6 +70,7 @@ export const up = async (knex) => {
   await knex.schema.createTable('LOAIMONAN', (table) => {
     table.increments('MaLoaiMonAn').primary();
     table.string('TenLoaiMonAn', 50).notNullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
   });
 
   await knex.schema.createTable('MONAN', (table) => {
@@ -77,6 +80,7 @@ export const up = async (knex) => {
     table.decimal('DonGia', 15, 2).notNullable();
     table.text('GhiChu').nullable();
     table.text('AnhURL').nullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
     table.foreign('MaLoaiMonAn').references('MaLoaiMonAn').inTable('LOAIMONAN');
   });
   await knex.raw(
@@ -114,6 +118,7 @@ export const up = async (knex) => {
     table.decimal('DonGiaThoiDiemDat', 15, 2).notNullable();
     table.decimal('DonGiaHienTai', 15, 2).notNullable();
     table.text('GhiChu').nullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
   });
   await knex.raw(
     'ALTER TABLE "THUCDON" ADD CONSTRAINT "chk_dongia_thoidiemdat_thucdon" CHECK ("DonGiaThoiDiemDat" >= 0)'
@@ -138,6 +143,7 @@ export const up = async (knex) => {
   await knex.schema.createTable('LOAIDICHVU', (table) => {
     table.increments('MaLoaiDichVu').primary();
     table.string('TenLoaiDichVu', 50).notNullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
   });
 
   await knex.schema.createTable('DICHVU', (table) => {
@@ -147,6 +153,7 @@ export const up = async (knex) => {
     table.decimal('DonGia', 15, 2).notNullable();
     table.text('GhiChu').nullable();
     table.text('AnhURL').nullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
     table
       .foreign('MaLoaiDichVu')
       .references('MaLoaiDichVu')
@@ -160,6 +167,7 @@ export const up = async (knex) => {
   await knex.schema.createTable('CA', (table) => {
     table.increments('MaCa').primary();
     table.string('TenCa', 50).notNullable();
+    table.boolean('DaXoa').notNullable().defaultTo(false);
   });
 
   await knex.schema.createTable('DATTIEC', (table) => {
@@ -167,6 +175,7 @@ export const up = async (knex) => {
     table.string('TenChuRe', 100).notNullable();
     table.string('TenCoDau', 100).notNullable();
     table.string('DienThoai', 15).notNullable();
+    table.date('NgayDatTiec').notNullable();
     table.date('NgayDaiTiec').notNullable();
     table.integer('MaCa').unsigned().notNullable();
     table.integer('MaSanh').unsigned().notNullable();
@@ -213,11 +222,12 @@ export const up = async (knex) => {
     table.increments('MaHoaDon').primary();
     table.integer('MaDatTiec').unsigned().notNullable();
     table.date('NgayThanhToan').notNullable();
+    table.date('NgayLapHoaDon').notNullable();
     table.decimal('TongTienBan', 15, 2).notNullable();
     table.decimal('TongTienDichVu', 15, 2).notNullable();
     table.decimal('TongTienHoaDon', 15, 2).notNullable();
-    table.boolean('ApDungQuyDinhPhat').notNullable();
-    table.decimal('PhanTramPhatMotNgay', 5, 2).notNullable();
+    table.boolean('ApDungQuyDinhPhat').notNullable().defaultTo(false);
+    table.decimal('PhanTramPhatMotNgay', 5, 2).notNullable().defaultTo(0.0);
     table.decimal('TongTienPhat', 15, 2).notNullable();
     table.decimal('TongTienConLai', 15, 2).notNullable();
     table.integer('TrangThai').notNullable(); // 0: Chưa thanh toán, 1: Đã thanh toán, 2: Đã hủy
