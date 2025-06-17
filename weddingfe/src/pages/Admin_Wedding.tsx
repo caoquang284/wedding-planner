@@ -210,6 +210,7 @@ function Admin_Wedding() {
     }).format(numValue);
   };
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchDate, setSearchDate] = useState<string>("");
   const [selectedServiceType, setSelectedServiceType] = useState<number | null>(
     null
   );
@@ -236,6 +237,9 @@ function Admin_Wedding() {
     useState<IDatTiec | null>(null);
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false);
   const [menuDetails, setMenuDetails] = useState<IThucDon | null>(null);
+
+  // Thêm state mới để kiểm soát việc lọc theo ngày
+  const [isDateFiltered, setIsDateFiltered] = useState(false);
 
   useEffect(() => {
     const calculateCosts = () => {
@@ -907,12 +911,26 @@ function Admin_Wedding() {
     });
   };
 
-  const filteredBookings = bookings.filter(
-    (booking) =>
+  // Sửa lại hàm filteredBookings
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch =
       booking.TenChuRe.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.TenCoDau.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.DienThoai.includes(searchTerm)
-  );
+      booking.DienThoai.includes(searchTerm);
+
+    // Nếu đang trong chế độ lọc theo ngày và có ngày được chọn
+    if (isDateFiltered && searchDate) {
+      const bookingDate = new Date(booking.NgayDatTiec)
+        .toISOString()
+        .split("T")[0];
+      console.log("booking", booking.NgayDatTiec);
+      console.log("bookingDate", bookingDate);
+      console.log("searchDate", searchDate);
+      return matchesSearch && bookingDate === searchDate;
+    }
+
+    return matchesSearch;
+  });
 
   // Add function to get hall name
   const getHallName = (maSanh: number) => {
@@ -1549,20 +1567,48 @@ function Admin_Wedding() {
               <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
                 Quản Lý Đặt Tiệc Cưới
               </h2>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm theo tên chú rể, cô dâu hoặc số điện thoại..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-64 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
-                />
-                <button
-                  onClick={openAddModal}
-                  className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
-                >
-                  Thêm Đặt Tiệc
-                </button>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm theo tên chú rể, cô dâu hoặc số điện thoại..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+                  />
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="date"
+                      placeholder="Tìm kiếm theo ngày đặt tiệc..."
+                      value={searchDate}
+                      onChange={(e) => setSearchDate(e.target.value)}
+                      className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+                    />
+                    <button
+                      onClick={() => {
+                        setIsDateFiltered(!isDateFiltered);
+                        if (!isDateFiltered && !searchDate) {
+                          // Nếu đang bật lọc nhưng chưa có ngày được chọn, hiển thị thông báo
+                          alert("Vui lòng chọn ngày để lọc");
+                          setIsDateFiltered(false);
+                        }
+                      }}
+                      className={`${
+                        isDateFiltered
+                          ? "bg-[#001F3F] text-white"
+                          : "bg-[#E6C3C3] text-[#001F3F]"
+                      } py-2 px-4 rounded hover:bg-[#d4b3b3] transition-colors duration-300 whitespace-nowrap`}
+                    >
+                      {isDateFiltered ? "Bỏ lọc" : "Lọc"}
+                    </button>
+                  </div>
+                  <button
+                    onClick={openAddModal}
+                    className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300 whitespace-nowrap"
+                  >
+                    Thêm Đặt Tiệc
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1622,14 +1668,18 @@ function Admin_Wedding() {
                           {booking.DienThoai}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {new Date(booking.NgayDatTiec).toLocaleDateString(
-                            "vi-VN"
-                          )}
+                          {
+                            new Date(booking.NgayDatTiec)
+                              .toISOString()
+                              .split("T")[0]
+                          }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {new Date(booking.NgayDaiTiec).toLocaleDateString(
-                            "vi-VN"
-                          )}
+                          {
+                            new Date(booking.NgayDaiTiec)
+                              .toISOString()
+                              .split("T")[0]
+                          }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {formatVND(booking.TienDatCoc)}
@@ -1697,9 +1747,11 @@ function Admin_Wedding() {
                       </p>
                       <p className="text-sm text-[#001F3F]">
                         Ngày đặt tiệc:{" "}
-                        {new Date(booking.NgayDaiTiec).toLocaleDateString(
-                          "vi-VN"
-                        )}
+                        {
+                          new Date(booking.NgayDaiTiec)
+                            .toISOString()
+                            .split("T")[0]
+                        }
                       </p>
                       <p className="text-sm text-[#001F3F]">
                         Tiền đặt cọc: {formatVND(booking.TienDatCoc)}
@@ -2327,9 +2379,11 @@ function Admin_Wedding() {
                       </p>
                       <p>
                         <span className="font-medium">Ngày đặt tiệc:</span>{" "}
-                        {new Date(
-                          selectedBookingDetail.NgayDaiTiec
-                        ).toLocaleDateString("vi-VN")}
+                        {
+                          new Date(selectedBookingDetail.NgayDaiTiec)
+                            .toISOString()
+                            .split("T")[0]
+                        }
                       </p>
                       <p>
                         <span className="font-medium">Ca:</span>{" "}
