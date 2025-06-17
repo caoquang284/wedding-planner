@@ -16,6 +16,7 @@ interface HoaDon {
   MaHoaDon: number;
   MaDatTiec: number;
   NgayThanhToan: string;
+  NgayLapHoaDon: string;
   TongTienBan: number;
   TongTienDichVu: number;
   TongTienHoaDon: number;
@@ -36,6 +37,7 @@ interface DatTiec {
 interface FormData {
   MaDatTiec: number | null;
   NgayThanhToan: string;
+  NgayLapHoaDon: string;
   TongTienBan: string;
   TongTienDichVu: string;
   TongTienHoaDon: string;
@@ -128,6 +130,7 @@ const AdminInvoice: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     MaDatTiec: null,
     NgayThanhToan: "",
+    NgayLapHoaDon: "",
     TongTienBan: "",
     TongTienDichVu: "",
     TongTienHoaDon: "",
@@ -140,6 +143,7 @@ const AdminInvoice: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [searchDate, setSearchDate] = useState<string>("");
   const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>(
     {
       isOpen: false,
@@ -209,6 +213,7 @@ const AdminInvoice: React.FC = () => {
     setFormData({
       MaDatTiec: null,
       NgayThanhToan: "",
+      NgayLapHoaDon: "",
       TongTienBan: "",
       TongTienDichVu: "",
       TongTienHoaDon: "",
@@ -226,6 +231,7 @@ const AdminInvoice: React.FC = () => {
     setFormData({
       MaDatTiec: invoice.MaDatTiec,
       NgayThanhToan: invoice.NgayThanhToan.split("T")[0],
+      NgayLapHoaDon: invoice.NgayLapHoaDon.split("T")[0],
       TongTienBan: invoice.TongTienBan.toString(),
       TongTienDichVu: invoice.TongTienDichVu.toString(),
       TongTienHoaDon: invoice.TongTienHoaDon.toString(),
@@ -824,6 +830,9 @@ const AdminInvoice: React.FC = () => {
                     Đặt tiệc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
+                    Ngày lập hóa đơn
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
                     Ngày thanh toán
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider align-middle">
@@ -862,6 +871,11 @@ const AdminInvoice: React.FC = () => {
                         {datTiec
                           ? `${datTiec.TenChuRe} & ${datTiec.TenCoDau} (${invoice.MaDatTiec})`
                           : `Mã ${invoice.MaDatTiec}`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 align-middle">
+                        {new Date(invoice.NgayLapHoaDon).toLocaleDateString(
+                          "vi-VN"
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 align-middle">
                         {new Date(invoice.NgayThanhToan).toLocaleDateString(

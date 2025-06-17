@@ -121,17 +121,33 @@ const updateThucDon = async (req, res) => {
       DonGiaHienTai: donGiaHienTai,
       GhiChu: ghiChu || null,
     });
+    const monAnInThucDon = await ThucDon.getMonAnInThucDon(id);
 
     // Nếu có danh sách món ăn mới, cập nhật THUCDON_MONAN
     if (monAnIds && Array.isArray(monAnIds)) {
       // Xóa tất cả món ăn cũ
-      await ThucDon.removeAllMonAn(id);
+      //Toi muon xoa nhung mon an ma khong co trong monAnInThucDon
+      if (monAnInThucDon.length > 0) {
+        const monAnInThucDonIds = monAnInThucDon.map((item) => item.MaMonAn);
+        const monAnIdsNotInThucDon = monAnIds.filter(
+          (maMonAn) => !monAnInThucDonIds.includes(maMonAn)
+        );
+        for (const maMonAn of monAnIdsNotInThucDon) {
+          await ThucDon.removeMonAn(id, maMonAn);
+        }
+      }
 
       // Thêm các món ăn mới
       for (const maMonAn of monAnIds) {
         // Lấy DonGia từ MONAN làm DonGiaThoiDiemDat
         const monAn = await knex('MONAN').where({ MaMonAn: maMonAn }).first();
-        await ThucDon.addMonAn(id, maMonAn, monAn.DonGia);
+        //Toi muon so sanh monAnInThucDon.MaMonAn voi monAnIds
+        const isMonAnInThucDon = monAnInThucDon.some(
+          (item) => item.MaMonAn === maMonAn
+        );
+        if (!isMonAnInThucDon) {
+          await ThucDon.addMonAn(id, maMonAn, monAn.DonGia);
+        }
       }
     }
 
@@ -287,6 +303,17 @@ const updateMonAnInThucDon = async (req, res) => {
   }
 };
 
+const getMonAnInThucDon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const monAnInThucDon = await ThucDon.getMonAnInThucDon(id);
+    return res.status(200).json(monAnInThucDon);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Lỗi khi lấy món ăn trong thực đơn: ' + error.message,
+    });
+  }
+};
 export default {
   createThucDon,
   getAllThucDon,
@@ -296,4 +323,5 @@ export default {
   addMonAnToThucDon,
   removeMonAnFromThucDon,
   updateMonAnInThucDon,
+  getMonAnInThucDon,
 };

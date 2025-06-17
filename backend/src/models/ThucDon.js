@@ -163,7 +163,9 @@ const ThucDon = {
       .first();
     return !!thucDonMonAn;
   },
-
+  getMonAnInThucDon: async (maThucDon) => {
+    return await knex('THUCDON_MONAN').where({ MaThucDon: maThucDon });
+  },
   isMonAnExists: async (maMonAn) => {
     const monAn = await knex('MONAN').where({ MaMonAn: maMonAn }).first();
     return !!monAn;

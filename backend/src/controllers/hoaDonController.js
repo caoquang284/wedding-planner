@@ -15,10 +15,11 @@ const createHoaDon = async (req, res) => {
       TongTienConLai,
       TrangThai,
     } = req.body;
-
+    const ngayLapHoaDon = new Date();
     const hoaDonData = {
       MaDatTiec,
       NgayThanhToan,
+      NgayLapHoaDon: ngayLapHoaDon,
       TongTienBan,
       TongTienDichVu,
       TongTienHoaDon,

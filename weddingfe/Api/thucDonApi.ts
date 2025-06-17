@@ -63,4 +63,7 @@ export const deleteThucDon = async (id: number) => {
   const response = await axiosInstance.delete(`/xoa/${id}`);
   return response.data;
 };
-
+export const getMonAnInThucDon = async (id: number) => {
+  const response = await axiosInstance.get(`/mon-an-trong-thuc-don/${id}`);
+  return response.data;
+};

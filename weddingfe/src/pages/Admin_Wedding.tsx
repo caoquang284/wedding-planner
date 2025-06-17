@@ -4,6 +4,7 @@ import {
   getThucDonById,
   createThucDon,
   updateThucDon,
+  getMonAnInThucDon,
 } from "../../Api/thucDonApi";
 import { getAllDichVu, getAllLoaiDichVu } from "../../Api/dichVuApi";
 import { getAllMonAn, getAllLoaiMonAn } from "../../Api/monAnApi";
@@ -71,6 +72,7 @@ interface IDatTiec {
   TenCoDau: string;
   DienThoai: string;
   NgayDaiTiec: Date;
+  NgayDatTiec: Date;
   TienDatCoc: number;
   SoLuongBan: number;
   SoBanDuTru: number;
@@ -122,6 +124,7 @@ interface IFormData {
   TenCoDau: string;
   DienThoai: string;
   NgayDaiTiec: string;
+  NgayDatTiec: string;
   SoLuongBan: string;
   SoBanDuTru: string;
   TienDatCoc: string;
@@ -188,6 +191,7 @@ function Admin_Wedding() {
     TenCoDau: "",
     DienThoai: "",
     NgayDaiTiec: "",
+    NgayDatTiec: "",
     SoLuongBan: "",
     SoBanDuTru: "",
     TienDatCoc: "",
@@ -379,6 +383,7 @@ function Admin_Wedding() {
       TenCoDau: "",
       DienThoai: "",
       NgayDaiTiec: "",
+      NgayDatTiec: "",
       SoLuongBan: "",
       SoBanDuTru: "",
       TienDatCoc: "",
@@ -423,6 +428,7 @@ function Admin_Wedding() {
         TenCoDau: booking.TenCoDau,
         DienThoai: booking.DienThoai,
         NgayDaiTiec: new Date(booking.NgayDaiTiec).toISOString().split("T")[0],
+        NgayDatTiec: new Date(booking.NgayDatTiec).toISOString().split("T")[0],
         SoLuongBan: booking.SoLuongBan.toString(),
         SoBanDuTru: booking.SoBanDuTru.toString(),
         TienDatCoc: booking.TienDatCoc.toString(),
@@ -757,13 +763,22 @@ function Admin_Wedding() {
               const newBooking = await createDatTiec(datTiecData);
               newBookingId = newBooking.MaDatTiec;
             }
+            //Toi muon lay tong tien mon an bang tong tien don gia hien tai cua cac mon trong danh sach mon an in thuc don
+            const monAnInThucDon = await getMonAnInThucDon(menuId);
+            console.log("monAnInThucDon", monAnInThucDon);
+            //mon an in thuc don se tra ve don gia hien tai cua mon an, chi can cong tat ca cac don gia hien tai cua cac gia tri trong mang nay thoi
+            const tongTienMonAn = monAnInThucDon.reduce(
+              (total: number, dish: any) =>
+                total +
+                (dish && dish.DonGiaThoiDiemDat
+                  ? Number(dish.DonGiaThoiDiemDat)
+                  : 0),
+              0
+            );
 
             // Calculate totals for invoice
             const tongTienBan =
-              selectedDishes.reduce((total, dishId) => {
-                const dish = apiDishes.find((d) => d.MaMonAn === dishId);
-                return total + (dish && dish.DonGia ? Number(dish.DonGia) : 0);
-              }, 0) *
+              tongTienMonAn *
               ((Number(formData.SoLuongBan) || 0) +
                 (Number(formData.SoBanDuTru) || 0));
 
@@ -791,7 +806,8 @@ function Admin_Wedding() {
                   TongTienDichVu: tongTienDichVu,
                   TongTienHoaDon: tongTienHoaDon,
                 };
-
+                console.log("tongTienBan", tongTienBan);
+                console.log(existingInvoice.data[0].TongTienBan);
                 if (existingInvoice.data[0].TrangThai === 1) {
                   // If invoice is paid, calculate remaining amount
                   const diffTienBan = Number(
@@ -847,6 +863,7 @@ function Admin_Wedding() {
               TenCoDau: "",
               DienThoai: "",
               NgayDaiTiec: "",
+              NgayDatTiec: "",
               SoLuongBan: "",
               SoBanDuTru: "",
               TienDatCoc: "",
@@ -1301,13 +1318,13 @@ function Admin_Wedding() {
                                 />
                               )}
                               <div>
-                                <span className="text-sm font-medium text-[#001F3F]">
+                                <span className="text-base font-medium text-[#001F3F]">
                                   {dish.TenMonAn}
                                 </span>
-                                <p className="text-xs text-[#001F3F] mt-0.5">
+                                <p className="text-sm text-[#001F3F] mt-0.5">
                                   {dish.GhiChu || "Không có ghi chú"}
                                 </p>
-                                <p className="text-xs text-[#B8860B] mt-0.5">
+                                <p className="text-sm text-[#B8860B] mt-0.5">
                                   {formatVND(dish.DonGia)}
                                 </p>
                               </div>
@@ -1494,10 +1511,10 @@ function Admin_Wedding() {
                               />
                             )}
                             <div>
-                              <span className="text-sm font-medium text-[#001F3F]">
+                              <span className="text-lg font-medium text-[#001F3F]">
                                 {dish.TenMonAn}
                               </span>
-                              <p className="text-xs text-[#001F3F] mt-0.5">
+                              <p className="text-base text-[#001F3F] mt-0.5">
                                 {dish.GhiChu || "Không có ghi chú"}
                               </p>
                               <p className="text-xs text-[#B8860B] mt-0.5">
@@ -1564,14 +1581,15 @@ function Admin_Wedding() {
                         Ngày Đặt Tiệc
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
+                        Ngày Đãi Tiệc
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Tiền Đặt Cọc (VNĐ)
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Số Lượng Bàn
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[#001F3F] uppercase tracking-wider">
-                        Bàn Dự Trữ
-                      </th>
+
                       <th className="px-6 py-3 text-right text-xs font-medium text-[#001F3F] uppercase tracking-wider">
                         Hành Động
                       </th>
@@ -1598,6 +1616,11 @@ function Admin_Wedding() {
                           {booking.DienThoai}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
+                          {new Date(booking.NgayDatTiec).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
                           {new Date(booking.NgayDaiTiec).toLocaleDateString(
                             "vi-VN"
                           )}
@@ -1606,10 +1629,7 @@ function Admin_Wedding() {
                           {formatVND(booking.TienDatCoc)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {booking.SoLuongBan}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#001F3F]">
-                          {booking.SoBanDuTru}
+                          {booking.SoLuongBan + booking.SoBanDuTru}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
@@ -2091,8 +2111,7 @@ function Admin_Wedding() {
                             Số lượng: {service.SoLuong}
                           </p>
                           <p className="text-xs text-[#B8860B]">
-                            {service.DonGiaThoiDiemDat.toLocaleString("vi-VN")}{" "}
-                            VNĐ
+                            {formatVND(service.DonGiaThoiDiemDat)}
                           </p>
                         </div>
                       );

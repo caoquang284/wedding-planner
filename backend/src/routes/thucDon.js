@@ -53,5 +53,6 @@ router.delete(
   },
   thucDonController.deleteThucDon
 );
+router.get('/mon-an-trong-thuc-don/:id', thucDonController.getMonAnInThucDon);
 
 export default router;
