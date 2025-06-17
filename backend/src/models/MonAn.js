@@ -27,6 +27,9 @@ const MonAn = {
   delete: async (id) => {
     return await knex('MONAN').where({ MaMonAn: id }).delete();
   },
+  temDelete: async (id) => {
+    return await knex('MONAN').where({ MaMonAn: id }).update({ DaXoa: true });
+  },
   isLoaiMonAnExists: async (maLoaiMonAn) => {
     const loaiMonAn = await knex('LOAIMONAN')
       .where({ MaLoaiMonAn: maLoaiMonAn })

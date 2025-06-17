@@ -34,6 +34,9 @@ const Sanh = {
   delete: async (id) => {
     return await knex('SANH').where({ MaSanh: id }).delete();
   },
+  temDelete: async (id) => {
+    return await knex('SANH').where({ MaSanh: id }).update({ DaXoa: true });
+  },
   getDonGiaBanToiThieuTuMaSanh: async (maSanh) => {
     // B1: Lấy MaLoaiSanh từ bảng SANH
     const s = await knex('SANH').where({ MaSanh: maSanh }).first();

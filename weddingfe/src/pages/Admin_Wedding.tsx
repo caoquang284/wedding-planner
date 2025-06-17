@@ -35,6 +35,7 @@ interface IMonAn {
   DonGia: number;
   GhiChu?: string;
   AnhURL?: string;
+  DaXoa?: boolean;
 }
 
 interface IMonAnThucDon {
@@ -115,6 +116,7 @@ interface IDichVu {
   DonGia: number;
   GhiChu?: string;
   AnhURL?: string;
+  DaXoa?: boolean;
 }
 
 // Interface cho form dữ liệu
@@ -373,6 +375,7 @@ function Admin_Wedding() {
     DonGia: service.DonGia,
     GhiChu: service.GhiChu || "",
     AnhURL: service.AnhURL,
+    DaXoa: service.DaXoa,
   }));
 
   // Handlers
@@ -1487,7 +1490,10 @@ function Admin_Wedding() {
                 </h6>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {apiDishes
-                    .filter((dish) => dish.MaLoaiMonAn === category.MaLoaiMonAn)
+                    .filter(
+                      (dish) =>
+                        dish.MaLoaiMonAn === category.MaLoaiMonAn && !dish.DaXoa
+                    )
                     .map((dish) => (
                       <div
                         key={dish.MaMonAn}
@@ -2029,7 +2035,8 @@ function Admin_Wedding() {
                     {services
                       .filter(
                         (service) =>
-                          service.MaLoaiDichVu === selectedServiceType
+                          service.MaLoaiDichVu === selectedServiceType &&
+                          !service.DaXoa
                       )
                       .map((service) => (
                         <div

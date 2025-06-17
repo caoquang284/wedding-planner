@@ -27,6 +27,7 @@ interface Dish {
   DonGia: number;
   GhiChu: string;
   AnhURL?: string;
+  DaXoa: boolean;
 }
 
 const formatVND = (value: number | string) => {
@@ -532,7 +533,7 @@ function Menus() {
       try {
         if (id) {
           await deleteMonAn(id);
-          setDishes((prev) => prev.filter((dish) => dish.MaMonAn !== id));
+          //setDishes((prev) => prev.filter((dish) => dish.MaMonAn !== id));
           setMenus((prev) =>
             prev.map((menu) => ({
               ...menu,
@@ -1024,43 +1025,56 @@ function Menus() {
                     (cat) => cat.id === dish.MaLoaiMonAn
                   );
                   return (
-                    <tr key={dish.MaMonAn}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    // Neu dish.DaXoa == true thi dong do mau
+                    <tr
+                      key={dish.MaMonAn}
+                      className={`${
+                        dish.DaXoa ? "bg-red-100" : "bg-white"
+                      } border-b border-gray-200 hover:bg-opacity-80 transition-colors duration-200`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-gray-900">
                         {dish.TenMonAn}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
                         {category ? category.name : "Chưa phân loại"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
                         {formatVND(dish.DonGia)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-6 py-4 text-base text-gray-500">
                         {dish.GhiChu || "Không có ghi chú"}
                       </td>
+                      {/* Tang chieu dai va chieu rong cua anh */}
                       <td className="px-6 py-4">
                         {dish.AnhURL ? (
                           <img
                             src={dish.AnhURL}
                             alt={dish.TenMonAn}
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-24 h-24 object-cover rounded-lg"
                           />
                         ) : (
                           <span className="text-gray-500">Không có ảnh</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => openEditDishModal(dish)}
-                          className="text-blue-600 hover:text-blue-800 mr-4"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDish(dish.MaMonAn)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Xóa
-                        </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-base font-medium">
+                        {/* Neu dish.DaXoa == true thi button sua khong hien thi */}
+                        {!dish.DaXoa ? (
+                          <button
+                            onClick={() => openEditDishModal(dish)}
+                            className="text-blue-600 hover:text-blue-800 mr-4 text-base"
+                          >
+                            Sửa
+                          </button>
+                        ) : null}
+                        {/* Neu dish.DaXoa == true thi button xoa khong hien thi */}
+                        {!dish.DaXoa ? (
+                          <button
+                            onClick={() => handleDeleteDish(dish.MaMonAn)}
+                            className="text-red-600 hover:text-red-800 text-base"
+                          >
+                            Xóa
+                          </button>
+                        ) : null}
                       </td>
                     </tr>
                   );
@@ -1120,6 +1134,94 @@ function Menus() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Danh sách loại món ăn */}
+        {/* Cho no cach bang phia tren nhieu chut */}
+        <div className="mb-6 mt-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+            Quản lý loại món ăn
+          </h2>
+        </div>
+
+        <div>
+          {/* Ẩn bảng trên mobile */}
+          <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Mã loại
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tên loại món ăn
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {categories.map((category) => (
+                  <tr key={category.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {category.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {category.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => openEditCategoryModal(category)}
+                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(category.id)}
+                        className="text-[#D4B2B2] hover:text-[#B89999]"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Hiển thị dạng card trên mobile */}
+          <div className="block sm:hidden space-y-4">
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#B8860B]"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">Mã: {category.id}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditCategoryModal(category)}
+                      className="text-[#B8860B] hover:text-[#8B6508] text-sm"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="text-[#D4B2B2] hover:text-[#B89999] text-sm"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

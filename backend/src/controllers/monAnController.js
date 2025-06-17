@@ -90,7 +90,7 @@ const deleteMonAn = async (req, res) => {
         error: 'Không thể xóa món ăn đang được sử dụng trong một thực đơn',
       });
     }
-    await MonAn.delete(id);
+    await MonAn.temDelete(id);
     return res.status(200).json({ message: 'Xóa món ăn thành công' });
   } catch (error) {
     return res

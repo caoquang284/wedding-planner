@@ -24,6 +24,9 @@ const Ca = {
   delete: async (id) => {
     return await knex('CA').where({ MaCa: id }).delete();
   },
+  temDelete: async (id) => {
+    return await knex('CA').where({ MaCa: id }).update({ DaXoa: true });
+  },
 };
 
 export default Ca;
