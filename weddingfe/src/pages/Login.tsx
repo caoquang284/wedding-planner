@@ -26,7 +26,6 @@ function Login() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-animated-gradient overflow-hidden">
-      {/* Hiệu ứng bóng mờ động */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute w-72 h-72 bg-purple-300 opacity-30 rounded-full blur-3xl float-1 top-10 left-10"></div>
         <div className="absolute w-80 h-80 bg-pink-300 opacity-30 rounded-full blur-2xl float-2 bottom-20 right-10"></div>

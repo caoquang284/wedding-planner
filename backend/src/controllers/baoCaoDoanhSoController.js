@@ -1,28 +1,27 @@
-// baoCaoDoanhSoController.js
 import BaoCaoDoanhSo from '../models/BaoCaoDoanhSo.js';
+import { knex } from '../config/database.js';
 
 const createBaoCaoDoanhSo = async (req, res) => {
   try {
     const { thang, nam } = req.body;
 
-    // Kiểm tra báo cáo đã tồn tại
     const existingReport = await BaoCaoDoanhSo.findByMonthYear(thang, nam);
     if (existingReport) {
       return res.status(400).json({ error: 'Báo cáo cho tháng/năm này đã tồn tại' });
     }
 
-    // Tạo dữ liệu báo cáo
     const { tongDoanhThu, chiTiet } = await BaoCaoDoanhSo.generateReportData(thang, nam);
+    if (tongDoanhThu === undefined || tongDoanhThu === 0) {
+      console.warn('TongDoanhThu không hợp lệ:', tongDoanhThu);
+    }
 
-    // Tạo báo cáo doanh thu
     const baoCaoData = {
       Thang: thang,
       Nam: nam,
-      TongDoanhThu: tongDoanhThu,
+      TongDoanhThu: tongDoanhThu || 0,
     };
     const newBaoCao = await BaoCaoDoanhSo.create(baoCaoData);
 
-    // Thêm chi tiết báo cáo
     for (const chiTietItem of chiTiet) {
       await BaoCaoDoanhSo.createChiTiet({
         MaBaoCaoDoanhSo: newBaoCao.MaBaoCaoDoanhSo,
@@ -32,6 +31,10 @@ const createBaoCaoDoanhSo = async (req, res) => {
         TiLe: chiTietItem.TiLe,
       });
     }
+
+    // Cập nhật lại TongDoanhThu từ chi tiết
+    const totalRevenueFromChiTiet = chiTiet.reduce((sum, item) => sum + item.DoanhThu, 0);
+    await BaoCaoDoanhSo.update(newBaoCao.MaBaoCaoDoanhSo, { TongDoanhThu: totalRevenueFromChiTiet });
 
     return res.status(201).json({ message: 'Tạo báo cáo thành công', data: newBaoCao });
   } catch (error) {
@@ -57,6 +60,7 @@ const getBaoCaoDoanhSo = async (req, res) => {
     const { id } = req.params;
     const baoCao = await BaoCaoDoanhSo.findById(id);
     const chiTiet = await BaoCaoDoanhSo.findChiTietByBaoCaoId(id);
+    console.log('BaoCao:', baoCao, 'ChiTiet:', chiTiet);
     return res.status(200).json({ data: { ...baoCao, chiTiet } });
   } catch (error) {
     return res.status(404).json({ error: error.message });
@@ -105,10 +109,53 @@ const updateBaoCaoDoanhSo = async (req, res) => {
   }
 };
 
+const getRevenueStatsByDateRange = async (req, res) => {
+  console.log('Query params:', req.query); // Debug
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp ngày bắt đầu và ngày kết thúc' });
+    }
+
+    const stats = await knex('HOADON')
+      .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+      .where('HOADON.NgayThanhToan', '>=', startDate)
+      .where('HOADON.NgayThanhToan', '<=', endDate)
+      .where('HOADON.TrangThai', 1)
+      .select(
+        knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan") as Nam'),
+        knex.raw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan") as Thang'),
+        knex.raw('COUNT(*) as SoLuongTiec'),
+        knex.raw('SUM("HOADON"."TongTienHoaDon") as DoanhThu')
+      )
+      .groupBy(
+        'HOADON.NgayThanhToan', 
+        knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")'),
+        knex.raw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan")')
+      )
+      .orderBy(
+        knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")'),
+        'asc'
+      )
+      .orderBy(
+        knex.raw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan")'),
+        'asc'
+      );
+
+    console.log('Stats result:', stats);
+    return res.status(200).json({ data: stats });
+  } catch (error) {
+    console.error('Lỗi khi lấy thống kê:', error.message, error.stack);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 export default {
   createBaoCaoDoanhSo,
   getAllBaoCaoDoanhSo,
   getBaoCaoDoanhSo,
   themChiTiet,
-  updateBaoCaoDoanhSo, 
+  updateBaoCaoDoanhSo,
+  getRevenueStatsByDateRange,
 };

@@ -52,4 +52,11 @@ router.put(
   baoCaoDoanhSoController.updateBaoCaoDoanhSo
 );
 
+router.get(
+  '/stats-by-date',
+  auth,
+  checkPermission('Quản lý báo cáo doanh thu'),
+  baoCaoDoanhSoController.getRevenueStatsByDateRange
+);
+
 export default router;
