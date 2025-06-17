@@ -11,6 +11,7 @@ import { getCaById } from "../../Api/caApi";
 import { getDichVuById } from "../../Api/dichVuApi";
 import { getMonAnById } from "../../Api/monAnApi";
 import { useNavigate } from "react-router-dom";
+import { getThamSo } from "../../Api/thamSoApi";
 
 interface HoaDon {
   MaHoaDon: number;
@@ -26,7 +27,9 @@ interface HoaDon {
   TongTienConLai: number;
   TrangThai: number;
 }
-
+interface ThamSo {
+  PhanTramPhatMotNgay: number;
+}
 interface DatTiec {
   MaDatTiec: number;
   TenChuRe: string;
@@ -176,6 +179,7 @@ const AdminInvoice: React.FC = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [canConfirmPayment, setCanConfirmPayment] = useState(false);
+  const [thamSo, setThamSo] = useState<ThamSo | null>(null);
   const navigate = useNavigate();
 
   // Đóng thông báo thành công sau 3 giây
@@ -192,6 +196,30 @@ const AdminInvoice: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
+        const thamSo = await getThamSo();
+
+        const danhsachHoaDon = await getAllHoaDon();
+        console.log("danhsachHoaDon", danhsachHoaDon);
+        for (const invoice of danhsachHoaDon.data) {
+          if (
+            new Date(invoice.NgayThanhToan) < new Date() &&
+            invoice.TrangThai === 0
+          ) {
+            if (invoice.TrangThai === 0) {
+              if (invoice.ApDungQuyDinhPhat === false) {
+                invoice.ApDungQuyDinhPhat = true;
+                invoice.PhanTramPhatMotNgay = thamSo.PhanTramPhatTrenNgay;
+                invoice.TongTienPhat = Number(
+                  (invoice.TongTienHoaDon * invoice.PhanTramPhatMotNgay) / 100
+                );
+                invoice.TongTienConLai =
+                  Number(invoice.TongTienHoaDon) + Number(invoice.TongTienPhat);
+                console.log("invoice", invoice);
+                await updateHoaDon(invoice.MaHoaDon, invoice);
+              }
+            }
+          }
+        }
         const [hoaDonList, datTiecList] = await Promise.all([
           getAllHoaDon(),
           getAllDatTiec(),
@@ -1092,6 +1120,7 @@ const AdminInvoice: React.FC = () => {
                 <div className="mb-3">
                   <label className="flex items-center space-x-2">
                     <input
+                      disabled={true}
                       type="checkbox"
                       name="ApDungQuyDinhPhat"
                       checked={formData.ApDungQuyDinhPhat}
@@ -1106,6 +1135,7 @@ const AdminInvoice: React.FC = () => {
                     Phần trăm phạt mỗi ngày (%)
                   </label>
                   <input
+                    disabled={true}
                     type="number"
                     name="PhanTramPhatMotNgay"
                     value={formData.PhanTramPhatMotNgay}
@@ -1113,7 +1143,6 @@ const AdminInvoice: React.FC = () => {
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     min="0"
                     max="100"
-                    disabled={!formData.ApDungQuyDinhPhat}
                   />
                 </div>
                 <div className="mb-3">

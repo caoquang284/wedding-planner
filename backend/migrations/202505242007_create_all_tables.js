@@ -226,8 +226,8 @@ export const up = async (knex) => {
     table.decimal('TongTienBan', 15, 2).notNullable();
     table.decimal('TongTienDichVu', 15, 2).notNullable();
     table.decimal('TongTienHoaDon', 15, 2).notNullable();
-    table.boolean('ApDungQuyDinhPhat').notNullable();
-    table.decimal('PhanTramPhatMotNgay', 5, 2).notNullable();
+    table.boolean('ApDungQuyDinhPhat').notNullable().defaultTo(false);
+    table.decimal('PhanTramPhatMotNgay', 5, 2).notNullable().defaultTo(0.0);
     table.decimal('TongTienPhat', 15, 2).notNullable();
     table.decimal('TongTienConLai', 15, 2).notNullable();
     table.integer('TrangThai').notNullable(); // 0: Chưa thanh toán, 1: Đã thanh toán, 2: Đã hủy

@@ -27,7 +27,7 @@ const HoaDon = {
   // Lấy tất cả hóa đơn
   findAll: async () => {
     try {
-      return await knex('HOADON').select('*');
+      return await knex('HOADON').select('*').orderBy('MaHoaDon', 'desc');
     } catch (error) {
       throw new Error(`Lỗi khi lấy danh sách hóa đơn: ${error.message}`);
     }
