@@ -19,7 +19,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface BaoCaoDoanhSo {
-  MaBaoCaoDoanhSo: number;
+  MaBaoCaoDoanhSo: string;
   Thang: number;
   Nam: number;
   TongDoanhThu: number;
@@ -117,14 +117,14 @@ const AdminReport: React.FC = () => {
     setDateRange((prev) => ({ ...prev, [name]: value } as DateRange));
   };
 
-  const handleViewDetail = async (id: number) => {
-    try {
-      const response = await getBaoCaoDoanhSoById(id);
-      setSelectedReport(response.data || null);
-    } catch (error: any) {
-      alert('Lỗi khi lấy chi tiết báo cáo: ' + (error.response?.data?.error || error.message));
-    }
-  };
+  const handleViewDetail = async (id: string) => {
+  try {
+    const response = await getBaoCaoDoanhSoById(id);
+    setSelectedReport(response.data || null);
+  } catch (error: any) {
+    alert('Lỗi khi lấy chi tiết báo cáo: ' + (error.response?.data?.error || error.message));
+  }
+};
 
   const handlePrint = (report: BaoCaoDoanhSo) => {
     const printContent = document.getElementById(`report-${report.MaBaoCaoDoanhSo}`);

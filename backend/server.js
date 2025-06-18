@@ -1,5 +1,4 @@
 import express, { json } from 'express';
-import './src/websocket.js'; // Đảm bảo WebSocket server chạy cùng với server chính
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -7,7 +6,6 @@ import { config } from 'dotenv';
 import routes from './src/routes/index.js';
 import dichVuRoutes from './src/routes/dichVu.js';
 import loaiDichVuRoutes from './src/routes/loaiDichVu.js';
-import thamSoRoutes from './src/routes/thamSo.js';
 import loaiMonAnRoutes from './src/routes/loaiMonAn.js';
 import monAnRoutes from './src/routes/monAn.js';
 import thucDonRoutes from './src/routes/thucDon.js';
@@ -61,7 +59,6 @@ app.use('/api/sanh', auth, sanhRoutes);
 app.use('/api/loaiMonAn', auth, loaiMonAnRoutes);
 app.use('/api/monAn', auth, monAnRoutes);
 app.use('/api/thucDon', auth, thucDonRoutes);
-app.use('/api/thamSo', auth, thamSoRoutes);
 app.use('/api/loaiDichVu', auth, loaiDichVuRoutes);
 app.use('/api/dichVu', auth, dichVuRoutes);
 app.use('/api/ca', auth, caRoutes);
