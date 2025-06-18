@@ -31,7 +31,7 @@ export const getAllBaoCaoDoanhSo = async (filters: { thang?: number; nam?: numbe
 };
 
 // Lấy báo cáo doanh thu theo ID
-export const getBaoCaoDoanhSoById = async (id: number) => {
+export const getBaoCaoDoanhSoById = async (id: string) => {
   try {
     const response = await axiosInstance.get(`/chi-tiet/${id}`);
     console.log('getBaoCaoDoanhSoById response data:', response.data.data);
