@@ -813,9 +813,11 @@ function Admin_Wedding() {
                   TongTienDichVu: tongTienDichVu,
                   TongTienHoaDon: tongTienHoaDon,
                 };
-                console.log("tongTienBan", tongTienBan);
-                console.log(existingInvoice.data[0].TongTienBan);
-                if (existingInvoice.data[0].TrangThai === 1) {
+
+                if (
+                  existingInvoice.data[0].TrangThai === 1 ||
+                  existingInvoice.data[0].TrangThai === 3
+                ) {
                   // If invoice is paid, calculate remaining amount
                   const diffTienBan = Number(
                     tongTienBan - existingInvoice.data[0].TongTienBan
@@ -1688,27 +1690,36 @@ function Admin_Wedding() {
                           {booking.SoLuongBan + booking.SoBanDuTru}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => openEditModal(booking)}
-                            className="text-[#B8860B] hover:text-[#8B6914] mr-4"
-                          >
-                            Sửa
-                          </button>
-                          <button
-                            onClick={() => handleDelete(booking.MaDatTiec)}
-                            className="text-[#D4B2B2] hover:text-[#C49898] mr-4"
-                          >
-                            Xóa
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedBookingDetail(booking);
-                              setShowDetailModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            Chi tiết
-                          </button>
+                          {!booking.DaHuy && (
+                            <>
+                              <button
+                                onClick={() => openEditModal(booking)}
+                                className="text-[#B8860B] hover:text-[#8B6914] mr-4"
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                onClick={() => handleDelete(booking.MaDatTiec)}
+                                className="text-[#D4B2B2] hover:text-[#C49898] mr-4"
+                              >
+                                Xóa
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedBookingDetail(booking);
+                                  setShowDetailModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                Chi tiết
+                              </button>
+                            </>
+                          )}
+                          {booking.DaHuy && (
+                            <span className="text-red-600 font-medium">
+                              Đã hủy
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

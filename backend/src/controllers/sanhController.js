@@ -84,6 +84,12 @@ const updateSanh = async (req, res) => {
         return res.status(400).json({ error: 'Tên sảnh đã tồn tại' });
       }
     }
+    const daDuocDatTiec = await Sanh.checkDaDuocDatTiec(id);
+    if (daDuocDatTiec) {
+      return res
+        .status(400)
+        .json({ error: 'Sảnh đã được đặt tiệc, không thể cập nhật' });
+    }
     const updatedSanh = await Sanh.update(id, {
       TenSanh: tenSanh || sanh.TenSanh,
       MaLoaiSanh: maLoaiSanh || sanh.MaLoaiSanh,
@@ -117,7 +123,7 @@ const deleteSanh = async (req, res) => {
         error: 'Sảnh đang được sử dụng trong đặt tiệc, không thể xóa',
       });
     }
-    await Sanh.delete(id);
+    await Sanh.temDelete(id);
     return res.status(200).json({ message: 'Xóa sảnh thành công' });
   } catch (error) {
     return res

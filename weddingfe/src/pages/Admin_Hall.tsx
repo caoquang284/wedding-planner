@@ -9,17 +9,13 @@ import {
   updateLoaiSanh,
   deleteLoaiSanh,
 } from "../../Api/sanhApi";
-import {
-  getAllCa,
-  createCa,
-  updateCa,
-  deleteCa,
-} from "../../Api/caApi";
+import { getAllCa, createCa, updateCa, deleteCa } from "../../Api/caApi";
 
 // Định nghĩa interface
 interface Ca {
   MaCa: number;
   TenCa: string;
+  DaXoa: boolean;
 }
 
 interface Sanh {
@@ -31,12 +27,14 @@ interface Sanh {
   GhiChu?: string;
   AnhURL?: string;
   DonGiaBanToiThieu: number;
+  DaXoa: boolean;
 }
 
 interface LoaiSanh {
   MaLoaiSanh: number;
   TenLoaiSanh: string;
   DonGiaBanToiThieu: number;
+  DaXoa: boolean;
 }
 
 interface CaFormData {
@@ -91,7 +89,8 @@ function AdminHall() {
   // State cho loại sảnh
   const [loaiSanhs, setLoaiSanhs] = useState<LoaiSanh[]>([]);
   const [loaiSanhSearchTerm, setLoaiSanhSearchTerm] = useState<string>("");
-  const [isLoaiSanhModalOpen, setIsLoaiSanhModalOpen] = useState<boolean>(false);
+  const [isLoaiSanhModalOpen, setIsLoaiSanhModalOpen] =
+    useState<boolean>(false);
   const [isLoaiSanhEditMode, setIsLoaiSanhEditMode] = useState<boolean>(false);
   const [loaiSanhFormData, setLoaiSanhFormData] = useState<LoaiSanhFormData>({
     tenLoaiSanh: "",
@@ -99,11 +98,13 @@ function AdminHall() {
   });
 
   // State chung cho modal xác nhận
-  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>({
-    isOpen: false,
-    message: "",
-    onConfirm: () => {},
-  });
+  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>(
+    {
+      isOpen: false,
+      message: "",
+      onConfirm: () => {},
+    }
+  );
 
   // Lấy dữ liệu ca, sảnh và loại sảnh khi component mount
   useEffect(() => {
@@ -111,6 +112,7 @@ function AdminHall() {
       try {
         // Lấy danh sách ca
         const caData = await getAllCa();
+
         setCas(caData);
         // Nếu không có ca nào, thêm các ca mặc định
         if (caData.length === 0) {
@@ -162,9 +164,7 @@ function AdminHall() {
 
   const closeCaModal = () => setIsCaModalOpen(false);
 
-  const handleCaInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleCaInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCaFormData((prev) => ({
       ...prev,
@@ -188,9 +188,7 @@ function AdminHall() {
         if (isCaEditMode && caFormData.id) {
           const updatedCa = await updateCa(caFormData.id, dataToSend);
           setCas((prev) =>
-            prev.map((ca) =>
-              ca.MaCa === caFormData.id ? updatedCa : ca
-            )
+            prev.map((ca) => (ca.MaCa === caFormData.id ? updatedCa : ca))
           );
         } else {
           const newCa = await createCa(dataToSend);
@@ -207,7 +205,9 @@ function AdminHall() {
 
     setConfirmationModal({
       isOpen: true,
-      message: `Bạn có chắc chắn muốn ${isCaEditMode ? "sửa" : "thêm"} ca này không?`,
+      message: `Bạn có chắc chắn muốn ${
+        isCaEditMode ? "sửa" : "thêm"
+      } ca này không?`,
       onConfirm: action,
     });
   };
@@ -265,12 +265,17 @@ function AdminHall() {
   const closeSanhModal = () => setIsSanhModalOpen(false);
 
   const handleSanhInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setSanhFormData((prev) => ({
       ...prev,
-      [name]: name === "maLoaiSanh" || name === "soLuongBanToiDa" ? Number(value) : value,
+      [name]:
+        name === "maLoaiSanh" || name === "soLuongBanToiDa"
+          ? Number(value)
+          : value,
     }));
   };
 
@@ -337,7 +342,9 @@ function AdminHall() {
 
     setConfirmationModal({
       isOpen: true,
-      message: `Bạn có chắc chắn muốn ${isSanhEditMode ? "sửa" : "thêm"} sảnh này không?`,
+      message: `Bạn có chắc chắn muốn ${
+        isSanhEditMode ? "sửa" : "thêm"
+      } sảnh này không?`,
       onConfirm: action,
     });
   };
@@ -396,7 +403,10 @@ function AdminHall() {
 
   const handleLoaiSanhSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loaiSanhFormData.tenLoaiSanh || loaiSanhFormData.tenLoaiSanh.length < 2) {
+    if (
+      !loaiSanhFormData.tenLoaiSanh ||
+      loaiSanhFormData.tenLoaiSanh.length < 2
+    ) {
       alert("Tên loại sảnh không được để trống và phải có ít nhất 2 ký tự");
       return;
     }
@@ -413,7 +423,10 @@ function AdminHall() {
     const action = async () => {
       try {
         if (isLoaiSanhEditMode && loaiSanhFormData.id) {
-          const updatedLoaiSanh = await updateLoaiSanh(loaiSanhFormData.id, dataToSend);
+          const updatedLoaiSanh = await updateLoaiSanh(
+            loaiSanhFormData.id,
+            dataToSend
+          );
           setLoaiSanhs((prev) =>
             prev.map((ls) =>
               ls.MaLoaiSanh === loaiSanhFormData.id ? updatedLoaiSanh : ls
@@ -441,14 +454,18 @@ function AdminHall() {
       } catch (error: any) {
         console.error("Error saving loai sanh:", error.response?.data || error);
         alert(
-          `Lỗi khi lưu loại sảnh: ${error.response?.data?.error || error.message}`
+          `Lỗi khi lưu loại sảnh: ${
+            error.response?.data?.error || error.message
+          }`
         );
       }
     };
 
     setConfirmationModal({
       isOpen: true,
-      message: `Bạn có chắc chắn muốn ${isLoaiSanhEditMode ? "sửa" : "thêm"} loại sảnh này không?`,
+      message: `Bạn có chắc chắn muốn ${
+        isLoaiSanhEditMode ? "sửa" : "thêm"
+      } loại sảnh này không?`,
       onConfirm: action,
     });
   };
@@ -465,9 +482,14 @@ function AdminHall() {
         await deleteLoaiSanh(id);
         setLoaiSanhs((prev) => prev.filter((ls) => ls.MaLoaiSanh !== id));
       } catch (error: any) {
-        console.error("Error deleting loai sanh:", error.response?.data || error);
+        console.error(
+          "Error deleting loai sanh:",
+          error.response?.data || error
+        );
         alert(
-          `Lỗi khi xóa loại sảnh: ${error.response?.data?.error || error.message}`
+          `Lỗi khi xóa loại sảnh: ${
+            error.response?.data?.error || error.message
+          }`
         );
       }
     };
@@ -499,7 +521,9 @@ function AdminHall() {
   );
 
   const filteredLoaiSanhs = loaiSanhs.filter((loaiSanh) =>
-    loaiSanh.TenLoaiSanh.toLowerCase().includes(loaiSanhSearchTerm.toLowerCase())
+    loaiSanh.TenLoaiSanh.toLowerCase().includes(
+      loaiSanhSearchTerm.toLowerCase()
+    )
   );
 
   return (
@@ -542,23 +566,33 @@ function AdminHall() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCas.map((ca) => (
-                  <tr key={ca.MaCa}>
+                  <tr
+                    key={ca.MaCa}
+                    className={`${
+                      ca.DaXoa ? "bg-red-100" : "bg-white"
+                    } hover:bg-[#F8F9FA] transition-colors duration-200`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {ca.TenCa}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => openEditCaModal(ca)}
-                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCa(ca.MaCa)}
-                        className="text-[#D4B2B2] hover:text-[#B89999]"
-                      >
-                        Xóa
-                      </button>
+                      {/* Neu ca da xoa thi an nut button xoa*/}
+                      {ca.DaXoa ? null : (
+                        <>
+                          <button
+                            onClick={() => openEditCaModal(ca)}
+                            className="text-[#B8860B] hover:text-[#8B6508] mr-4"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCa(ca.MaCa)}
+                            className="text-[#D4B2B2] hover:text-[#B89999]"
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -567,10 +601,14 @@ function AdminHall() {
           </div>
 
           <div className="block sm:hidden space-y-4">
+            {/* lam nhu vay ne trong classname */}
+
             {filteredCas.map((ca) => (
               <div
                 key={ca.MaCa}
-                className="bg-white shadow-md rounded-lg p-4 border-l-4 border-[#D4B2B2]"
+                className={`${
+                  ca.DaXoa ? "bg-red-100" : "bg-white"
+                } hover:bg-[#F8F9FA] transition-colors duration-200`}
               >
                 <div className="flex justify-between items-start">
                   <div>
@@ -647,7 +685,12 @@ function AdminHall() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredSanhs.map((sanh) => (
-                  <tr key={sanh.MaSanh}>
+                  <tr
+                    key={sanh.MaSanh}
+                    className={`${
+                      sanh.DaXoa ? "bg-red-100" : "bg-white"
+                    } hover:bg-[#F8F9FA] transition-colors duration-200`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {sanh.TenSanh}
                     </td>
@@ -672,18 +715,23 @@ function AdminHall() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => openEditSanhModal(sanh)}
-                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSanh(sanh.MaSanh)}
-                        className="text-[#D4B2B2] hover:text-[#B89999]"
-                      >
-                        Xóa
-                      </button>
+                      {/* Neu sanh da xoa thi an nut button xoa*/}
+                      {sanh.DaXoa ? null : (
+                        <>
+                          <button
+                            onClick={() => openEditSanhModal(sanh)}
+                            className="text-[#B8860B] hover:text-[#8B6508] mr-4"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSanh(sanh.MaSanh)}
+                            className="text-[#D4B2B2] hover:text-[#B89999]"
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -779,26 +827,38 @@ function AdminHall() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredLoaiSanhs.map((loaiSanh) => (
-                  <tr key={loaiSanh.MaLoaiSanh}>
+                  <tr
+                    key={loaiSanh.MaLoaiSanh}
+                    className={`${
+                      loaiSanh.DaXoa ? "bg-red-100" : "bg-white"
+                    } hover:bg-[#F8F9FA] transition-colors duration-200`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {loaiSanh.TenLoaiSanh}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {loaiSanh.DonGiaBanToiThieu.toLocaleString('vi-VN')} VNĐ
+                      {loaiSanh.DonGiaBanToiThieu.toLocaleString("vi-VN")} VNĐ
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => openEditLoaiSanhModal(loaiSanh)}
-                        className="text-[#B8860B] hover:text-[#8B6508] mr-4"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDeleteLoaiSanh(loaiSanh.MaLoaiSanh)}
-                        className="text-[#D4B2B2] hover:text-[#B89999]"
-                      >
-                        Xóa
-                      </button>
+                      {/* Neu loai sanh da xoa thi an nut button xoa*/}
+                      {loaiSanh.DaXoa ? null : (
+                        <>
+                          <button
+                            onClick={() => openEditLoaiSanhModal(loaiSanh)}
+                            className="text-[#B8860B] hover:text-[#8B6508] mr-4"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDeleteLoaiSanh(loaiSanh.MaLoaiSanh)
+                            }
+                            className="text-[#D4B2B2] hover:text-[#B89999]"
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -818,7 +878,8 @@ function AdminHall() {
                       {loaiSanh.TenLoaiSanh}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      Đơn giá: {loaiSanh.DonGiaBanToiThieu.toLocaleString('vi-VN')} VNĐ
+                      Đơn giá:{" "}
+                      {loaiSanh.DonGiaBanToiThieu.toLocaleString("vi-VN")} VNĐ
                     </p>
                   </div>
                   <div className="flex gap-2">

@@ -929,18 +929,22 @@ const AdminInvoice: React.FC = () => {
                         >
                           Chi tiết
                         </button>
-                        <button
-                          onClick={() => openEditModal(invoice)}
-                          className="text-[#B8860B] hover:text-[#8B6914] mr-4 transition-colors duration-300"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDelete(invoice.MaHoaDon)}
-                          className="text-[#D4B2B2] hover:text-[#C49898] transition-colors duration-300"
-                        >
-                          Xóa
-                        </button>
+                        {invoice.TrangThai !== 2 && (
+                          <>
+                            <button
+                              onClick={() => openEditModal(invoice)}
+                              className="text-[#B8860B] hover:text-[#8B6914] mr-4 transition-colors duration-300"
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              onClick={() => handleDelete(invoice.MaHoaDon)}
+                              className="text-[#D4B2B2] hover:text-[#C49898] transition-colors duration-300"
+                            >
+                              Xóa
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1004,18 +1008,27 @@ const AdminInvoice: React.FC = () => {
                       >
                         Chi tiết
                       </button>
-                      <button
-                        onClick={() => openEditModal(invoice)}
-                        className="text-[#B8860B] hover:text-[#8B6914] text-sm transition-colors duration-300"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(invoice.MaHoaDon)}
-                        className="text-[#D4B2B2] hover:text-[#C49898] text-sm transition-colors duration-300"
-                      >
-                        Xóa
-                      </button>
+                      {invoice.TrangThai !== 2 && (
+                        <>
+                          <button
+                            onClick={() => openEditModal(invoice)}
+                            className="text-[#B8860B] hover:text-[#8B6914] text-sm transition-colors duration-300"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDelete(invoice.MaHoaDon)}
+                            className="text-[#D4B2B2] hover:text-[#C49898] text-sm transition-colors duration-300"
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      )}
+                      {invoice.TrangThai === 2 && (
+                        <span className="text-green-600 font-medium">
+                          Đã thanh toán
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

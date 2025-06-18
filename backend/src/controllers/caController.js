@@ -60,6 +60,12 @@ const updateCa = async (req, res) => {
         return res.status(400).json({ error: 'Tên ca đã tồn tại' });
       }
     }
+    const daDuocDatTiec = await Ca.checkDaDuocDatTiec(id);
+    if (daDuocDatTiec) {
+      return res
+        .status(400)
+        .json({ error: 'Ca đã được đặt tiệc, không thể cập nhật' });
+    }
     const updatedCa = await Ca.update(id, { TenCa: tenCa || ca.TenCa });
     return res.status(200).json(updatedCa);
   } catch (error) {
@@ -86,7 +92,7 @@ const deleteCa = async (req, res) => {
         .status(400)
         .json({ error: 'Ca đang được sử dụng trong đặt tiệc, không thể xóa' });
     }
-    await Ca.delete(id);
+    await Ca.temDelete(id);
     return res.status(200).json({ message: 'Xóa ca thành công' });
   } catch (error) {
     return res.status(500).json({ error: 'Lỗi khi xóa ca: ' + error.message });
