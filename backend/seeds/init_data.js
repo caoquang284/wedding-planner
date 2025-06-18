@@ -1716,11 +1716,11 @@ export async function seed(knex) {
       MaDatTiec: 1,
       NgayThanhToan: '2025-06-17',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 30000000.0, // 30 bàn * 1,000,000
-      TongTienDichVu: 2000000.0,
-      TongTienHoaDon: 32000000.0, // 30,000,000 + 2,000,000
-      TongTienPhat: 3200000.0, // (32,000,000 * 5% * 2 ngày)
-      TongTienConLai: 23200000.0, // 32,000,000 + 3,200,000 - 12,000,000
+      TongTienBan: 35665000.0, // 30 bàn * 1,000,000
+      TongTienDichVu: 32000000.0,
+      TongTienHoaDon: 67665000.0, // 30,000,000 + 2,000,000
+      TongTienPhat: 0.0, //
+      TongTienConLai: 55665000.0, // 32,000,000 + 3,200,000 - 12,000,000
       TrangThai: 0,
     },
     {
@@ -1728,11 +1728,11 @@ export async function seed(knex) {
       MaDatTiec: 2,
       NgayThanhToan: '2025-07-22',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 40000000.0, // 40 bàn * 1,000,000
-      TongTienDichVu: 3000000.0,
-      TongTienHoaDon: 43000000.0, // 40,000,000 + 3,000,000
+      TongTienBan: 50160000.0, // 40 bàn * 1,000,000
+      TongTienDichVu: 28000000.0,
+      TongTienHoaDon: 78160000.0, // 40,000,000 + 3,000,000
       TongTienPhat: 0.0,
-      TongTienConLai: 28000000.0, // 43,000,000 - 15,000,000
+      TongTienConLai: 63160000.0, // 43,000,000 - 15,000,000
       TrangThai: 0,
     },
     {
@@ -1740,11 +1740,11 @@ export async function seed(knex) {
       MaDatTiec: 3,
       NgayThanhToan: '2025-08-12',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 25000000.0, // 25 bàn * 1,000,000
-      TongTienDichVu: 0.0,
-      TongTienHoaDon: 25000000.0,
-      TongTienPhat: 1500000.0, // (25,000,000 * 3% * 2 ngày)
-      TongTienConLai: 16500000.0, // 25,000,000 + 1,500,000 - 10,000,000
+      TongTienBan: 34720000.0, // 25 bàn * 1,000,000
+      TongTienDichVu: 8000000.0,
+      TongTienHoaDon: 42720000.0,
+      TongTienPhat: 0.0,
+      TongTienConLai: 32720000.0,
       TrangThai: 0,
     },
     {
@@ -1752,11 +1752,11 @@ export async function seed(knex) {
       MaDatTiec: 4,
       NgayThanhToan: '2025-09-07',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 35000000.0, // 35 bàn * 1,000,000
-      TongTienDichVu: 4000000.0,
-      TongTienHoaDon: 39000000.0, // 35,000,000 + 4,000,000
+      TongTienBan: 101840000.0, // 35 bàn * 1,000,000
+      TongTienDichVu: 18000000.0,
+      TongTienHoaDon: 119840000.0, // 35,000,000 + 4,000,000
       TongTienPhat: 0.0,
-      TongTienConLai: 26000000.0, // 39,000,000 - 13,000,000
+      TongTienConLai: 106840000.0, // 39,000,000 - 13,000,000
       TrangThai: 0,
     },
     {
@@ -1764,11 +1764,11 @@ export async function seed(knex) {
       MaDatTiec: 5,
       NgayThanhToan: '2025-10-14',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 28000000.0, // 28 bàn * 1,000,000
-      TongTienDichVu: 1000000.0,
-      TongTienHoaDon: 29000000.0, // 28,000,000 + 1,000,000
-      TongTienPhat: 4060000.0, // (29,000,000 * 7% * 2 ngày)
-      TongTienConLai: 22060000.0, // 29,000,000 + 4,060,000 - 11,000,000
+      TongTienBan: 106340000.0, // 28 bàn * 1,000,000
+      TongTienDichVu: 11000000.0,
+      TongTienHoaDon: 117304000.0, // 28,000,000 + 1,000,000
+      TongTienPhat: 0.0, // (29,000,000 * 7% * 2 ngày)
+      TongTienConLai: 106304000.0, // 29,000,000 + 4,060,000 - 11,000,000
       TrangThai: 0,
     },
     {
@@ -1776,11 +1776,11 @@ export async function seed(knex) {
       MaDatTiec: 6,
       NgayThanhToan: '2025-11-20',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 38000000.0, // 38 bàn * 1,000,000
-      TongTienDichVu: 5000000.0,
-      TongTienHoaDon: 43000000.0, // 38,000,000 + 5,000,000
+      TongTienBan: 153252000.0, // 38 bàn * 1,000,000
+      TongTienDichVu: 30000000.0,
+      TongTienHoaDon: 183252000.0, // 38,000,000 + 5,000,000
       TongTienPhat: 0.0,
-      TongTienConLai: 29000000.0, // 43,000,000 - 14,000,000
+      TongTienConLai: 169252000.0, // 43,000,000 - 14,000,000
       TrangThai: 0,
     },
     {
@@ -1788,11 +1788,11 @@ export async function seed(knex) {
       MaDatTiec: 7,
       NgayThanhToan: '2025-12-03',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 20000000.0, // 20 bàn * 1,000,000
-      TongTienDichVu: 0.0,
-      TongTienHoaDon: 20000000.0,
-      TongTienPhat: 800000.0, // (20,000,000 * 4% * 1 ngày)
-      TongTienConLai: 11800000.0, // 20,000,000 + 800,000 - 9,000,000
+      TongTienBan: 93544000.0, // 20 bàn * 1,000,000
+      TongTienDichVu: 14000000.0,
+      TongTienHoaDon: 107544000.0,
+      TongTienPhat: 0.0,
+      TongTienConLai: 98544000.0,
       TrangThai: 0,
     },
     {
@@ -1800,11 +1800,11 @@ export async function seed(knex) {
       MaDatTiec: 8,
       NgayThanhToan: '2025-06-27',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 45000000.0, // 45 bàn * 1,000,000
-      TongTienDichVu: 3000000.0,
-      TongTienHoaDon: 48000000.0, // 45,000,000 + 3,000,000
+      TongTienBan: 218400000.0, // 45 bàn * 1,000,000
+      TongTienDichVu: 29000000.0,
+      TongTienHoaDon: 247440000.0, // 45,000,000 + 3,000,000
       TongTienPhat: 0.0,
-      TongTienConLai: 32000000.0, // 48,000,000 - 16,000,000
+      TongTienConLai: 231400000.0, // 48,000,000 - 16,000,000
       TrangThai: 0,
     },
     {
@@ -1812,11 +1812,11 @@ export async function seed(knex) {
       MaDatTiec: 9,
       NgayThanhToan: '2025-08-01',
       NgayLapHoaDon: '2025-06-17',
-      TongTienBan: 27000000.0, // 27 bàn * 1,000,000
-      TongTienDichVu: 2000000.0,
-      TongTienHoaDon: 29000000.0, // 27,000,000 + 2,000,000
-      TongTienPhat: 1740000.0, // (29,000,000 * 6% * 1 ngày)
-      TongTienConLai: 20240000.0, // 29,000,000 + 1,740,000 - 10,500,000
+      TongTienBan: 126570000.0, // 27 bàn * 1,000,000
+      TongTienDichVu: 11000000.0,
+      TongTienHoaDon: 137570000.0, // 27,000,000 + 2,000,000
+      TongTienPhat: 0.0, // (29,000,000 * 6% * 1 ngày)
+      TongTienConLai: 127070000.0, // 29,000,000 + 1,740,000 - 10,500,000
       TrangThai: 0,
     },
     {
