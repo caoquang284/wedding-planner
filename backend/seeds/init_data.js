@@ -1359,7 +1359,6 @@ export async function seed(knex) {
       TenCoDau: 'Trần Thị Bình',
       DienThoai: '0901234567',
       NgayDaiTiec: '2025-06-15',
-      NgayDatTiec: '2025-06-17',
       MaCa: 1,
       MaSanh: 1,
       MaThucDon: 10,
@@ -1373,7 +1372,6 @@ export async function seed(knex) {
       TenCoDau: 'Phạm Ngọc Châu',
       DienThoai: '0912345678',
       NgayDaiTiec: '2025-07-20',
-      NgayDatTiec: '2025-06-17',
       MaCa: 2,
       MaSanh: 2,
       MaThucDon: 11,
@@ -1387,7 +1385,6 @@ export async function seed(knex) {
       TenCoDau: 'Nguyễn Thị Dung',
       DienThoai: '0923456789',
       NgayDaiTiec: '2025-08-10',
-      NgayDatTiec: '2025-06-17',
       MaCa: 3,
       MaSanh: 3,
       MaThucDon: 12,
@@ -1401,7 +1398,6 @@ export async function seed(knex) {
       TenCoDau: 'Lê Thị Hà',
       DienThoai: '0934567890',
       NgayDaiTiec: '2025-09-05',
-      NgayDatTiec: '2025-06-17',
       MaCa: 4,
       MaSanh: 4,
       MaThucDon: 13,
@@ -1415,7 +1411,6 @@ export async function seed(knex) {
       TenCoDau: 'Võ Thị Kim',
       DienThoai: '0945678901',
       NgayDaiTiec: '2025-10-12',
-      NgayDatTiec: '2025-06-17',
       MaCa: 5,
       MaSanh: 5,
       MaThucDon: 14,
@@ -1429,7 +1424,6 @@ export async function seed(knex) {
       TenCoDau: 'Đỗ Thị Mai',
       DienThoai: '0956789012',
       NgayDaiTiec: '2025-11-18',
-      NgayDatTiec: '2025-06-17',
       MaCa: 1,
       MaSanh: 6,
       MaThucDon: 15,
@@ -1443,7 +1437,6 @@ export async function seed(knex) {
       TenCoDau: 'Hà Thị Ngọc',
       DienThoai: '0967890123',
       NgayDaiTiec: '2025-12-01',
-      NgayDatTiec: '2025-06-17',
       MaCa: 2,
       MaSanh: 7,
       MaThucDon: 16,
@@ -1457,7 +1450,6 @@ export async function seed(knex) {
       TenCoDau: 'Trương Thị Quỳnh',
       DienThoai: '0978901234',
       NgayDaiTiec: '2025-06-25',
-      NgayDatTiec: '2025-06-17',
       MaCa: 3,
       MaSanh: 8,
       MaThucDon: 17,
@@ -1471,7 +1463,6 @@ export async function seed(knex) {
       TenCoDau: 'Ngô Thị Thu',
       DienThoai: '0989012345',
       NgayDaiTiec: '2025-07-30',
-      NgayDatTiec: '2025-06-17',
       MaCa: 4,
       MaSanh: 9,
       MaThucDon: 18,
@@ -1485,7 +1476,6 @@ export async function seed(knex) {
       TenCoDau: 'Phan Thị Uyên',
       DienThoai: '0990123456',
       NgayDaiTiec: '2025-08-15',
-      NgayDatTiec: '2025-06-17',
       MaCa: 5,
       MaSanh: 10,
       MaThucDon: 18,
@@ -1939,7 +1929,12 @@ export async function seed(knex) {
   await knex.raw(
     `SELECT setval('"DATTIEC_MaDatTiec_seq"', (SELECT COALESCE(MAX("MaDatTiec"), 0) FROM "DATTIEC"))`
   );
+  const maxId = await knex('BAOCAODOANHSO')
+    .max('MaBaoCaoDoanhSo AS max_id')
+    .first();
+  const nextValue = maxId.max_id ? maxId.max_id + 1 : 1; // Nếu rỗng, bắt đầu từ 1
   await knex.raw(
-    `SELECT setval('"BAOCAODOANHSO_MaBaoCaoDoanhSo_seq"', (SELECT COALESCE(MAX("MaBaoCaoDoanhSo"), 0) FROM "BAOCAODOANHSO"))`
+    `SELECT setval('"BAOCAODOANHSO_MaBaoCaoDoanhSo_seq"', ?, true)`,
+    [nextValue]
   );
 }
