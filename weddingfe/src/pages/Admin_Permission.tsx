@@ -68,7 +68,9 @@ function AdminPermission() {
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(undefined);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | undefined>(
+    undefined
+  );
   const [availablePermissions, setAvailablePermissions] = useState<
     { MaChucNang: number; TenChucNang: string; TenManHinh: string }[]
   >([]);
@@ -137,7 +139,8 @@ function AdminPermission() {
 
   const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState<boolean>(false);
-  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState<boolean>(false);
+  const [isPermissionModalOpen, setIsPermissionModalOpen] =
+    useState<boolean>(false);
   const [userFormData, setUserFormData] = useState<UserFormData>({
     id: undefined,
     tenDangNhap: "",
@@ -149,25 +152,30 @@ function AdminPermission() {
     id: undefined,
     name: "",
   });
-  const [permissionFormData, setPermissionFormData] = useState<PermissionFormData>({
-    maNhom: undefined,
-    maChucNang: undefined,
-  });
+  const [permissionFormData, setPermissionFormData] =
+    useState<PermissionFormData>({
+      maNhom: undefined,
+      maChucNang: undefined,
+    });
   const [isUserEditMode, setIsUserEditMode] = useState<boolean>(false);
   const [isGroupEditMode, setIsGroupEditMode] = useState<boolean>(false);
 
   const [userSearchTerm, setUserSearchTerm] = useState<string>("");
   const [groupSearchTerm, setGroupSearchTerm] = useState<string>("");
 
-  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>({
-    isOpen: false,
-    message: "",
-    onConfirm: () => {},
-  });
+  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModal>(
+    {
+      isOpen: false,
+      message: "",
+      onConfirm: () => {},
+    }
+  );
 
   const openAddUserModal = () => {
     if (groups.length === 0) {
-      alert("Vui lòng thêm ít nhất một nhóm người dùng trước khi thêm người dùng");
+      alert(
+        "Vui lòng thêm ít nhất một nhóm người dùng trước khi thêm người dùng"
+      );
       return;
     }
     setUserFormData({
@@ -256,83 +264,92 @@ function AdminPermission() {
   };
 
   const handleUserSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!userFormData.tenDangNhap || userFormData.tenDangNhap.length < 3) {
-    alert("Tên đăng nhập không được để trống và phải có ít nhất 3 ký tự");
-    return;
-  }
-  if (!userFormData.tenNguoiDung) {
-    alert("Tên người dùng không được để trống");
-    return;
-  }
-  if (!userFormData.maNhom || isNaN(userFormData.maNhom)) {
-    alert("Vui lòng chọn nhóm người dùng hợp lệ");
-    return;
-  }
-  if (!isUserEditMode && (!userFormData.matKhau || userFormData.matKhau.length < 6)) {
-    alert("Mật khẩu là bắt buộc khi tạo người dùng mới và phải có ít nhất 6 ký tự");
-    return;
-  }
-
-  const action = async () => {
-    try {
-      if (isUserEditMode && userFormData.id) {
-        const updatedUser = await updateNguoiDung({
-          tenNguoiDung: userFormData.tenNguoiDung,
-          maNhom: userFormData.maNhom,
-        });
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.MaNguoiDung === userFormData.id
-              ? {
-                  ...user,
-                  TenNguoiDung: updatedUser.TenNguoiDung,
-                  MaNhom: updatedUser.MaNhom,
-                  TenNhom:
-                    groups.find((g) => g.MaNhom === updatedUser.MaNhom)?.TenNhom ||
-                    "Chưa có nhóm",
-                }
-              : user
-          )
-        );
-      } else {
-        const dataToSend = {
-          tenDangNhap: userFormData.tenDangNhap,
-          matKhau: userFormData.matKhau!,
-          tenNguoiDung: userFormData.tenNguoiDung,
-          maNhom: Number(userFormData.maNhom), 
-        };
-        console.log('Data sent to createNguoiDung:', dataToSend);
-        const newUser = await createNguoiDung(dataToSend);
-        console.log('New user created:', newUser);
-        setUsers((prev) => [
-          ...prev,
-          {
-            MaNguoiDung: newUser.MaNguoiDung,
-            TenDangNhap: newUser.TenDangNhap,
-            TenNguoiDung: newUser.TenNguoiDung,
-            MaNhom: newUser.MaNhom,
-            TenNhom:
-              groups.find((g) => g.MaNhom === newUser.MaNhom)?.TenNhom ||
-              "Chưa có nhóm",
-          },
-        ]);
-      }
-      closeUserModal();
-    } catch (error: any) {
-      console.error('Error saving user:', error.response?.data || error);
-      alert(
-        `Lỗi khi lưu người dùng: ${error.response?.data?.error || error.message}`
-      );
+    e.preventDefault();
+    if (!userFormData.tenDangNhap || userFormData.tenDangNhap.length < 3) {
+      alert("Tên đăng nhập không được để trống và phải có ít nhất 3 ký tự");
+      return;
     }
-  };
+    if (!userFormData.tenNguoiDung) {
+      alert("Tên người dùng không được để trống");
+      return;
+    }
+    if (!userFormData.maNhom || isNaN(userFormData.maNhom)) {
+      alert("Vui lòng chọn nhóm người dùng hợp lệ");
+      return;
+    }
+    if (
+      !isUserEditMode &&
+      (!userFormData.matKhau || userFormData.matKhau.length < 6)
+    ) {
+      alert(
+        "Mật khẩu là bắt buộc khi tạo người dùng mới và phải có ít nhất 6 ký tự"
+      );
+      return;
+    }
 
-  setConfirmationModal({
-    isOpen: true,
-    message: `Bạn có chắc chắn muốn ${isUserEditMode ? "sửa" : "thêm"} người dùng này không?`,
-    onConfirm: action,
-  });
-};
+    const action = async () => {
+      try {
+        if (isUserEditMode && userFormData.id) {
+          const updatedUser = await updateNguoiDung({
+            tenNguoiDung: userFormData.tenNguoiDung,
+            maNhom: userFormData.maNhom,
+          });
+          setUsers((prev) =>
+            prev.map((user) =>
+              user.MaNguoiDung === userFormData.id
+                ? {
+                    ...user,
+                    TenNguoiDung: updatedUser.TenNguoiDung,
+                    MaNhom: updatedUser.MaNhom,
+                    TenNhom:
+                      groups.find((g) => g.MaNhom === updatedUser.MaNhom)
+                        ?.TenNhom || "Chưa có nhóm",
+                  }
+                : user
+            )
+          );
+        } else {
+          const dataToSend = {
+            tenDangNhap: userFormData.tenDangNhap,
+            matKhau: userFormData.matKhau!,
+            tenNguoiDung: userFormData.tenNguoiDung,
+            maNhom: Number(userFormData.maNhom),
+          };
+          console.log("Data sent to createNguoiDung:", dataToSend);
+          const newUser = await createNguoiDung(dataToSend);
+          console.log("New user created:", newUser);
+          setUsers((prev) => [
+            ...prev,
+            {
+              MaNguoiDung: newUser.MaNguoiDung,
+              TenDangNhap: newUser.TenDangNhap,
+              TenNguoiDung: newUser.TenNguoiDung,
+              MaNhom: newUser.MaNhom,
+              TenNhom:
+                groups.find((g) => g.MaNhom === newUser.MaNhom)?.TenNhom ||
+                "Chưa có nhóm",
+            },
+          ]);
+        }
+        closeUserModal();
+      } catch (error: any) {
+        console.error("Error saving user:", error.response?.data || error);
+        alert(
+          `Lỗi khi lưu người dùng: ${
+            error.response?.data?.error || error.message
+          }`
+        );
+      }
+    };
+
+    setConfirmationModal({
+      isOpen: true,
+      message: `Bạn có chắc chắn muốn ${
+        isUserEditMode ? "sửa" : "thêm"
+      } người dùng này không?`,
+      onConfirm: action,
+    });
+  };
 
   const handleGroupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -374,14 +391,16 @@ function AdminPermission() {
         console.error("Error saving group:", error);
         alert(
           "Lỗi khi lưu nhóm người dùng: " +
-          (error.response?.data?.error || error.message)
+            (error.response?.data?.error || error.message)
         );
       }
     };
 
     setConfirmationModal({
       isOpen: true,
-      message: `Bạn có chắc chắn muốn ${isGroupEditMode ? "sửa" : "thêm"} nhóm người dùng này không?`,
+      message: `Bạn có chắc chắn muốn ${
+        isGroupEditMode ? "sửa" : "thêm"
+      } nhóm người dùng này không?`,
       onConfirm: action,
     });
   };
@@ -412,8 +431,7 @@ function AdminPermission() {
       } catch (error: any) {
         console.error("Error saving permission:", error);
         alert(
-          "Lỗi khi gán quyền: " +
-          (error.response?.data?.error || error.message)
+          "Lỗi khi gán quyền: " + (error.response?.data?.error || error.message)
         );
       }
     };
@@ -475,7 +493,10 @@ function AdminPermission() {
     });
   };
 
-  const handleDeletePermission = (maNhom: number | undefined, maChucNang: number | undefined) => {
+  const handleDeletePermission = (
+    maNhom: number | undefined,
+    maChucNang: number | undefined
+  ) => {
     const action = async () => {
       try {
         if (maNhom && maChucNang) {
@@ -641,7 +662,11 @@ function AdminPermission() {
               />
               <select
                 value={selectedGroupId || ""}
-                onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : undefined)}
+                onChange={(e) =>
+                  setSelectedGroupId(
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
                 className="w-full sm:w-48 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D4B2B2]"
               >
                 <option value="">Chọn nhóm để xem quyền</option>
@@ -745,9 +770,8 @@ function AdminPermission() {
         {selectedGroupId && (
           <div>
             <h3 className="text-xl font-bold text-[#001F3F] mb-4">
-              Quyền của nhóm: {
-                groups.find((g) => g.MaNhom === selectedGroupId)?.TenNhom
-              }
+              Quyền của nhóm:{" "}
+              {groups.find((g) => g.MaNhom === selectedGroupId)?.TenNhom}
             </h3>
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
@@ -759,9 +783,9 @@ function AdminPermission() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Màn hình
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {/* <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Hành động
-                    </th>
+                    </th> */}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -773,7 +797,7 @@ function AdminPermission() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {perm.TenManHinh}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() =>
                             handleDeletePermission(perm.MaNhom, perm.MaChucNang)
@@ -782,7 +806,7 @@ function AdminPermission() {
                         >
                           Xóa
                         </button>
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

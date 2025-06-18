@@ -64,6 +64,7 @@ interface IThucDon {
 interface ICa {
   MaCa: number;
   TenCa: string;
+  DaXoa?: boolean;
 }
 
 // Interface cho đặt tiệc
@@ -90,6 +91,7 @@ interface ILoaiSanh {
   MaLoaiSanh: number;
   TenLoaiSanh: string;
   DonGiaBanToiThieu: number;
+  DaXoa?: boolean;
 }
 
 // Interface cho sảnh
@@ -100,12 +102,14 @@ interface ISanh {
   SoLuongBanToiDa: number;
   GhiChu?: string;
   AnhURL?: string;
+  DaXoa?: boolean;
 }
 
 // Interface cho loại dịch vụ
 interface ILoaiDichVu {
   MaLoaiDichVu: number;
   TenLoaiDichVu: string;
+  DaXoa?: boolean;
 }
 
 // Interface cho dịch vụ
@@ -370,6 +374,7 @@ function Admin_Wedding() {
   const serviceTypes = apiServiceTypes.map((type) => ({
     MaLoaiDichVu: type.MaLoaiDichVu,
     TenLoaiDichVu: type.TenLoaiDichVu,
+    DaXoa: type.DaXoa,
   }));
 
   const services = apiServices.map((service) => ({
@@ -814,10 +819,7 @@ function Admin_Wedding() {
                   TongTienHoaDon: tongTienHoaDon,
                 };
 
-                if (
-                  existingInvoice.data[0].TrangThai === 1 ||
-                  existingInvoice.data[0].TrangThai === 3
-                ) {
+                if (existingInvoice.data[0].TrangThai === 1) {
                   // If invoice is paid, calculate remaining amount
                   const diffTienBan = Number(
                     tongTienBan - existingInvoice.data[0].TongTienBan
@@ -830,6 +832,21 @@ function Admin_Wedding() {
                   );
                   updateData.TrangThai = 3;
                 }
+                if (existingInvoice.data[0].TrangThai === 3) {
+                  const diffTienBan = Number(
+                    tongTienBan - existingInvoice.data[0].TongTienBan
+                  );
+                  const diffTienDichVu = Number(
+                    tongTienDichVu - existingInvoice.data[0].TongTienDichVu
+                  );
+                  updateData.TongTienConLai = Number(
+                    Number(diffTienBan) +
+                      Number(diffTienDichVu) +
+                      Number(existingInvoice.data[0].TongTienConLai)
+                  );
+                  updateData.TrangThai = 3;
+                }
+                console.log("updateData", updateData);
                 await updateHoaDon(maHoaDon, updateData);
               }
             } else {
@@ -1503,57 +1520,60 @@ function Admin_Wedding() {
             Tùy chỉnh món ăn trong thực đơn
           </h5>
           <div className="border rounded-lg p-4 bg-white shadow-sm">
-            {apiDishTypes.map((category) => (
-              <div key={category.MaLoaiMonAn} className="mb-4">
-                <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
-                  {category.TenLoaiMonAn}
-                </h6>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {apiDishes
-                    .filter(
-                      (dish) =>
-                        dish.MaLoaiMonAn === category.MaLoaiMonAn && !dish.DaXoa
-                    )
-                    .map((dish) => (
-                      <div
-                        key={dish.MaMonAn}
-                        className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 h-32"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedDishes.includes(dish.MaMonAn)}
-                          onChange={(e) =>
-                            handleDishSelect(dish.MaMonAn, e.target.checked)
-                          }
-                          className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-start gap-2">
-                            {dish.AnhURL && (
-                              <img
-                                src={dish.AnhURL}
-                                alt={dish.TenMonAn}
-                                className="w-24 h-24 object-cover rounded-lg"
-                              />
-                            )}
-                            <div>
-                              <span className="text-lg font-medium text-[#001F3F]">
-                                {dish.TenMonAn}
-                              </span>
-                              <p className="text-base text-[#001F3F] mt-0.5">
-                                {dish.GhiChu || "Không có ghi chú"}
-                              </p>
-                              <p className="text-xs text-[#B8860B] mt-0.5">
-                                {formatVND(dish.DonGia)}
-                              </p>
+            {apiDishTypes
+              .filter((category) => !category.DaXoa)
+              .map((category) => (
+                <div key={category.MaLoaiMonAn} className="mb-4">
+                  <h6 className="text-sm font-semibold text-[#001F3F] mb-2">
+                    {category.TenLoaiMonAn}
+                  </h6>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {apiDishes
+                      .filter(
+                        (dish) =>
+                          dish.MaLoaiMonAn === category.MaLoaiMonAn &&
+                          !dish.DaXoa
+                      )
+                      .map((dish) => (
+                        <div
+                          key={dish.MaMonAn}
+                          className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 h-32"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedDishes.includes(dish.MaMonAn)}
+                            onChange={(e) =>
+                              handleDishSelect(dish.MaMonAn, e.target.checked)
+                            }
+                            className="h-4 w-4 text-[#B8860B] rounded border-gray-300 focus:ring-[#E6C3C3]"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-start gap-2">
+                              {dish.AnhURL && (
+                                <img
+                                  src={dish.AnhURL}
+                                  alt={dish.TenMonAn}
+                                  className="w-24 h-24 object-cover rounded-lg"
+                                />
+                              )}
+                              <div>
+                                <span className="text-lg font-medium text-[#001F3F]">
+                                  {dish.TenMonAn}
+                                </span>
+                                <p className="text-base text-[#001F3F] mt-0.5">
+                                  {dish.GhiChu || "Không có ghi chú"}
+                                </p>
+                                <p className="text-xs text-[#B8860B] mt-0.5">
+                                  {formatVND(dish.DonGia)}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </>
@@ -1856,36 +1876,38 @@ function Admin_Wedding() {
                   Chọn Loại Sảnh
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {hallTypes.map((hallType) => (
-                    <div
-                      key={hallType.MaLoaiSanh}
-                      onClick={() => {
-                        setSelectedHallType(hallType.MaLoaiSanh);
-                        setSelectedHall(null); // Reset selected hall when changing hall type
-                      }}
-                      className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
-                        selectedHallType === hallType.MaLoaiSanh
-                          ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
-                          : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
-                      }`}
-                    >
-                      <div className="p-4">
-                        <h5
-                          className={`text-lg font-medium text-center ${
-                            selectedHallType === hallType.MaLoaiSanh
-                              ? "text-[#001F3F]"
-                              : "text-[#2C3E50]"
-                          }`}
-                        >
-                          {hallType.TenLoaiSanh}
-                        </h5>
-                        <p className="text-sm text-[#001F3F] text-center">
-                          Đơn giá tối thiểu:{" "}
-                          {formatVND(hallType.DonGiaBanToiThieu)}/bàn
-                        </p>
+                  {hallTypes
+                    .filter((hallType) => !hallType.DaXoa)
+                    .map((hallType) => (
+                      <div
+                        key={hallType.MaLoaiSanh}
+                        onClick={() => {
+                          setSelectedHallType(hallType.MaLoaiSanh);
+                          setSelectedHall(null); // Reset selected hall when changing hall type
+                        }}
+                        className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
+                          selectedHallType === hallType.MaLoaiSanh
+                            ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                            : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
+                        }`}
+                      >
+                        <div className="p-4">
+                          <h5
+                            className={`text-lg font-medium text-center ${
+                              selectedHallType === hallType.MaLoaiSanh
+                                ? "text-[#001F3F]"
+                                : "text-[#2C3E50]"
+                            }`}
+                          >
+                            {hallType.TenLoaiSanh}
+                          </h5>
+                          <p className="text-sm text-[#001F3F] text-center">
+                            Đơn giá tối thiểu:{" "}
+                            {formatVND(hallType.DonGiaBanToiThieu)}/bàn
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 
@@ -1950,58 +1972,60 @@ function Admin_Wedding() {
 
                 {formData.NgayDaiTiec ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {caList.map((ca) => {
-                      // Kiểm tra xem ca này đã được đặt chưa
-                      const isBooked = bookings.some(
-                        (booking) =>
-                          new Date(booking.NgayDaiTiec)
-                            .toISOString()
-                            .split("T")[0] === formData.NgayDaiTiec &&
-                          booking.MaCa === ca.MaCa &&
-                          booking.MaSanh === selectedHall &&
-                          (!isEditMode ||
-                            booking.MaDatTiec !== formData.MaDatTiec)
-                      );
+                    {caList
+                      .filter((ca) => !ca.DaXoa)
+                      .map((ca) => {
+                        // Kiểm tra xem ca này đã được đặt chưa
+                        const isBooked = bookings.some(
+                          (booking) =>
+                            new Date(booking.NgayDaiTiec)
+                              .toISOString()
+                              .split("T")[0] === formData.NgayDaiTiec &&
+                            booking.MaCa === ca.MaCa &&
+                            booking.MaSanh === selectedHall &&
+                            (!isEditMode ||
+                              booking.MaDatTiec !== formData.MaDatTiec)
+                        );
 
-                      // Xác định màu sắc và icon dựa vào MaCa
-                      let bgColor, icon, textColor;
-                      switch (ca.MaCa) {
-                        case 1: // Trưa
-                          bgColor = "bg-amber-50";
-                          icon = "🌞";
-                          textColor = "text-amber-700";
-                          break;
-                        case 2: // Tối
-                          bgColor = "bg-indigo-50";
-                          icon = "🌆";
-                          textColor = "text-indigo-700";
-                          break;
-                        case 3: // Sáng
-                          bgColor = "bg-yellow-50";
-                          icon = "☀️";
-                          textColor = "text-yellow-700";
-                          break;
-                        case 4: // Chiều
-                          bgColor = "bg-orange-50";
-                          icon = "🌤️";
-                          textColor = "text-orange-700";
-                          break;
-                        case 5: // Đêm
-                          bgColor = "bg-blue-50";
-                          icon = "🌙";
-                          textColor = "text-blue-700";
-                          break;
-                        default:
-                          bgColor = "bg-gray-50";
-                          icon = "📅";
-                          textColor = "text-gray-700";
-                      }
+                        // Xác định màu sắc và icon dựa vào MaCa
+                        let bgColor, icon, textColor;
+                        switch (ca.MaCa) {
+                          case 1: // Trưa
+                            bgColor = "bg-amber-50";
+                            icon = "🌞";
+                            textColor = "text-amber-700";
+                            break;
+                          case 2: // Tối
+                            bgColor = "bg-indigo-50";
+                            icon = "🌆";
+                            textColor = "text-indigo-700";
+                            break;
+                          case 3: // Sáng
+                            bgColor = "bg-yellow-50";
+                            icon = "☀️";
+                            textColor = "text-yellow-700";
+                            break;
+                          case 4: // Chiều
+                            bgColor = "bg-orange-50";
+                            icon = "🌤️";
+                            textColor = "text-orange-700";
+                            break;
+                          case 5: // Đêm
+                            bgColor = "bg-blue-50";
+                            icon = "🌙";
+                            textColor = "text-blue-700";
+                            break;
+                          default:
+                            bgColor = "bg-gray-50";
+                            icon = "📅";
+                            textColor = "text-gray-700";
+                        }
 
-                      return (
-                        <div
-                          key={ca.MaCa}
-                          onClick={() => !isBooked && setSelectedCa(ca.MaCa)}
-                          className={`
+                        return (
+                          <div
+                            key={ca.MaCa}
+                            onClick={() => !isBooked && setSelectedCa(ca.MaCa)}
+                            className={`
                             p-6 rounded-lg border transition-all duration-300 cursor-pointer relative
                             ${
                               isBooked
@@ -2011,29 +2035,29 @@ function Admin_Wedding() {
                                 : `${bgColor} border-transparent hover:shadow-lg hover:scale-105`
                             }
                           `}
-                        >
-                          <div className="flex flex-col items-center space-y-3">
-                            <span
-                              className="text-3xl"
-                              role="img"
-                              aria-label={ca.TenCa}
-                            >
-                              {icon}
-                            </span>
-                            <h5
-                              className={`text-lg font-medium text-center ${textColor}`}
-                            >
-                              {ca.TenCa}
-                            </h5>
-                            {isBooked && (
-                              <p className="text-sm text-red-500 text-center mt-2 absolute bottom-2 left-0 right-0">
-                                Đã đặt
-                              </p>
-                            )}
+                          >
+                            <div className="flex flex-col items-center space-y-3">
+                              <span
+                                className="text-3xl"
+                                role="img"
+                                aria-label={ca.TenCa}
+                              >
+                                {icon}
+                              </span>
+                              <h5
+                                className={`text-lg font-medium text-center ${textColor}`}
+                              >
+                                {ca.TenCa}
+                              </h5>
+                              {isBooked && (
+                                <p className="text-sm text-red-500 text-center mt-2 absolute bottom-2 left-0 right-0">
+                                  Đã đặt
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 ) : (
                   <div className="text-center text-gray-500 p-4 border border-dashed rounded-lg">
@@ -2057,29 +2081,31 @@ function Admin_Wedding() {
                 Chọn Dịch Vụ
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                {serviceTypes.map((type) => (
-                  <div
-                    key={type.MaLoaiDichVu}
-                    onClick={() => setSelectedServiceType(type.MaLoaiDichVu)}
-                    className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
-                      selectedServiceType === type.MaLoaiDichVu
-                        ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
-                        : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
-                    }`}
-                  >
-                    <div className="p-6">
-                      <h5
-                        className={`text-lg font-medium text-center ${
-                          selectedServiceType === type.MaLoaiDichVu
-                            ? "text-[#001F3F]"
-                            : "text-[#2C3E50]"
-                        }`}
-                      >
-                        {type.TenLoaiDichVu}
-                      </h5>
+                {serviceTypes
+                  .filter((type) => !type.DaXoa)
+                  .map((type) => (
+                    <div
+                      key={type.MaLoaiDichVu}
+                      onClick={() => setSelectedServiceType(type.MaLoaiDichVu)}
+                      className={`rounded-lg shadow-md cursor-pointer border transition-all duration-300 ${
+                        selectedServiceType === type.MaLoaiDichVu
+                          ? "bg-[#F5E6E8] border-[#D4B2B2] shadow-lg"
+                          : "bg-white border-gray-200 hover:shadow-lg hover:border-[#B8860B]"
+                      }`}
+                    >
+                      <div className="p-6">
+                        <h5
+                          className={`text-lg font-medium text-center ${
+                            selectedServiceType === type.MaLoaiDichVu
+                              ? "text-[#001F3F]"
+                              : "text-[#2C3E50]"
+                          }`}
+                        >
+                          {type.TenLoaiDichVu}
+                        </h5>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
 
               {selectedServiceType && (
@@ -2089,7 +2115,9 @@ function Admin_Wedding() {
                     <span className="text-[#B8860B]">
                       {
                         serviceTypes.find(
-                          (type) => type.MaLoaiDichVu === selectedServiceType
+                          (type) =>
+                            type.MaLoaiDichVu === selectedServiceType &&
+                            !type.DaXoa
                         )?.TenLoaiDichVu
                       }
                     </span>

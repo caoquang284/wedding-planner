@@ -973,11 +973,13 @@ function AdminHall() {
                   required
                 >
                   <option value="">Chọn loại sảnh</option>
-                  {loaiSanhs.map((loai) => (
-                    <option key={loai.MaLoaiSanh} value={loai.MaLoaiSanh}>
-                      {loai.TenLoaiSanh}
-                    </option>
-                  ))}
+                  {loaiSanhs
+                    .filter((loai) => !loai.DaXoa)
+                    .map((loai) => (
+                      <option key={loai.MaLoaiSanh} value={loai.MaLoaiSanh}>
+                        {loai.TenLoaiSanh}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="mb-4">
