@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   getAllBaoCaoDoanhSo,
   getBaoCaoDoanhSoById,
   getRevenueStatsByDateRange,
-} from '../../Api/baoCaoDoanhSoApi';
-import { Line } from 'react-chartjs-2';
+} from "../../Api/baoCaoDoanhSoApi";
+
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,9 +15,17 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface BaoCaoDoanhSo {
   MaBaoCaoDoanhSo: string;
@@ -48,18 +57,26 @@ interface StatsData {
 }
 
 const formatVND = (value: number | string) => {
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  if (typeof numValue !== 'number' || isNaN(numValue)) return 'N/A';
-  return numValue.toLocaleString('vi-VN') + ' VNĐ';
+  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  if (typeof numValue !== "number" || isNaN(numValue)) return "N/A";
+  return numValue.toLocaleString("vi-VN") + " VNĐ";
 };
 
 const AdminReport: React.FC = () => {
   const [reports, setReports] = useState<BaoCaoDoanhSo[]>([]);
-  const [selectedReport, setSelectedReport] = useState<BaoCaoDoanhSo | null>(null);
-  const [searchFilters, setSearchFilters] = useState<{ thang?: number; nam?: number }>({});
-  const [dateRange, setDateRange] = useState<DateRange>({ startDate: '', endDate: '' });
+  const [selectedReport, setSelectedReport] = useState<BaoCaoDoanhSo | null>(
+    null
+  );
+  const [searchFilters, setSearchFilters] = useState<{
+    thang?: number;
+    nam?: number;
+  }>({});
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: "",
+    endDate: "",
+  });
   const [statsData, setStatsData] = useState<StatsData[]>([]);
-  const [formData, setFormData] = useState<FormData>({ thang: '', nam: '' });
+  const [formData, setFormData] = useState<FormData>({ thang: "", nam: "" });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +87,10 @@ const AdminReport: React.FC = () => {
       const response = await getAllBaoCaoDoanhSo(searchFilters);
       setReports(response.data || []);
     } catch (err: any) {
-      setError('Lỗi khi lấy dữ liệu báo cáo: ' + (err.response?.data?.error || err.message));
+      setError(
+        "Lỗi khi lấy dữ liệu báo cáo: " +
+          (err.response?.data?.error || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -84,10 +104,16 @@ const AdminReport: React.FC = () => {
     const fetchStats = async () => {
       if (dateRange.startDate && dateRange.endDate) {
         try {
-          const response = await getRevenueStatsByDateRange(dateRange.startDate, dateRange.endDate);
+          const response = await getRevenueStatsByDateRange(
+            dateRange.startDate,
+            dateRange.endDate
+          );
           setStatsData(response.data || []);
         } catch (err: any) {
-          setError('Lỗi khi lấy dữ liệu thống kê: ' + (err.response?.data?.error || err.message));
+          setError(
+            "Lỗi khi lấy dữ liệu thống kê: " +
+              (err.response?.data?.error || err.message)
+          );
         }
       }
     };
@@ -118,19 +144,24 @@ const AdminReport: React.FC = () => {
   };
 
   const handleViewDetail = async (id: string) => {
-  try {
-    const response = await getBaoCaoDoanhSoById(id);
-    setSelectedReport(response.data || null);
-  } catch (error: any) {
-    alert('Lỗi khi lấy chi tiết báo cáo: ' + (error.response?.data?.error || error.message));
-  }
-};
+    try {
+      const response = await getBaoCaoDoanhSoById(id);
+      setSelectedReport(response.data || null);
+    } catch (error: any) {
+      alert(
+        "Lỗi khi lấy chi tiết báo cáo: " +
+          (error.response?.data?.error || error.message)
+      );
+    }
+  };
 
   const handlePrint = (report: BaoCaoDoanhSo) => {
-    const printContent = document.getElementById(`report-${report.MaBaoCaoDoanhSo}`);
+    const printContent = document.getElementById(
+      `report-${report.MaBaoCaoDoanhSo}`
+    );
     if (printContent) {
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
       document.body.appendChild(iframe);
 
       const iframeDoc = iframe.contentWindow!.document;
@@ -211,19 +242,19 @@ const AdminReport: React.FC = () => {
     labels: statsData.map((item) => item.label),
     datasets: [
       {
-        label: 'Doanh Thu (VNĐ)',
+        label: "Doanh Thu (VNĐ)",
         data: statsData.map((item) => Number(item.DoanhThu) || 0),
-        borderColor: '#001F3F',
-        backgroundColor: 'rgba(0, 31, 63, 0.2)',
+        borderColor: "#001F3F",
+        backgroundColor: "rgba(0, 31, 63, 0.2)",
         fill: true,
       },
       {
-        label: 'Số Lượng Tiệc Cưới',
+        label: "Số Lượng Tiệc Cưới",
         data: statsData.map((item) => Number(item.SoLuongTiec) || 0),
-        borderColor: '#B8860B',
-        backgroundColor: 'rgba(184, 134, 11, 0.2)',
+        borderColor: "#B8860B",
+        backgroundColor: "rgba(184, 134, 11, 0.2)",
         fill: true,
-        yAxisID: 'y1',
+        yAxisID: "y1",
       },
     ],
   };
@@ -231,41 +262,41 @@ const AdminReport: React.FC = () => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' as const },
+      legend: { position: "top" as const },
       title: {
         display: true,
         text:
           dateRange.startDate && dateRange.endDate
             ? `Thống Kê Doanh Thu và Số Lượng Tiệc Cưới từ ${new Date(
                 dateRange.startDate
-              ).toLocaleDateString('vi-VN')} đến ${new Date(dateRange.endDate).toLocaleDateString(
-                'vi-VN'
-              )}`
-            : 'Thống Kê Doanh Thu và Số Lượng Tiệc Cưới',
+              ).toLocaleDateString("vi-VN")} đến ${new Date(
+                dateRange.endDate
+              ).toLocaleDateString("vi-VN")}`
+            : "Thống Kê Doanh Thu và Số Lượng Tiệc Cưới",
       },
     },
     scales: {
       x: {
         title: {
           display: true,
-          text: statsData.some((item) => item.label.includes('/'))
-            ? statsData.some((item) => item.label.includes('/20'))
-              ? 'Tháng/Năm'
-              : 'Ngày/Tháng/Năm'
-            : 'Năm',
+          text: statsData.some((item) => item.label.includes("/"))
+            ? statsData.some((item) => item.label.includes("/20"))
+              ? "Tháng/Năm"
+              : "Ngày/Tháng/Năm"
+            : "Năm",
         },
       },
       y: {
-        type: 'linear' as const,
+        type: "linear" as const,
         display: true,
-        position: 'left' as const,
-        title: { display: true, text: 'Doanh Thu (VNĐ)' },
+        position: "left" as const,
+        title: { display: true, text: "Doanh Thu (VNĐ)" },
       },
       y1: {
-        type: 'linear' as const,
+        type: "linear" as const,
         display: true,
-        position: 'right' as const,
-        title: { display: true, text: 'Số Lượng Tiệc' },
+        position: "right" as const,
+        title: { display: true, text: "Số Lượng Tiệc" },
         grid: { drawOnChartArea: false },
       },
     },
@@ -300,8 +331,13 @@ const AdminReport: React.FC = () => {
         {/* Bộ lọc tháng/năm và khoảng thời gian */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-[#001F3F] mb-2">Tìm kiếm theo tháng/năm</h3>
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-2">
+              Tìm kiếm theo tháng/năm
+            </h3>
+            <form
+              onSubmit={handleSearch}
+              className="flex flex-col sm:flex-row gap-3"
+            >
               <input
                 type="number"
                 name="thang"
@@ -327,7 +363,9 @@ const AdminReport: React.FC = () => {
             </form>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-[#001F3F] mb-2">Thống kê theo khoảng thời gian</h3>
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-2">
+              Thống kê theo khoảng thời gian
+            </h3>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="date"
@@ -379,7 +417,10 @@ const AdminReport: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {reports.map((report) => (
-                  <tr key={report.MaBaoCaoDoanhSo} className="hover:bg-[#F8F9FA] transition-colors duration-200">
+                  <tr
+                    key={report.MaBaoCaoDoanhSo}
+                    className="hover:bg-[#F8F9FA] transition-colors duration-200"
+                  >
                     <td className="px-6 py-4 text-sm font-medium text-[#001F3F] align-middle">
                       {report.MaBaoCaoDoanhSo}
                     </td>
@@ -471,7 +512,7 @@ const AdminReport: React.FC = () => {
                             {index + 1}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
-                            {new Date(item.Ngay).toLocaleDateString('vi-VN')}
+                            {new Date(item.Ngay).toLocaleDateString("vi-VN")}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
                             {item.SoLuongTiec}
@@ -480,14 +521,17 @@ const AdminReport: React.FC = () => {
                             {formatVND(item.DoanhThu)}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
-                            {typeof item.TiLe === 'number' && !isNaN(item.TiLe)
+                            {typeof item.TiLe === "number" && !isNaN(item.TiLe)
                               ? `${item.TiLe.toFixed(2)}%`
-                              : 'N/A'}
+                              : "N/A"}
                           </td>
                         </tr>
                       )) || (
                         <tr>
-                          <td colSpan={5} className="px-6 py-4 text-sm text-gray-500 text-center">
+                          <td
+                            colSpan={5}
+                            className="px-6 py-4 text-sm text-gray-500 text-center"
+                          >
                             Không có dữ liệu chi tiết
                           </td>
                         </tr>

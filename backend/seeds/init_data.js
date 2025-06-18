@@ -1359,6 +1359,7 @@ export async function seed(knex) {
       TenCoDau: 'Trần Thị Bình',
       DienThoai: '0901234567',
       NgayDaiTiec: '2025-06-15',
+      NgayDatTiec: '2025-06-17',
       MaCa: 1,
       MaSanh: 1,
       MaThucDon: 10,
@@ -1372,6 +1373,7 @@ export async function seed(knex) {
       TenCoDau: 'Phạm Ngọc Châu',
       DienThoai: '0912345678',
       NgayDaiTiec: '2025-07-20',
+      NgayDatTiec: '2025-06-17',
       MaCa: 2,
       MaSanh: 2,
       MaThucDon: 11,
@@ -1385,6 +1387,7 @@ export async function seed(knex) {
       TenCoDau: 'Nguyễn Thị Dung',
       DienThoai: '0923456789',
       NgayDaiTiec: '2025-08-10',
+      NgayDatTiec: '2025-06-17',
       MaCa: 3,
       MaSanh: 3,
       MaThucDon: 12,
@@ -1398,6 +1401,7 @@ export async function seed(knex) {
       TenCoDau: 'Lê Thị Hà',
       DienThoai: '0934567890',
       NgayDaiTiec: '2025-09-05',
+      NgayDatTiec: '2025-06-17',
       MaCa: 4,
       MaSanh: 4,
       MaThucDon: 13,
@@ -1411,6 +1415,7 @@ export async function seed(knex) {
       TenCoDau: 'Võ Thị Kim',
       DienThoai: '0945678901',
       NgayDaiTiec: '2025-10-12',
+      NgayDatTiec: '2025-06-17',
       MaCa: 5,
       MaSanh: 5,
       MaThucDon: 14,
@@ -1424,6 +1429,7 @@ export async function seed(knex) {
       TenCoDau: 'Đỗ Thị Mai',
       DienThoai: '0956789012',
       NgayDaiTiec: '2025-11-18',
+      NgayDatTiec: '2025-06-17',
       MaCa: 1,
       MaSanh: 6,
       MaThucDon: 15,
@@ -1437,6 +1443,7 @@ export async function seed(knex) {
       TenCoDau: 'Hà Thị Ngọc',
       DienThoai: '0967890123',
       NgayDaiTiec: '2025-12-01',
+      NgayDatTiec: '2025-06-17',
       MaCa: 2,
       MaSanh: 7,
       MaThucDon: 16,
@@ -1450,6 +1457,7 @@ export async function seed(knex) {
       TenCoDau: 'Trương Thị Quỳnh',
       DienThoai: '0978901234',
       NgayDaiTiec: '2025-06-25',
+      NgayDatTiec: '2025-06-17',
       MaCa: 3,
       MaSanh: 8,
       MaThucDon: 17,
@@ -1463,6 +1471,7 @@ export async function seed(knex) {
       TenCoDau: 'Ngô Thị Thu',
       DienThoai: '0989012345',
       NgayDaiTiec: '2025-07-30',
+      NgayDatTiec: '2025-06-17',
       MaCa: 4,
       MaSanh: 9,
       MaThucDon: 18,
@@ -1476,6 +1485,7 @@ export async function seed(knex) {
       TenCoDau: 'Phan Thị Uyên',
       DienThoai: '0990123456',
       NgayDaiTiec: '2025-08-15',
+      NgayDatTiec: '2025-06-17',
       MaCa: 5,
       MaSanh: 10,
       MaThucDon: 18,
@@ -1711,7 +1721,7 @@ export async function seed(knex) {
       TongTienHoaDon: 67665000.0, // 30,000,000 + 2,000,000
       TongTienPhat: 0.0, //
       TongTienConLai: 55665000.0, // 32,000,000 + 3,200,000 - 12,000,000
-      TrangThai: 0,
+      TrangThai: 1,
     },
     {
       MaHoaDon: 2,
@@ -1776,7 +1786,7 @@ export async function seed(knex) {
     {
       MaHoaDon: 7,
       MaDatTiec: 7,
-      NgayThanhToan: '2025-12-03',
+      NgayThanhToan: '2025-06-03',
       NgayLapHoaDon: '2025-06-17',
       TongTienBan: 93544000.0, // 20 bàn * 1,000,000
       TongTienDichVu: 14000000.0,
@@ -1795,19 +1805,19 @@ export async function seed(knex) {
       TongTienHoaDon: 247440000.0, // 45,000,000 + 3,000,000
       TongTienPhat: 0.0,
       TongTienConLai: 231400000.0, // 48,000,000 - 16,000,000
-      TrangThai: 0,
+      TrangThai: 1,
     },
     {
       MaHoaDon: 9,
       MaDatTiec: 9,
-      NgayThanhToan: '2025-08-01',
-      NgayLapHoaDon: '2025-06-17',
+      NgayThanhToan: '2024-08-01',
+      NgayLapHoaDon: '2024-06-17',
       TongTienBan: 126570000.0, // 27 bàn * 1,000,000
       TongTienDichVu: 11000000.0,
       TongTienHoaDon: 137570000.0, // 27,000,000 + 2,000,000
       TongTienPhat: 0.0, // (29,000,000 * 6% * 1 ngày)
       TongTienConLai: 127070000.0, // 29,000,000 + 1,740,000 - 10,500,000
-      TrangThai: 0,
+      TrangThai: 1,
     },
     {
       MaHoaDon: 10,
@@ -1819,64 +1829,7 @@ export async function seed(knex) {
       TongTienHoaDon: 36000000.0, // 32,000,000 + 4,000,000
       TongTienPhat: 0.0,
       TongTienConLai: 23500000.0, // 36,000,000 - 12,500,000
-      TrangThai: 0,
-    },
-  ]);
-
-  await knex('BAOCAODOANHSO').insert([
-    { MaBaoCaoDoanhSo: 1, Thang: 6, Nam: 2024, TongDoanhThu: 32000000 },
-    { MaBaoCaoDoanhSo: 2, Thang: 7, Nam: 2024, TongDoanhThu: 43000000 },
-    { MaBaoCaoDoanhSo: 3, Thang: 5, Nam: 2025, TongDoanhThu: 39000000 },
-    { MaBaoCaoDoanhSo: 4, Thang: 6, Nam: 2025, TongDoanhThu: 100000000 },
-  ]);
-
-  // Chèn dữ liệu vào bảng CHITIET_BAOCAODOANHSO
-  await knex('CHITIET_BAOCAODOANHSO').insert([
-    // Tháng 6/2024
-    {
-      MaBaoCaoDoanhSo: 1,
-      Ngay: '2024-06-15',
-      SoLuongTiec: 1,
-      DoanhThu: 32000000,
-      TiLe: 100.0,
-    },
-    // Tháng 7/2024
-    {
-      MaBaoCaoDoanhSo: 2,
-      Ngay: '2024-07-10',
-      SoLuongTiec: 1,
-      DoanhThu: 43000000,
-      TiLe: 100.0,
-    },
-    // Tháng 5/2025
-    {
-      MaBaoCaoDoanhSo: 3,
-      Ngay: '2025-05-20',
-      SoLuongTiec: 1,
-      DoanhThu: 39000000,
-      TiLe: 100.0,
-    },
-    // Tháng 6/2025
-    {
-      MaBaoCaoDoanhSo: 4,
-      Ngay: '2025-06-17',
-      SoLuongTiec: 1,
-      DoanhThu: 32000000,
-      TiLe: 32.0,
-    },
-    {
-      MaBaoCaoDoanhSo: 4,
-      Ngay: '2025-06-18',
-      SoLuongTiec: 1,
-      DoanhThu: 43000000,
-      TiLe: 43.0,
-    },
-    {
-      MaBaoCaoDoanhSo: 4,
-      Ngay: '2025-06-19',
-      SoLuongTiec: 1,
-      DoanhThu: 25000000,
-      TiLe: 25.0,
+      TrangThai: 1,
     },
   ]);
 

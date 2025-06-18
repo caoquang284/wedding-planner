@@ -11,7 +11,7 @@ import { getCaById } from "../../Api/caApi";
 import { getDichVuById } from "../../Api/dichVuApi";
 import { getMonAnById } from "../../Api/monAnApi";
 import { useNavigate } from "react-router-dom";
-import { getThamSo } from "../../Api/thamSoApi";
+import { getThamSo, updateThamSo } from "../../Api/thamSoApi";
 
 interface HoaDon {
   MaHoaDon: number;
@@ -837,6 +837,7 @@ const AdminInvoice: React.FC = () => {
                 <option value="2">Đã hủy</option>
               </select>
             </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto"></div>
             {/* <button
               onClick={openAddModal}
               className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"

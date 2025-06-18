@@ -23,6 +23,7 @@ import { authRoutes } from './src/routes/auth.js';
 import datTiecRoutes from './src/routes/datTiec.js';
 import hoaDonRoutes from './src/routes/hoaDon.js';
 import baoCaoDoanhSoRoutes from './src/routes/baoCaoDoanhSo.js';
+import thamSoRoutes from './src/routes/thamSo.js';
 
 config();
 
@@ -65,6 +66,7 @@ app.use('/api/dichVu', auth, dichVuRoutes);
 app.use('/api/ca', auth, caRoutes);
 app.use('/api/datTiec', auth, datTiecRoutes);
 app.use('/api/hoaDon', auth, hoaDonRoutes);
+app.use('/api/thamSo', auth, thamSoRoutes);
 app.use(
   '/api/baoCaoDoanhSo',
   auth,
