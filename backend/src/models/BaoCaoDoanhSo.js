@@ -21,7 +21,10 @@ const BaoCaoDoanhSo = {
       if (!baoCao) {
         throw new Error('Báo cáo doanh thu không tồn tại');
       }
-      return baoCao;
+      return {
+        ...baoCao,
+        TongDoanhThu: Number(baoCao.TongDoanhThu) || 0,
+      };
     } catch (error) {
       throw new Error(`Lỗi khi tìm báo cáo: ${error.message}`);
     }
@@ -55,9 +58,16 @@ const BaoCaoDoanhSo = {
     try {
       const chiTiet = await knex('CHITIET_BAOCAODOANHSO')
         .where({ MaBaoCaoDoanhSo: maBaoCaoDoanhSo })
-        .select('*');
-      console.log('Chi tiết lấy được:', chiTiet); // Kiểm tra log
-      return chiTiet;
+        .select('Ngay', 'SoLuongTiec', 'DoanhThu', 'TiLe')
+        .orderBy('Ngay', 'asc');
+
+      // Đảm bảo định dạng số đúng
+      return chiTiet.map((item) => ({
+        Ngay: item.Ngay,
+        SoLuongTiec: Number(item.SoLuongTiec) || 0,
+        DoanhThu: Number(item.DoanhThu) || 0,
+        TiLe: Number(item.TiLe) || 0,
+      }));
     } catch (error) {
       throw new Error(`Lỗi khi lấy chi tiết báo cáo: ${error.message}`);
     }
@@ -103,53 +113,54 @@ const BaoCaoDoanhSo = {
 
   // Tạo dữ liệu báo cáo doanh thu cho tháng/năm
   generateReportData: async (thang, nam) => {
-  try {
-    console.log(`Tạo báo cáo cho tháng ${thang}, năm ${nam}`);
-    const hoaDons = await knex('HOADON')
-    .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
-    .where('HOADON.NgayThanhToan', '>=', `${nam}-${thang}-01`)
-    .where('HOADON.NgayThanhToan', '<', `${nam}-${thang + 1}-01`)
-    .where('HOADON.TrangThai', 1)
-    .select('HOADON.TongTienHoaDon', 'HOADON.NgayThanhToan');
+    try {
+      console.log(`Tạo báo cáo cho tháng ${thang}, năm ${nam}`);
+      const hoaDons = await knex('HOADON')
+        .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+        .where('HOADON.NgayThanhToan', '>=', `${nam}-${thang}-01`)
+        .where('HOADON.NgayThanhToan', '<', `${nam}-${thang + 1}-01`)
+        .where('HOADON.TrangThai', 1)
+        .select('HOADON.TongTienHoaDon', 'HOADON.NgayThanhToan');
 
-    console.log('Hóa đơn tìm thấy:', hoaDons);
-    const chiTietMap = {};
-    let tongDoanhThu = 0;
+      console.log('Hóa đơn tìm thấy:', hoaDons);
+      const chiTietMap = {};
+      let tongDoanhThu = 0;
 
-    for (const hoaDon of hoaDons) {
-      const ngay = new Date(hoaDon.NgayThanhToan).toISOString().split('T')[0];
-      const tongTien = parseFloat(hoaDon.TongTienHoaDon.toString().replace(/[^0-9.-]/g, ''));
-      console.log('TongTienHoaDon thô:', hoaDon.TongTienHoaDon, 'sau xử lý:', tongTien);
-      tongDoanhThu += tongTien;
+      for (const hoaDon of hoaDons) {
+        const ngay = new Date(hoaDon.NgayThanhToan).toISOString().split('T')[0];
+        const tongTien = hoaDon.TongTienHoaDon; // Sử dụng trực tiếp vì đã là numeric
+        if (tongTien == null || isNaN(tongTien)) {
+          console.warn('TongTienHoaDon không hợp lệ:', tongTien);
+          continue;
+        }
+        tongDoanhThu += Number(tongTien);
 
-      if (!chiTietMap[ngay]) {
-        chiTietMap[ngay] = {
-          Ngay: ngay,
-          SoLuongTiec: 0,
-          DoanhThu: 0,
-        };
+        if (!chiTietMap[ngay]) {
+          chiTietMap[ngay] = {
+            Ngay: ngay,
+            SoLuongTiec: 0,
+            DoanhThu: 0,
+          };
+        }
+        chiTietMap[ngay].SoLuongTiec += 1;
+        chiTietMap[ngay].DoanhThu += Number(tongTien);
       }
 
-      chiTietMap[ngay].SoLuongTiec += 1;
-      chiTietMap[ngay].DoanhThu += tongTien; // Đảm bảo DoanhThu được cộng
+      const chiTiet = Object.values(chiTietMap).map((item) => ({
+        ...item,
+        TiLe: tongDoanhThu > 0 ? (item.DoanhThu / tongDoanhThu) * 100 : 0,
+      }));
+
+      console.log('Dữ liệu báo cáo:', { tongDoanhThu, chiTiet });
+      return {
+        tongDoanhThu,
+        chiTiet,
+      };
+    } catch (error) {
+      console.error('Lỗi trong generateReportData:', error);
+      throw new Error(`Lỗi khi tạo dữ liệu báo cáo: ${error.message}`);
     }
-
-    const chiTiet = Object.values(chiTietMap).map((item) => ({
-      ...item,
-      TiLe: tongDoanhThu > 0 ? (item.DoanhThu / tongDoanhThu) * 100 : 0,
-    }));
-
-    console.log('Dữ liệu báo cáo:', { tongDoanhThu, chiTiet }); // Kiểm tra chiTiet
-
-    return {
-      tongDoanhThu,
-      chiTiet,
-    };
-  } catch (error) {
-    console.error('Lỗi trong generateReportData:', error);
-    throw new Error(`Lỗi khi tạo dữ liệu báo cáo: ${error.message}`);
-  }
-},
+  },
 };
 
 export default BaoCaoDoanhSo;

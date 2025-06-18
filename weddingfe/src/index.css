@@ -7,6 +7,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes gradientMove {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.bg-animated-gradient {
+  background: linear-gradient(-45deg, #c084fc, #60a5fa, #a5b4fc, #f9a8d4);
+  background-size: 300% 300%;
+  animation: gradientMove 6s ease infinite; /* ← nhanh hơn */
+}
+
+/* Bóng bay hiệu ứng nhẹ nhàng */
+@keyframes float1 {
+  0% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-30px) translateX(10px); }
+  100% { transform: translateY(0px) translateX(0px); }
+}
+
+@keyframes float2 {
+  0% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-20px) translateX(-15px); }
+  100% { transform: translateY(0px) translateX(0px); }
+}
+
+.float-1 {
+  animation: float1 8s ease-in-out infinite;
+}
+
+.float-2 {
+  animation: float2 10s ease-in-out infinite;
+}
+
 @theme {
   --color-primary: rgb(160 81 250);
   --color-secondary: rgb(169, 55, 223);
@@ -60,8 +96,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@tailwind base;
-@tailwind components;
 @tailwind utilities;
 
 @media print {

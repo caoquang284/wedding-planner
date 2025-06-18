@@ -2,9 +2,21 @@ import React, { useState, useEffect } from 'react';
 import {
   getAllBaoCaoDoanhSo,
   getBaoCaoDoanhSoById,
-  createBaoCaoDoanhSo,
+  getRevenueStatsByDateRange,
 } from '../../Api/baoCaoDoanhSoApi';
-import { useNavigate } from 'react-router-dom';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface BaoCaoDoanhSo {
   MaBaoCaoDoanhSo: number;
@@ -24,47 +36,73 @@ interface FormData {
   nam: string;
 }
 
-const formatVND = (value: number) => {
-  if (typeof value !== 'number') return '';
-  return value.toLocaleString('vi-VN') + ' VNĐ';
+interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
+interface StatsData {
+  label: string;
+  SoLuongTiec: number;
+  DoanhThu: number;
+}
+
+const formatVND = (value: number | string) => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (typeof numValue !== 'number' || isNaN(numValue)) return 'N/A';
+  return numValue.toLocaleString('vi-VN') + ' VNĐ';
 };
 
 const AdminReport: React.FC = () => {
   const [reports, setReports] = useState<BaoCaoDoanhSo[]>([]);
   const [selectedReport, setSelectedReport] = useState<BaoCaoDoanhSo | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormData>({
-    thang: '',
-    nam: '',
-  });
   const [searchFilters, setSearchFilters] = useState<{ thang?: number; nam?: number }>({});
+  const [dateRange, setDateRange] = useState<DateRange>({ startDate: '', endDate: '' });
+  const [statsData, setStatsData] = useState<StatsData[]>([]);
+  const [formData, setFormData] = useState<FormData>({ thang: '', nam: '' });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer);
+  const fetchReports = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getAllBaoCaoDoanhSo(searchFilters);
+      setReports(response.data || []);
+    } catch (err: any) {
+      setError('Lỗi khi lấy dữ liệu báo cáo: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
     }
-  }, [successMessage]);
+  };
 
   useEffect(() => {
-    const fetchReports = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await getAllBaoCaoDoanhSo(searchFilters);
-        setReports(response.data || []);
-      } catch (err: any) {
-        setError('Lỗi khi lấy dữ liệu báo cáo: ' + (err.response?.data?.error || err.message));
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchReports();
   }, [searchFilters]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (dateRange.startDate && dateRange.endDate) {
+        try {
+          const response = await getRevenueStatsByDateRange(dateRange.startDate, dateRange.endDate);
+          setStatsData(response.data || []);
+        } catch (err: any) {
+          setError('Lỗi khi lấy dữ liệu thống kê: ' + (err.response?.data?.error || err.message));
+        }
+      }
+    };
+    fetchStats();
+  }, [dateRange]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchReports, 30000);
+    return () => clearInterval(interval);
+  }, [searchFilters]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value } as FormData));
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,37 +112,15 @@ const AdminReport: React.FC = () => {
     });
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDateRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCreateReport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const thang = Number(formData.thang);
-    const nam = Number(formData.nam);
-    console.log('Dữ liệu gửi lên:', { thang, nam });
-    if (!thang || !nam || thang < 1 || thang > 12 || nam < 2000) {
-      alert('Vui lòng nhập tháng (1-12) và năm hợp lệ (>= 2000)');
-      return;
-    }
-    try {
-      const response = await createBaoCaoDoanhSo({ thang, nam });
-      console.log('Phản hồi từ server:', response.data);
-      setReports((prev) => [...prev, response.data]);
-      setSuccessMessage('Tạo báo cáo thành công!');
-      setFormData({ thang: '', nam: '' });
-      setIsModalOpen(false);
-    } catch (error: any) {
-      console.error('Lỗi khi tạo báo cáo:', error.response?.data || error.message);
-      alert('Lỗi khi tạo báo cáo: ' + (error.response?.data?.error || error.message));
-    }
+    setDateRange((prev) => ({ ...prev, [name]: value } as DateRange));
   };
 
   const handleViewDetail = async (id: number) => {
     try {
       const response = await getBaoCaoDoanhSoById(id);
-      setSelectedReport(response.data.data || response.data); // Điều chỉnh dựa trên cấu trúc
+      setSelectedReport(response.data || null);
     } catch (error: any) {
       alert('Lỗi khi lấy chi tiết báo cáo: ' + (error.response?.data?.error || error.message));
     }
@@ -191,6 +207,70 @@ const AdminReport: React.FC = () => {
     }
   };
 
+  const chartData = {
+    labels: statsData.map((item) => item.label),
+    datasets: [
+      {
+        label: 'Doanh Thu (VNĐ)',
+        data: statsData.map((item) => Number(item.DoanhThu) || 0),
+        borderColor: '#001F3F',
+        backgroundColor: 'rgba(0, 31, 63, 0.2)',
+        fill: true,
+      },
+      {
+        label: 'Số Lượng Tiệc Cưới',
+        data: statsData.map((item) => Number(item.SoLuongTiec) || 0),
+        borderColor: '#B8860B',
+        backgroundColor: 'rgba(184, 134, 11, 0.2)',
+        fill: true,
+        yAxisID: 'y1',
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' as const },
+      title: {
+        display: true,
+        text:
+          dateRange.startDate && dateRange.endDate
+            ? `Thống Kê Doanh Thu và Số Lượng Tiệc Cưới từ ${new Date(
+                dateRange.startDate
+              ).toLocaleDateString('vi-VN')} đến ${new Date(dateRange.endDate).toLocaleDateString(
+                'vi-VN'
+              )}`
+            : 'Thống Kê Doanh Thu và Số Lượng Tiệc Cưới',
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: statsData.some((item) => item.label.includes('/'))
+            ? statsData.some((item) => item.label.includes('/20'))
+              ? 'Tháng/Năm'
+              : 'Ngày/Tháng/Năm'
+            : 'Năm',
+        },
+      },
+      y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        title: { display: true, text: 'Doanh Thu (VNĐ)' },
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        title: { display: true, text: 'Số Lượng Tiệc' },
+        grid: { drawOnChartArea: false },
+      },
+    },
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
@@ -213,17 +293,15 @@ const AdminReport: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {successMessage && (
-          <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
-            {successMessage}
-          </div>
-        )}
-        <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
-            Quản lý báo cáo doanh thu
-          </h2>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#001F3F] mb-4">
+          Quản lý báo cáo doanh thu
+        </h2>
+
+        {/* Bộ lọc tháng/năm và khoảng thời gian */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-2">Tìm kiếm theo tháng/năm</h3>
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
               <input
                 type="number"
                 name="thang"
@@ -247,15 +325,36 @@ const AdminReport: React.FC = () => {
                 Tìm kiếm
               </button>
             </form>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
-            >
-              Tạo báo cáo
-            </button>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-[#001F3F] mb-2">Thống kê theo khoảng thời gian</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="date"
+                name="startDate"
+                value={dateRange.startDate}
+                onChange={handleDateRangeChange}
+                className="w-full sm:w-40 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+              />
+              <input
+                type="date"
+                name="endDate"
+                value={dateRange.endDate}
+                onChange={handleDateRangeChange}
+                className="w-full sm:w-40 p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+              />
+            </div>
           </div>
         </div>
 
+        {/* Biểu đồ thống kê */}
+        {statsData.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <Line data={chartData} options={chartOptions} />
+          </div>
+        )}
+
+        {/* Danh sách báo cáo */}
         <div className="mb-6">
           <div className="hidden sm:block bg-white shadow-md rounded-lg overflow-hidden border border-gray-100">
             <table className="min-w-full divide-y divide-gray-200">
@@ -306,109 +405,9 @@ const AdminReport: React.FC = () => {
               </tbody>
             </table>
           </div>
-
-          <div className="block sm:hidden space-y-4">
-            {reports.map((report) => (
-              <div
-                key={report.MaBaoCaoDoanhSo}
-                className="shadow-md rounded-lg p-4 border border-gray-100"
-              >
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-lg font-medium text-[#001F3F]">
-                    Báo cáo #{report.MaBaoCaoDoanhSo}
-                  </h3>
-                  <p className="text-sm text-gray-600">Tháng: {report.Thang}</p>
-                  <p className="text-sm text-gray-600">Năm: {report.Nam}</p>
-                  <p className="text-sm text-[#B8860B]">
-                    Tổng doanh thu: {formatVND(report.TongDoanhThu)}
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => handleViewDetail(report.MaBaoCaoDoanhSo)}
-                      className="text-[#001F3F] hover:text-[#003366] text-sm transition-colors duration-300"
-                    >
-                      Chi tiết
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-            <div className="bg-white shadow-xl rounded-lg w-full max-w-lg p-6 relative">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-              <h3 className="text-lg font-semibold text-[#001F3F] mb-4">
-                Tạo báo cáo doanh thu
-              </h3>
-              <form onSubmit={handleCreateReport}>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium">Tháng</label>
-                  <input
-                    type="number"
-                    name="thang"
-                    value={formData.thang}
-                    onChange={handleInputChange}
-                    placeholder="Nhập tháng (1-12)"
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    required
-                    min="1"
-                    max="12"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium">Năm</label>
-                  <input
-                    type="number"
-                    name="nam"
-                    value={formData.nam}
-                    onChange={handleInputChange}
-                    placeholder="Nhập năm (>= 2000)"
-                    className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                    required
-                    min="2000"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-gray-100 text-[#001F3F] rounded hover:bg-gray-200 transition-colors duration-300"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#001F3F] text-white rounded hover:bg-[#003366] transition-colors duration-300"
-                  >
-                    Tạo
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
+        {/* Modal chi tiết báo cáo */}
         {selectedReport && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
             <div className="bg-white shadow-xl rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
@@ -486,7 +485,13 @@ const AdminReport: React.FC = () => {
                               : 'N/A'}
                           </td>
                         </tr>
-                      ))}
+                      )) || (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-4 text-sm text-gray-500 text-center">
+                            Không có dữ liệu chi tiết
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

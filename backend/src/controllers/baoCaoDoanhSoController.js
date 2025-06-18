@@ -1,43 +1,5 @@
-// baoCaoDoanhSoController.js
 import BaoCaoDoanhSo from '../models/BaoCaoDoanhSo.js';
-
-const createBaoCaoDoanhSo = async (req, res) => {
-  try {
-    const { thang, nam } = req.body;
-
-    // Kiểm tra báo cáo đã tồn tại
-    const existingReport = await BaoCaoDoanhSo.findByMonthYear(thang, nam);
-    if (existingReport) {
-      return res.status(400).json({ error: 'Báo cáo cho tháng/năm này đã tồn tại' });
-    }
-
-    // Tạo dữ liệu báo cáo
-    const { tongDoanhThu, chiTiet } = await BaoCaoDoanhSo.generateReportData(thang, nam);
-
-    // Tạo báo cáo doanh thu
-    const baoCaoData = {
-      Thang: thang,
-      Nam: nam,
-      TongDoanhThu: tongDoanhThu,
-    };
-    const newBaoCao = await BaoCaoDoanhSo.create(baoCaoData);
-
-    // Thêm chi tiết báo cáo
-    for (const chiTietItem of chiTiet) {
-      await BaoCaoDoanhSo.createChiTiet({
-        MaBaoCaoDoanhSo: newBaoCao.MaBaoCaoDoanhSo,
-        Ngay: chiTietItem.Ngay,
-        SoLuongTiec: chiTietItem.SoLuongTiec,
-        DoanhThu: chiTietItem.DoanhThu,
-        TiLe: chiTietItem.TiLe,
-      });
-    }
-
-    return res.status(201).json({ message: 'Tạo báo cáo thành công', data: newBaoCao });
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-};
+import { knex } from '../config/database.js';
 
 const getAllBaoCaoDoanhSo = async (req, res) => {
   try {
@@ -57,39 +19,10 @@ const getBaoCaoDoanhSo = async (req, res) => {
     const { id } = req.params;
     const baoCao = await BaoCaoDoanhSo.findById(id);
     const chiTiet = await BaoCaoDoanhSo.findChiTietByBaoCaoId(id);
+    console.log('BaoCao:', baoCao, 'ChiTiet:', chiTiet);
     return res.status(200).json({ data: { ...baoCao, chiTiet } });
   } catch (error) {
     return res.status(404).json({ error: error.message });
-  }
-};
-
-const themChiTiet = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { Ngay, SoLuongTiec, DoanhThu, TiLe } = req.body;
-
-    const chiTietData = {
-      MaBaoCaoDoanhSo: id,
-      Ngay,
-      SoLuongTiec,
-      DoanhThu,
-      TiLe,
-    };
-
-    const existingChiTiet = await knex('CHITIET_BAOCAODOANHSO')
-      .where({ MaBaoCaoDoanhSo: id, Ngay })
-      .first();
-
-    let chiTiet;
-    if (existingChiTiet) {
-      chiTiet = await BaoCaoDoanhSo.updateChiTiet(id, Ngay, chiTietData);
-    } else {
-      chiTiet = await BaoCaoDoanhSo.createChiTiet(chiTietData);
-    }
-
-    return res.status(201).json({ message: 'Thêm/cập nhật chi tiết báo cáo thành công', data: chiTiet });
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -105,10 +38,88 @@ const updateBaoCaoDoanhSo = async (req, res) => {
   }
 };
 
+const getRevenueStatsByDateRange = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Vui lòng cung cấp ngày bắt đầu và ngày kết thúc' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Xác định khoảng thời gian
+    const startYear = start.getFullYear();
+    const endYear = end.getFullYear();
+    const startMonth = start.getMonth() + 1;
+    const endMonth = end.getMonth() + 1;
+
+    let groupByClause, selectClause, labelFormat;
+    let isYearly = false, isMonthly = false, isDaily = false;
+
+    if (startYear !== endYear) {
+      // Trường hợp khác năm: nhóm theo năm
+      isYearly = true;
+      groupByClause = knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")');
+      selectClause = {
+        Nam: knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")'),
+        SoLuongTiec: knex.raw('COUNT(*)'),
+        DoanhThu: knex.raw('SUM("HOADON"."TongTienHoaDon")'),
+      };
+      labelFormat = (row) => `${row.Nam}`;
+    } else if (startMonth !== endMonth) {
+      // Trường hợp cùng năm, khác tháng: nhóm theo tháng/năm
+      isMonthly = true;
+      groupByClause = [
+        knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")'),
+        knex.raw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan")'),
+      ];
+      selectClause = {
+        Nam: knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")'),
+        Thang: knex.raw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan")'),
+        SoLuongTiec: knex.raw('COUNT(*)'),
+        DoanhThu: knex.raw('SUM("HOADON"."TongTienHoaDon")'),
+      };
+      labelFormat = (row) => `${row.Thang}/${row.Nam}`;
+    } else {
+      // Trường hợp cùng năm, cùng tháng, khác ngày: nhóm theo ngày
+      isDaily = true;
+      groupByClause = 'HOADON.NgayThanhToan';
+      selectClause = {
+        Ngay: 'HOADON.NgayThanhToan',
+        SoLuongTiec: knex.raw('COUNT(*)'),
+        DoanhThu: knex.raw('SUM("HOADON"."TongTienHoaDon")'),
+      };
+      labelFormat = (row) => new Date(row.Ngay).toLocaleDateString('vi-VN');
+    }
+
+    const stats = await knex('HOADON')
+      .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+      .where('HOADON.NgayThanhToan', '>=', startDate)
+      .where('HOADON.NgayThanhToan', '<=', endDate)
+      .where('HOADON.TrangThai', 1)
+      .select(selectClause)
+      .groupBy(groupByClause)
+      .orderBy(isYearly ? 'Nam' : isMonthly ? ['Nam', 'Thang'] : 'NgayThanhToan', 'asc');
+
+    // Định dạng dữ liệu trả về
+    const formattedStats = stats.map((row) => ({
+      label: labelFormat(row),
+      SoLuongTiec: Number(row.SoLuongTiec) || 0,
+      DoanhThu: Number(row.DoanhThu) || 0,
+    }));
+
+    return res.status(200).json({ data: formattedStats });
+  } catch (error) {
+    console.error('Lỗi khi lấy thống kê:', error.message, error.stack);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 export default {
-  createBaoCaoDoanhSo,
   getAllBaoCaoDoanhSo,
   getBaoCaoDoanhSo,
-  themChiTiet,
-  updateBaoCaoDoanhSo, 
+  updateBaoCaoDoanhSo,
+  getRevenueStatsByDateRange,
 };
