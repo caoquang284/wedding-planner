@@ -65,6 +65,12 @@ const updateLoaiSanh = async (req, res) => {
         return res.status(400).json({ error: 'Tên loại sảnh đã tồn tại' });
       }
     }
+    const daDuocDatTiec = await LoaiSanh.checkDaDuocDatTiec(id);
+    if (daDuocDatTiec) {
+      return res
+        .status(400)
+        .json({ error: 'Loại sảnh đã được đặt tiệc, không thể cập nhật' });
+    }
     const updatedLoaiSanh = await LoaiSanh.update(id, {
       TenLoaiSanh: tenLoaiSanh || loaiSanh.TenLoaiSanh,
       DonGiaBanToiThieu:
@@ -97,7 +103,7 @@ const deleteLoaiSanh = async (req, res) => {
         .status(400)
         .json({ error: 'Loại sảnh đang được sử dụng, không thể xóa' });
     }
-    await LoaiSanh.delete(id);
+    await LoaiSanh.temDelete(id);
     return res.status(200).json({ message: 'Xóa loại sảnh thành công' });
   } catch (error) {
     return res

@@ -14,6 +14,13 @@ const Ca = {
   findByTenCa: async (tenCa) => {
     return await knex('CA').where({ TenCa: tenCa }).first();
   },
+  checkDaDuocDatTiec: async (maCa) => {
+    const ca = await knex('DATTIEC').where({ MaCa: maCa }).first();
+    if (ca) {
+      return true;
+    }
+    return false;
+  },
   update: async (id, data) => {
     const [ca] = await knex('CA')
       .where({ MaCa: id })

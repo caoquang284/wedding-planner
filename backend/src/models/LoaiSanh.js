@@ -14,6 +14,13 @@ const LoaiSanh = {
   findByTenLoaiSanh: async (tenLoaiSanh) => {
     return await knex('LOAISANH').where({ TenLoaiSanh: tenLoaiSanh }).first();
   },
+  checkDaDuocDatTiec: async (maLoaiSanh) => {
+    const sanh = await knex('SANH').where({ MaLoaiSanh: maLoaiSanh }).first();
+    if (sanh) {
+      return true;
+    }
+    return false;
+  },
   update: async (id, data) => {
     const [loaiSanh] = await knex('LOAISANH')
       .where({ MaLoaiSanh: id })
@@ -23,6 +30,11 @@ const LoaiSanh = {
   },
   delete: async (id) => {
     return await knex('LOAISANH').where({ MaLoaiSanh: id }).delete();
+  },
+  temDelete: async (id) => {
+    return await knex('LOAISANH')
+      .where({ MaLoaiSanh: id })
+      .update({ DaXoa: true });
   },
 };
 

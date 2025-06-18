@@ -21,6 +21,13 @@ const Sanh = {
         { column: 'SANH.TenSanh', order: 'asc' },
       ]);
   },
+  checkDaDuocDatTiec: async (maSanh) => {
+    const sanh = await knex('DATTIEC').where({ MaSanh: maSanh }).first();
+    if (sanh) {
+      return true;
+    }
+    return false;
+  },
   findByTenSanh: async (tenSanh) => {
     return await knex('SANH').where({ TenSanh: tenSanh }).first();
   },

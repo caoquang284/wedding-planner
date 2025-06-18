@@ -1831,107 +1831,64 @@ export async function seed(knex) {
       TongTienConLai: 23500000.0, // 36,000,000 - 12,500,000
       TrangThai: 0,
     },
-// Trường hợp 1: Khác năm (2024 và 2025)
-  {
-    MaHoaDon: 11,
-    MaDatTiec: 1,
-    NgayThanhToan: '2024-06-15',
-    TongTienBan: 30000000.0,
-    TongTienDichVu: 2000000.0,
-    TongTienHoaDon: 32000000.0,
-    ApDungQuyDinhPhat: false,
-    PhanTramPhatMotNgay: 0.0,
-    TongTienPhat: 0.0,
-    TongTienConLai: 20000000.0,
-    TrangThai: 1,
-  },
-  {
-    MaHoaDon: 12,
-    MaDatTiec: 2,
-    NgayThanhToan: '2024-07-10',
-    TongTienBan: 40000000.0,
-    TongTienDichVu: 3000000.0,
-    TongTienHoaDon: 43000000.0,
-    ApDungQuyDinhPhat: false,
-    PhanTramPhatMotNgay: 0.0,
-    TongTienPhat: 0.0,
-    TongTienConLai: 28000000.0,
-    TrangThai: 1,
-  },
-  {
-    MaHoaDon: 13,
-    MaDatTiec: 3,
-    NgayThanhToan: '2025-05-20',
-    TongTienBan: 35000000.0,
-    TongTienDichVu: 4000000.0,
-    TongTienHoaDon: 39000000.0,
-    ApDungQuyDinhPhat: false,
-    PhanTramPhatMotNgay: 0.0,
-    TongTienPhat: 0.0,
-    TongTienConLai: 26000000.0,
-    TrangThai: 1,
-  },
-  {
-    MaHoaDon: 14,
-    MaDatTiec: 4,
-    NgayThanhToan: '2025-06-17',
-    TongTienBan: 30000000.0,
-    TongTienDichVu: 2000000.0,
-    TongTienHoaDon: 32000000.0,
-    ApDungQuyDinhPhat: false,
-    PhanTramPhatMotNgay: 0.0,
-    TongTienPhat: 0.0,
-    TongTienConLai: 20000000.0,
-    TrangThai: 1,
-  },
-  {
-    MaHoaDon: 15,
-    MaDatTiec: 5,
-    NgayThanhToan: '2025-06-18',
-    TongTienBan: 40000000.0,
-    TongTienDichVu: 3000000.0,
-    TongTienHoaDon: 43000000.0,
-    ApDungQuyDinhPhat: false,
-    PhanTramPhatMotNgay: 0.0,
-    TongTienPhat: 0.0,
-    TongTienConLai: 28000000.0,
-    TrangThai: 1,
-  },
-  {
-    MaHoaDon: 16,
-    MaDatTiec: 6,
-    NgayThanhToan: '2025-06-19',
-    TongTienBan: 25000000.0,
-    TongTienDichVu: 0.0,
-    TongTienHoaDon: 25000000.0,
-    ApDungQuyDinhPhat: false,
-    PhanTramPhatMotNgay: 0.0,
-    TongTienPhat: 0.0,
-    TongTienConLai: 15000000.0,
-    TrangThai: 1,
-  },
   ]);
 
   await knex('BAOCAODOANHSO').insert([
-  { MaBaoCaoDoanhSo: 1, Thang: 6, Nam: 2024, TongDoanhThu: 32000000 },
-  { MaBaoCaoDoanhSo: 2, Thang: 7, Nam: 2024, TongDoanhThu: 43000000 },
-  { MaBaoCaoDoanhSo: 3, Thang: 5, Nam: 2025, TongDoanhThu: 39000000 },
-  { MaBaoCaoDoanhSo: 4, Thang: 6, Nam: 2025, TongDoanhThu: 100000000 },
-]);
+    { MaBaoCaoDoanhSo: 1, Thang: 6, Nam: 2024, TongDoanhThu: 32000000 },
+    { MaBaoCaoDoanhSo: 2, Thang: 7, Nam: 2024, TongDoanhThu: 43000000 },
+    { MaBaoCaoDoanhSo: 3, Thang: 5, Nam: 2025, TongDoanhThu: 39000000 },
+    { MaBaoCaoDoanhSo: 4, Thang: 6, Nam: 2025, TongDoanhThu: 100000000 },
+  ]);
 
-// Chèn dữ liệu vào bảng CHITIET_BAOCAODOANHSO
-await knex('CHITIET_BAOCAODOANHSO').insert([
-  // Tháng 6/2024
-  { MaBaoCaoDoanhSo: 1, Ngay: '2024-06-15', SoLuongTiec: 1, DoanhThu: 32000000, TiLe: 100.0 },
-  // Tháng 7/2024
-  { MaBaoCaoDoanhSo: 2, Ngay: '2024-07-10', SoLuongTiec: 1, DoanhThu: 43000000, TiLe: 100.0 },
-  // Tháng 5/2025
-  { MaBaoCaoDoanhSo: 3, Ngay: '2025-05-20', SoLuongTiec: 1, DoanhThu: 39000000, TiLe: 100.0 },
-  // Tháng 6/2025
-  { MaBaoCaoDoanhSo: 4, Ngay: '2025-06-17', SoLuongTiec: 1, DoanhThu: 32000000, TiLe: 32.0 },
-  { MaBaoCaoDoanhSo: 4, Ngay: '2025-06-18', SoLuongTiec: 1, DoanhThu: 43000000, TiLe: 43.0 },
-  { MaBaoCaoDoanhSo: 4, Ngay: '2025-06-19', SoLuongTiec: 1, DoanhThu: 25000000, TiLe: 25.0 },
-]);
+  // Chèn dữ liệu vào bảng CHITIET_BAOCAODOANHSO
+  await knex('CHITIET_BAOCAODOANHSO').insert([
+    // Tháng 6/2024
+    {
+      MaBaoCaoDoanhSo: 1,
+      Ngay: '2024-06-15',
+      SoLuongTiec: 1,
+      DoanhThu: 32000000,
+      TiLe: 100.0,
+    },
+    // Tháng 7/2024
+    {
+      MaBaoCaoDoanhSo: 2,
+      Ngay: '2024-07-10',
+      SoLuongTiec: 1,
+      DoanhThu: 43000000,
+      TiLe: 100.0,
+    },
+    // Tháng 5/2025
+    {
+      MaBaoCaoDoanhSo: 3,
+      Ngay: '2025-05-20',
+      SoLuongTiec: 1,
+      DoanhThu: 39000000,
+      TiLe: 100.0,
+    },
+    // Tháng 6/2025
+    {
+      MaBaoCaoDoanhSo: 4,
+      Ngay: '2025-06-17',
+      SoLuongTiec: 1,
+      DoanhThu: 32000000,
+      TiLe: 32.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 4,
+      Ngay: '2025-06-18',
+      SoLuongTiec: 1,
+      DoanhThu: 43000000,
+      TiLe: 43.0,
+    },
+    {
+      MaBaoCaoDoanhSo: 4,
+      Ngay: '2025-06-19',
+      SoLuongTiec: 1,
+      DoanhThu: 25000000,
+      TiLe: 25.0,
+    },
+  ]);
 
   // Đặt lại sequence sau khi chèn dữ liệu
   await knex.raw('SELECT setval(\'"CHUCNANG_MaChucNang_seq"\', 37)'); // Sau MaChucNang: 11
@@ -1954,6 +1911,9 @@ await knex('CHITIET_BAOCAODOANHSO').insert([
   );
   await knex.raw(
     `SELECT setval('"LOAISANH_MaLoaiSanh_seq"', (SELECT COALESCE(MAX("MaLoaiSanh"), 0) FROM "LOAISANH"))`
+  );
+  await knex.raw(
+    `SELECT setval('"SANH_MaSanh_seq"', (SELECT COALESCE(MAX("MaSanh"), 0) FROM "SANH"))`
   );
   await knex.raw(
     `SELECT setval('"CA_MaCa_seq"', (SELECT COALESCE(MAX("MaCa"), 0) FROM "CA"))`
