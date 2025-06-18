@@ -1,5 +1,4 @@
 import express, { json } from 'express';
-import './src/websocket.js'; // Đảm bảo WebSocket server chạy cùng với server chính
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';

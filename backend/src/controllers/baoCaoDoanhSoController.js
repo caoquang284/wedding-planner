@@ -7,8 +7,34 @@ const getAllBaoCaoDoanhSo = async (req, res) => {
       thang: req.query.thang ? Number(req.query.thang) : undefined,
       nam: req.query.nam ? Number(req.query.nam) : undefined,
     };
-    const baoCaos = await BaoCaoDoanhSo.findAllWithFilters(filters);
-    return res.status(200).json({ data: baoCaos });
+
+    let query = knex('HOADON')
+      .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+      .where('HOADON.TrangThai', 1)
+      .select({
+        MaBaoCaoDoanhSo: knex.raw('CONCAT(EXTRACT(YEAR FROM "HOADON"."NgayThanhToan"), EXTRACT(MONTH FROM "HOADON"."NgayThanhToan"))'), // Tạo ID giả lập
+        Thang: knex.raw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan")'),
+        Nam: knex.raw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan")'),
+        TongDoanhThu: knex.raw('SUM("HOADON"."TongTienHoaDon")'),
+      })
+      .groupBy('Thang', 'Nam');
+
+    if (filters.thang) {
+      query = query.whereRaw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan") = ?', [filters.thang]);
+    }
+    if (filters.nam) {
+      query = query.whereRaw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan") = ?', [filters.nam]);
+    }
+
+    const baoCaos = await query;
+    const formattedBaoCaos = baoCaos.map((baoCao) => ({
+      MaBaoCaoDoanhSo: baoCao.MaBaoCaoDoanhSo,
+      Thang: Number(baoCao.Thang),
+      Nam: Number(baoCao.Nam),
+      TongDoanhThu: Number(baoCao.TongDoanhThu) || 0,
+    }));
+
+    return res.status(200).json({ data: formattedBaoCaos });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -16,11 +42,60 @@ const getAllBaoCaoDoanhSo = async (req, res) => {
 
 const getBaoCaoDoanhSo = async (req, res) => {
   try {
-    const { id } = req.params;
-    const baoCao = await BaoCaoDoanhSo.findById(id);
-    const chiTiet = await BaoCaoDoanhSo.findChiTietByBaoCaoId(id);
-    console.log('BaoCao:', baoCao, 'ChiTiet:', chiTiet);
-    return res.status(200).json({ data: { ...baoCao, chiTiet } });
+    const { id } = req.params; // id là CONCAT(Nam, Thang), ví dụ: "202501"
+    const nam = Number(id.substring(0, 4)); // Lấy năm
+    const thang = Number(id.substring(4)); // Lấy tháng
+
+    // Tính tổng doanh thu cho tháng/năm
+    const baoCao = await knex('HOADON')
+      .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+      .where('HOADON.TrangThai', 1)
+      .whereRaw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan") = ?', [thang])
+      .whereRaw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan") = ?', [nam])
+      .select({
+        MaBaoCaoDoanhSo: knex.raw('?::text', [id]),
+        Thang: knex.raw('?::integer', [thang]),
+        Nam: knex.raw('?::integer', [nam]),
+        TongDoanhThu: knex.raw('SUM("HOADON"."TongTienHoaDon")'),
+      })
+      .first();
+
+    if (!baoCao) {
+      throw new Error('Không có dữ liệu báo cáo cho tháng/năm này');
+    }
+
+    // Tính chi tiết báo cáo theo ngày
+    const chiTiet = await knex('HOADON')
+      .join('DATTIEC', 'HOADON.MaDatTiec', '=', 'DATTIEC.MaDatTiec')
+      .where('HOADON.TrangThai', 1)
+      .whereRaw('EXTRACT(MONTH FROM "HOADON"."NgayThanhToan") = ?', [thang])
+      .whereRaw('EXTRACT(YEAR FROM "HOADON"."NgayThanhToan") = ?', [nam])
+      .select({
+        Ngay: knex.raw('DATE("HOADON"."NgayThanhToan")'),
+        SoLuongTiec: knex.raw('COUNT(*)'),
+        DoanhThu: knex.raw('SUM("HOADON"."TongTienHoaDon")'),
+      })
+      .groupBy('Ngay')
+      .orderBy('Ngay', 'asc');
+
+    // Tính tỷ lệ (TiLe) cho chi tiết
+    const tongDoanhThu = Number(baoCao.TongDoanhThu) || 0;
+    const formattedChiTiet = chiTiet.map((item) => ({
+      Ngay: item.Ngay,
+      SoLuongTiec: Number(item.SoLuongTiec) || 0,
+      DoanhThu: Number(item.DoanhThu) || 0,
+      TiLe: tongDoanhThu > 0 ? (Number(item.DoanhThu) / tongDoanhThu) * 100 : 0,
+    }));
+
+    return res.status(200).json({
+      data: {
+        MaBaoCaoDoanhSo: baoCao.MaBaoCaoDoanhSo,
+        Thang: Number(baoCao.Thang),
+        Nam: Number(baoCao.Nam),
+        TongDoanhThu: Number(baoCao.TongDoanhThu) || 0,
+        chiTiet: formattedChiTiet,
+      },
+    });
   } catch (error) {
     return res.status(404).json({ error: error.message });
   }
