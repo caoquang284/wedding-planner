@@ -28,7 +28,7 @@ interface HoaDon {
   TrangThai: number;
 }
 interface ThamSo {
-  PhanTramPhatMotNgay: number;
+  PhanTramPhatTrenNgay: number;
 }
 interface DatTiec {
   MaDatTiec: number;
@@ -180,6 +180,7 @@ const AdminInvoice: React.FC = () => {
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [canConfirmPayment, setCanConfirmPayment] = useState(false);
   const [thamSo, setThamSo] = useState<ThamSo | null>(null);
+  const [phanTramPhatInput, setPhanTramPhatInput] = useState<string>("");
   const navigate = useNavigate();
 
   // Đóng thông báo thành công sau 3 giây
@@ -197,7 +198,8 @@ const AdminInvoice: React.FC = () => {
       setError(null);
       try {
         const thamSo = await getThamSo();
-
+        setThamSo(thamSo);
+        setPhanTramPhatInput(thamSo.PhanTramPhatTrenNgay.toString());
         const danhsachHoaDon = await getAllHoaDon();
         console.log("danhsachHoaDon", danhsachHoaDon);
         for (const invoice of danhsachHoaDon.data) {
@@ -279,6 +281,24 @@ const AdminInvoice: React.FC = () => {
     setConfirmationModal({ isOpen: false, message: "", onConfirm: () => {} });
   };
 
+  const handleUpdateThamSo = async () => {
+    try {
+      const phanTramPhat = parseFloat(phanTramPhatInput);
+      if (isNaN(phanTramPhat) || phanTramPhat < 0 || phanTramPhat > 100) {
+        alert("Phần trăm phạt phải là số từ 0 đến 100");
+        return;
+      }
+
+      await updateThamSo({ phanTramPhatTrenNgay: phanTramPhat });
+      setThamSo({ PhanTramPhatTrenNgay: phanTramPhat });
+      setSuccessMessage("Cập nhật thông số thành công!");
+    } catch (error: any) {
+      alert(
+        "Lỗi khi cập nhật thông số: " +
+          (error.response?.data?.error || error.message)
+      );
+    }
+  };
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -836,6 +856,32 @@ const AdminInvoice: React.FC = () => {
                 <option value="1">Đã thanh toán</option>
                 <option value="2">Đã hủy</option>
               </select>
+              {/* Cho div nay sat goc phai */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="w-full sm:w-auto bg-white shadow-md rounded-lg overflow-hidden border border-gray-100 p-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Phần trăm phạt trên ngày:
+                    </label>
+                    <input
+                      type="number"
+                      value={phanTramPhatInput}
+                      onChange={(e) => setPhanTramPhatInput(e.target.value)}
+                      className="w-20 p-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-[#E6C3C3]"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                    />
+                    <span className="text-sm text-gray-600">%</span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleUpdateThamSo}
+                  className="w-full sm:w-auto bg-[#001F3F] text-white py-2 px-4 rounded hover:bg-[#003366] transition-colors duration-300"
+                >
+                  Cập nhật thông số
+                </button>
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto"></div>
             {/* <button
@@ -1152,7 +1198,11 @@ const AdminInvoice: React.FC = () => {
                     disabled={true}
                     type="number"
                     name="PhanTramPhatMotNgay"
-                    value={formData.PhanTramPhatMotNgay}
+                    value={
+                      Number(formData.PhanTramPhatMotNgay) === 0
+                        ? thamSo?.PhanTramPhatTrenNgay.toString()
+                        : Number(formData.PhanTramPhatMotNgay)
+                    }
                     onChange={handleInputChange}
                     className="py-2 px-3 mt-1 w-full rounded border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                     min="0"
